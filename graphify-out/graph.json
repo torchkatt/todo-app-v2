@@ -1,0 +1,37 @@
+{
+  "name": "Todo",
+  "type": "web-app",
+  "framework": "react+vite",
+  "backend": "firebase",
+  "modules": {
+    "services": [
+      "planService", "revenueService", "listingService", "paymentService",
+      "sellerService", "authService", "categoryService", "aiChatMemoryService",
+      "aiChatSecurity", "aiChatTools", "aiChatUsageService"
+    ],
+    "pages": [
+      "Landing", "AppHome", "HelpPage", "PricingPage", "RevenueDashboard",
+      "Explore", "Cart", "CheckoutPage", "ListingDetail", "CategoryPage",
+      "SellerDashboard", "SellerProfile", "AdminPanel", "OrdersPage",
+      "OrderDetail", "Profile", "SettingsPage", "FavoritesPage", "ReviewsPage",
+      "Login", "Register", "TermsPage", "PrivacyPage"
+    ],
+    "components": ["OfflineBanner", "ReloadPrompt", "DateRangeFilter", "ErrorBoundary", "AIChat", "BottomTabs", "SEO", "PWAInstallPrompt"],
+    "contexts": ["AuthContext", "CartContext", "NotificationContext", "ThemeContext", "SubscriptionPlanContext"],
+    "hooks": ["useRevenue", "useFavorites", "useFirestore"],
+    "functions": ["wompiWebhook", "onTransactionCreate"],
+    "collections": ["sellers", "listings", "transactions", "categories", "users", "notifications"]
+  },
+  "dependencies": {
+    "firebase": ["auth", "firestore", "functions", "messaging", "storage"],
+    "external": ["wompi", "deepseek"]
+  },
+  "architecture": {
+    "payment": "Wompi widget + webhook",
+    "ai": "DeepSeek v4 Flash with function calling",
+    "auth": "Firebase Auth + Custom Claims",
+    "subscriptions": "Dynamic plans from Firestore (planService)",
+    "pwa": "Workbox generateSW with offline fallback",
+    "security": "5-layer AI Chat, Firestore rules, pre-commit hook"
+  }
+}
