@@ -1,0 +1,93 @@
+{
+  "app.name": "Todo",
+  "app.tagline": "La app que lo tiene todo",
+  "app.description": "Compra productos, reserva servicios, descarga contenido digital en Colombia",
+
+  "nav.home": "Inicio",
+  "nav.search": "Buscar",
+  "nav.orders": "Pedidos",
+  "nav.profile": "Perfil",
+  "nav.cart": "Carrito",
+
+  "home.hero.title": "Compra, vende, reserva servicios y descarga contenido digital",
+  "home.hero.subtitle": "Todo lo que necesitas, en un solo lugar",
+  "home.hero.explore": "Explorar",
+  "home.hero.sell": "Vender",
+  "home.categories": "Categorías",
+  "home.featured": "Lo más popular",
+  "home.viewAll": "Ver todos",
+  "home.benefits.commission": "0% comisión",
+  "home.benefits.commission.sub": "Primer mes",
+  "home.benefits.flexible": "Entrega flexible",
+  "home.benefits.flexible.sub": "Recoge o envío",
+  "home.benefits.verified": "Verificados",
+  "home.benefits.verified.sub": "Ratings reales",
+
+  "auth.login": "Iniciar sesión",
+  "auth.register": "Crear cuenta",
+  "auth.email": "Correo electrónico",
+  "auth.password": "Contraseña",
+  "auth.name": "Nombre completo",
+  "auth.google": "Google",
+  "auth.guest": "Continuar como invitado",
+  "auth.logout": "Cerrar sesión",
+
+  "search.placeholder": "Buscar productos, servicios...",
+  "search.results": "resultados",
+  "search.empty": "No encontramos resultados",
+  "search.empty.hint": "Intenta con otros términos o filtros",
+
+  "cart.empty": "Tu carrito está vacío",
+  "cart.checkout": "Ir a pagar",
+
+  "orders.title": "Mis Pedidos",
+  "orders.empty": "No tienes pedidos aún",
+  "orders.empty.hint": "Explora y compra algo increíble",
+
+  "profile.title": "Mi Perfil",
+  "profile.points": "Puntos",
+  "profile.purchases": "Compras",
+  "profile.spent": "Gastado",
+  "profile.streak": "Racha",
+  "profile.favorites": "Favoritos",
+  "profile.settings": "Configuración",
+  "profile.help": "Ayuda",
+
+  "listing.addToCart": "Agregar al carrito",
+  "listing.notFound": "Producto no encontrado",
+
+  "checkout.title": "Finalizar compra",
+  "checkout.contact": "Información de contacto",
+  "checkout.summary": "Resumen del pedido",
+  "checkout.pay": "Pagar",
+
+  "seller.create": "Crear mi tienda gratis",
+  "seller.dashboard": "Mi Tienda",
+  "seller.listings": "Mis Listados",
+  "seller.new": "Nuevo listado",
+
+  "settings.title": "Configuración",
+  "settings.save": "Guardar cambios",
+  "settings.language": "Idioma",
+  "settings.darkMode": "Modo oscuro",
+
+  "help.title": "Ayuda",
+  "help.faq1": "¿Cómo funciona Todo?",
+  "help.faq1.desc": "Guía rápida del marketplace",
+
+  "reviews.title": "Reseñas",
+  "reviews.cta": "¿Cómo calificas tu experiencia?",
+  "reviews.submit": "Enviar reseña",
+
+  "ai.welcome": "¡Hola! Soy el asistente de Todo. ¿En qué puedo ayudarte?",
+  "ai.placeholder": "Escribe tu mensaje...",
+
+  "common.loading": "Cargando...",
+  "common.error": "Error",
+  "common.back": "Volver",
+  "common.save": "Guardar",
+  "common.cancel": "Cancelar",
+  "common.delete": "Eliminar",
+  "common.confirm": "Confirmar",
+  "common.search": "Buscar"
+}

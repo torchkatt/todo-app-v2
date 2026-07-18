@@ -1,0 +1,93 @@
+{
+  "app.name": "Todo",
+  "app.tagline": "The one app for everything",
+  "app.description": "Buy products, book services, download digital content in Colombia",
+
+  "nav.home": "Home",
+  "nav.search": "Search",
+  "nav.orders": "Orders",
+  "nav.profile": "Profile",
+  "nav.cart": "Cart",
+
+  "home.hero.title": "Buy, sell, book services and download digital content",
+  "home.hero.subtitle": "Everything you need, in one place",
+  "home.hero.explore": "Explore",
+  "home.hero.sell": "Sell",
+  "home.categories": "Categories",
+  "home.featured": "Most popular near you",
+  "home.viewAll": "View all",
+  "home.benefits.commission": "0% commission",
+  "home.benefits.commission.sub": "First month",
+  "home.benefits.flexible": "Flexible delivery",
+  "home.benefits.flexible.sub": "Pickup or shipping",
+  "home.benefits.verified": "Verified",
+  "home.benefits.verified.sub": "Real ratings",
+
+  "auth.login": "Sign in",
+  "auth.register": "Create account",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.name": "Full name",
+  "auth.google": "Google",
+  "auth.guest": "Continue as guest",
+  "auth.logout": "Sign out",
+
+  "search.placeholder": "Search products, services...",
+  "search.results": "results",
+  "search.empty": "No results found",
+  "search.empty.hint": "Try different terms or filters",
+
+  "cart.empty": "Your cart is empty",
+  "cart.checkout": "Go to checkout",
+
+  "orders.title": "My Orders",
+  "orders.empty": "No orders yet",
+  "orders.empty.hint": "Explore and buy something amazing",
+
+  "profile.title": "My Profile",
+  "profile.points": "Points",
+  "profile.purchases": "Purchases",
+  "profile.spent": "Spent",
+  "profile.streak": "Streak",
+  "profile.favorites": "Favorites",
+  "profile.settings": "Settings",
+  "profile.help": "Help",
+
+  "listing.addToCart": "Add to cart",
+  "listing.notFound": "Product not found",
+
+  "checkout.title": "Checkout",
+  "checkout.contact": "Contact information",
+  "checkout.summary": "Order summary",
+  "checkout.pay": "Pay",
+
+  "seller.create": "Create my store for free",
+  "seller.dashboard": "My Store",
+  "seller.listings": "My Listings",
+  "seller.new": "New listing",
+
+  "settings.title": "Settings",
+  "settings.save": "Save changes",
+  "settings.language": "Language",
+  "settings.darkMode": "Dark mode",
+
+  "help.title": "Help",
+  "help.faq1": "How does Todo work?",
+  "help.faq1.desc": "Quick marketplace guide",
+
+  "reviews.title": "Reviews",
+  "reviews.cta": "How would you rate your experience?",
+  "reviews.submit": "Submit review",
+
+  "ai.welcome": "Hi! I'm the Todo assistant. How can I help you?",
+  "ai.placeholder": "Type your message...",
+
+  "common.loading": "Loading...",
+  "common.error": "Error",
+  "common.back": "Back",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.delete": "Delete",
+  "common.confirm": "Confirm",
+  "common.search": "Search"
+}
