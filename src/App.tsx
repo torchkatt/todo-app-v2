@@ -4,14 +4,18 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SubscriptionPlanProvider } from './context/SubscriptionPlanContext';
 import { AIChatButton } from './components/chat/AIChat';
 import BottomTabs from './components/layout/BottomTabs';
 import SEO from './components/seo/SEO';
 import ErrorBoundary from './components/ErrorBoundary';
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
+import { OfflineBanner } from './components/ui/OfflineBanner';
+import { ReloadPrompt } from './components/ui/ReloadPrompt';
 import Onboarding from './components/onboarding/Onboarding';
 
-const Home = lazy(() => import('./pages/Home'));
+const Landing = lazy(() => import('./pages/Landing'));
+const AppHome = lazy(() => import('./pages/AppHome'));
 const Explore = lazy(() => import('./pages/Explore'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -31,6 +35,8 @@ const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const RevenueDashboard = lazy(() => import('./pages/RevenueDashboard'));
 
 const Loading = () => (
   <div className="min-h-screen bg-brand-bg dark:bg-gray-900 flex items-center justify-center">
@@ -44,12 +50,17 @@ const App: React.FC = () => (
       <CartProvider>
         <NotificationProvider>
           <ThemeProvider>
+            <SubscriptionPlanProvider>
             <SEO />
+            <OfflineBanner />
             <Suspense fallback={<Loading />}>
               <ErrorBoundary>
               <div className="pb-20">
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  {/* Marketing Landing */}
+                  <Route path="/" element={<Landing />} />
+                  {/* App (marketplace) */}
+                  <Route path="/app" element={<AppHome />} />
                   <Route path="/explore" element={<Explore />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -67,6 +78,8 @@ const App: React.FC = () => (
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/revenue" element={<RevenueDashboard />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="*" element={<div className="p-8 text-center"><h1 className="text-xl font-extrabold mb-2 text-text-primary">404</h1><a href="/" className="text-purple-600 font-bold text-sm">Volver al inicio</a></div>} />
@@ -76,8 +89,10 @@ const App: React.FC = () => (
               </ErrorBoundary>
             </Suspense>
             <PWAInstallPrompt />
+            <ReloadPrompt />
             <Onboarding />
             <AIChatButton />
+            </SubscriptionPlanProvider>
           </ThemeProvider>
         </NotificationProvider>
       </CartProvider>
