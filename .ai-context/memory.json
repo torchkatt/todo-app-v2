@@ -1,0 +1,46 @@
+{
+  "project": {
+    "name": "todo",
+    "description": "Todo marketplace Colombia — Vite+React+TS+Firebase+Wompi+DeepSeek",
+    "tech_stack": ["React 18", "TypeScript", "Firebase (Auth, Firestore, Functions, Messaging)", "Vite", "Tailwind CSS", "Wompi", "DeepSeek"],
+    "architecture": "SPA/PWA with Firebase backend, role-based routing"
+  },
+  "last_session": "2026-07-17T23:00:00Z",
+  "sessions": [
+    {
+      "date": "2026-07-17",
+      "features_worked": [
+        "critical-firestore-rules-fix",
+        "seo-sitemap-robots-og-jsonld",
+        "gitignore-security",
+        "history-cleanup-api-key",
+        "pre-commit-hook-installed",
+        "354-tests",
+        "ai-context-docs"
+      ]
+    }
+  ],
+  "active_features": ["marketplace", "ai-chat", "wompi-payments"],
+  "patterns": {
+    "testing": "vitest (354 tests)",
+    "state_management": "React Context",
+    "api_services": "Firebase SDK directo",
+    "ui": "Tailwind CSS",
+    "i18n": "i18next",
+    "ai": "DeepSeek v4 Flash",
+    "payment": "Wompi widget"
+  },
+  "architecture_decisions": [
+    {
+      "id": "ADR-001",
+      "date": "2026-07-17",
+      "title": "Firestore Rules con helpers de seguridad",
+      "decision": "Reemplazar catch-all rule (match /{document=**}) por reglas específicas con helpers isAdmin, isSellerOwner, isOwner.",
+      "rationale": "Cualquier usuario autenticado podía escribir cualquier colección. Parche crítico de seguridad.",
+      "status": "implemented"
+    }
+  ],
+  "notes": {
+    "api_key_leak": "API key de Firebase estaba hardcodeada en seed.ts y seed-massive.ts. Limpiada de historial con git filter-repo. Pre-commit hook instalado para prevención."
+  }
+}
