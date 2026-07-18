@@ -6,7 +6,7 @@ import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
 import { CATEGORY_SEED } from '../services/categorySeed';
 
 const firebaseConfig = {
-  apiKey: "REPLACED_FIREBASE_API_KEY",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY || '',
   authDomain: "todo-a44f9.firebaseapp.com",
   projectId: "todo-a44f9",
   storageBucket: "todo-a44f9.firebasestorage.app",

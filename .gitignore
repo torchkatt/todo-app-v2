@@ -31,3 +31,6 @@ credentials.json
 token.json
 seed_token.txt
 functions/lib/
+
+# Firebase deploy cache
+.firebase/

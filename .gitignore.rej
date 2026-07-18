@@ -1,0 +1,11 @@
+--- .gitignore
++++ .gitignore
+@@ -28,6 +28,8 @@
+ .env.*
+ !.env.example
+ todo-sa-key.json
++credentials.json
++token.json
+ seed_token.txt
+ functions/lib/
+ 
