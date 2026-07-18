@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { ArrowLeft, Store, Plus, TrendingUp, Package, Star, Loader2, DollarSign, Users } from 'lucide-react';
 import type { Seller, Listing } from '../types';
@@ -14,6 +14,7 @@ const SellerDashboard: React.FC = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', description: '', type: 'product' as const, price: 0 });
 
   useEffect(() => {
@@ -52,14 +53,40 @@ const SellerDashboard: React.FC = () => {
 
   const createListing = async () => {
     if (!seller) return;
-    await addDoc(collection(db, 'listings'), {
-      sellerId: seller.id, categoryId: 'cat-otros', type: form.type, title: form.name, description: form.description,
-      price: form.price, quantity: 1, deliveryMethods: ['pickup'], tags: [], isActive: true, isFeatured: false,
-      isApproved: true, discountPercent: 0, stats: { views: 0, favorites: 0, transactions: 0, rating: 0, ratingCount: 0 },
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-    });
+    if (editId) {
+      await updateDoc(doc(db, 'listings', editId), {
+        title: form.name, description: form.description, type: form.type, price: form.price,
+        updatedAt: serverTimestamp(),
+      });
+      setEditId(null);
+    } else {
+      await addDoc(collection(db, 'listings'), {
+        sellerId: seller.id, categoryId: 'cat-otros', type: form.type, title: form.name,
+        description: form.description, price: form.price, quantity: 1, deliveryMethods: ['pickup'],
+        tags: [], isActive: true, isFeatured: false, isApproved: true, discountPercent: 0,
+        stats: { views: 0, favorites: 0, transactions: 0, rating: 0, ratingCount: 0 },
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+      });
+    }
     setShowForm(false);
     setForm({ name: '', description: '', type: 'product', price: 0 });
+    window.location.reload();
+  };
+
+  const editListing = (l: Listing) => {
+    setEditId(l.id!);
+    setForm({ name: l.title, description: l.description || '', type: l.type as any, price: l.price });
+    setShowForm(true);
+  };
+
+  const deleteListing = async (id: string) => {
+    if (!confirm('¿Eliminar este listado?')) return;
+    await deleteDoc(doc(db, 'listings', id));
+    window.location.reload();
+  };
+
+  const toggleActive = async (id: string, current: boolean) => {
+    await updateDoc(doc(db, 'listings', id), { isActive: !current });
     window.location.reload();
   };
 
@@ -120,7 +147,12 @@ const SellerDashboard: React.FC = () => {
                     <div className="text-sm font-extrabold text-text-primary truncate">{l.title}</div>
                     <div className="text-xs text-text-muted">${l.price.toLocaleString('es-CO')} · {l.isActive ? '✅' : '⛔'} · {l.stats?.views || 0} vistas</div>
                   </div>
-                  <button onClick={() => navigate(`/listing/${l.id}`)} className="text-xs font-bold text-purple-600 hover:underline">Ver</button>
+                  <div className="flex gap-1">
+                    <button onClick={() => editListing(l)} className="text-xs font-bold text-blue-600 hover:underline px-1.5">✏️</button>
+                    <button onClick={() => toggleActive(l.id!, l.isActive)} className="text-xs hover:underline px-1.5">{l.isActive ? '⛔' : '✅'}</button>
+                    <button onClick={() => deleteListing(l.id!)} className="text-xs font-bold text-red-500 hover:underline px-1.5">🗑️</button>
+                    <button onClick={() => navigate(`/listing/${l.id}`)} className="text-xs font-bold text-purple-600 hover:underline">Ver</button>
+                  </div>
                 </div>
               ))}
               {listings.length === 0 && <p className="text-center text-sm text-text-muted py-8">Aún no has creado listados. ¡Publica tu primero!</p>}

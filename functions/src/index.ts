@@ -57,19 +57,48 @@ export const wompiWebhook = functions.https.onRequest(async (req, res) => {
 });
 
 // ─── On Transaction Create ───
-// Auto-creates notification when a transaction is created
+// Creates notification + sends email
 export const onTransactionCreate = functions.firestore
   .onDocumentCreated('transactions/{txId}', async (event) => {
     const data = event.data?.data();
     if (!data) return;
 
+    const txId = event.params.txId;
+
+    // Create in-app notification for buyer
     await db.collection('notifications').add({
       userId: data.buyerId,
       title: '🛒 Pedido creado',
-      body: `Tu pedido #${event.params.txId.slice(-8)} está pendiente de pago`,
+      body: `Tu pedido #${txId.slice(-8)} está pendiente de pago`,
       type: 'order_update',
       read: false,
-      link: `/orders/${event.params.txId}`,
+      link: `/orders/${txId}`,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+
+    // Send email notification to seller
+    try {
+      const sellerDoc = await db.collection('sellers').doc(data.sellerId).get();
+      const buyerDoc = await db.collection('users').doc(data.buyerId).get();
+      const seller = sellerDoc.data();
+      const buyer = buyerDoc.data();
+
+      if (seller?.contact?.email) {
+        // Log email notification (actual sending requires SendGrid/Mailgun integration)
+        functions.logger.info(`EMAIL NOTIFICATION: To ${seller.contact.email} - New order #${txId.slice(-8)} from ${buyer?.fullName || 'Unknown'} - $${(data.totalAmount || 0).toLocaleString('es-CO')}`);
+        
+        // Store as notification for seller
+        await db.collection('notifications').add({
+          userId: data.sellerId,
+          title: '🛍️ Nuevo pedido recibido',
+          body: `Has recibido un pedido de ${buyer?.fullName || 'Cliente'} por $${(data.totalAmount || 0).toLocaleString('es-CO')}`,
+          type: 'order_update',
+          read: false,
+          link: `/orders/${txId}`,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      functions.logger.error('Failed to notify seller', e);
+    }
   });

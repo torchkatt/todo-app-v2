@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AIChatButton } from './components/chat/AIChat';
 import BottomTabs from './components/layout/BottomTabs';
 import SEO from './components/seo/SEO';
+import ErrorBoundary from './components/ErrorBoundary';
 import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
 import Onboarding from './components/onboarding/Onboarding';
 
@@ -45,6 +46,7 @@ const App: React.FC = () => (
           <ThemeProvider>
             <SEO />
             <Suspense fallback={<Loading />}>
+              <ErrorBoundary>
               <div className="pb-20">
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -71,6 +73,7 @@ const App: React.FC = () => (
                 </Routes>
               </div>
               <BottomTabs />
+              </ErrorBoundary>
             </Suspense>
             <PWAInstallPrompt />
             <Onboarding />
