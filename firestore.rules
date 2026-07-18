@@ -1,29 +1,96 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── HELPERS ───────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'SUPER_ADMIN' ||
+        request.auth.token.role == 'ADMIN'
+      );
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isSellerOwner(sellerId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/sellers/$(sellerId)).data.ownerId == request.auth.uid;
+    }
+
+    function isValidUserData() {
+      return request.resource.data.keys().hasAll(['email', 'role', 'createdAt']) &&
+             request.resource.data.role in ['CUSTOMER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'];
+    }
+
+    function canCreateUser() {
+      return isOwner(request.resource.data.uid) &&
+        request.resource.data.role == 'CUSTOMER';
+    }
+
+    // ─── USERS ─────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if (isOwner(userId) && canCreateUser()) || (isAdmin() && isValidUserData());
+      allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fullName', 'phone', 'avatarUrl', 'address', 'updatedAt'
+        ]));
+      allow delete: if isAdmin();
+    }
+
+    // ─── CATEGORIES ────────────────────────────────────────────────────
     match /categories/{doc} {
       allow read: if true;
-      allow write: if request.auth.token.role == 'SUPER_ADMIN';
+      allow write: if isAdmin();
     }
-    match /sellers/{doc} {
+
+    // ─── SELLERS ───────────────────────────────────────────────────────
+    match /sellers/{sellerId} {
       allow read: if true;
-      allow write: if request.auth.uid == resource.data.ownerId || request.auth.token.role == 'SUPER_ADMIN';
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isSellerOwner(sellerId);
+      allow delete: if isAdmin();
     }
-    match /listings/{doc} {
+
+    // ─── LISTINGS ──────────────────────────────────────────────────────
+    match /listings/{listingId} {
       allow read: if true;
-      allow write: if request.auth.uid == get(/databases/$(database)/documents/sellers/$(resource.data.sellerId)).data.ownerId || request.auth.token.role == 'SUPER_ADMIN';
+      allow create: if isAuthenticated() &&
+        isSellerOwner(request.resource.data.sellerId);
+      allow update: if isAdmin() || isSellerOwner(resource.data.sellerId);
+      allow delete: if isAdmin() || isSellerOwner(resource.data.sellerId);
     }
+
+    // ─── TRANSACTIONS ──────────────────────────────────────────────────
+    match /transactions/{transactionId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.buyerId == request.auth.uid) ||
+        (isAuthenticated() && resource.data.sellerId == request.auth.uid);
+      allow create: if false;  // Solo via Cloud Function
+      allow update: if isAdmin() ||
+        (isAuthenticated() && resource.data.buyerId == request.auth.uid &&
+         resource.data.status == 'PENDING' &&
+         request.resource.data.status == 'CANCELLED');
+      allow delete: if isAdmin();
+    }
+
+    // ─── NOTIFICATIONS ─────────────────────────────────────────────────
+    match /notifications/{doc} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─── ANALYTICS ─────────────────────────────────────────────────────
     match /analytics_events/{doc} {
       allow write: if true;
-      allow read: if request.auth.token.role == 'SUPER_ADMIN';
-    }
-    match /notifications/{doc} {
-      allow read: if request.auth.uid == resource.data.userId;
-      allow write: if request.auth.uid == resource.data.userId || request.auth.token.role == 'SUPER_ADMIN';
-    }
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read: if isAdmin();
     }
   }
 }
