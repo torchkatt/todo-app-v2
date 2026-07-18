@@ -2,10 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, User, ShoppingBag, Star, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award } from 'lucide-react';
+import GuestConversion from '../components/auth/GuestConversion';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const [showConversion, setShowConversion] = React.useState(false);
 
   if (loading) return <div className="min-h-screen bg-brand-bg flex items-center justify-center"><Loader2 size={28} className="animate-spin text-purple-600" /></div>;
 
@@ -110,11 +112,19 @@ const Profile: React.FC = () => {
           </div>
         )}
 
+        {/* Guest conversion */}
+        {user?.isGuest && (
+          <button onClick={() => setShowConversion(true)} className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all active:scale-[0.98] shadow-lg shadow-purple-200">
+            <Sparkles size={18} /> Guardar mi cuenta
+          </button>
+        )}
+
         {/* Logout */}
         <button onClick={logout} className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-red-500 bg-white rounded-xl border border-border hover:bg-red-50 transition-colors active:scale-[0.98]">
           <LogOut size={18} /> Cerrar sesión
         </button>
       </main>
+      {showConversion && <GuestConversion onClose={() => setShowConversion(false)} />}
     </div>
   );
 };

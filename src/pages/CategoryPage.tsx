@@ -6,6 +6,8 @@ import { CATEGORY_SEED } from '../services/categorySeed';
 import { ArrowLeft, ShoppingBag, MapPin, Star, Loader2 } from 'lucide-react';
 import type { Listing } from '../types';
 import { Category } from '../types';
+import SEO from '../components/seo/SEO';
+import { CardSkeleton } from '../components/skeleton/Skeleton';
 
 const CategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -51,8 +53,9 @@ const CategoryPage: React.FC = () => {
         </div>
       </header>
       <main className="max-w-4xl mx-auto px-4 py-6">
+      <SEO title={category?.name || 'Categoría'} description={`Explora ${category?.name || 'productos'} en Todo`} />
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-text-muted gap-2"><Loader2 size={20} className="animate-spin" /> Cargando...</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3"><CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton /></div>
         ) : listings.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4 text-4xl">{category?.icon || '📂'}</div>

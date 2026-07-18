@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, ShoppingBag, Star, MapPin, Clock, Plus, Minus, BadgeCheck, Loader2 } from 'lucide-react';
 import type { Listing, Seller } from '../types';
+import SEO from '../components/seo/SEO';
 
 const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,7 @@ const ListingDetail: React.FC = () => {
 
   if (!listing) return (
     <div className="min-h-screen bg-brand-bg flex flex-col items-center justify-center p-8 text-center">
+      <SEO title="Producto no encontrado" />
       <span className="text-6xl mb-4">🔍</span>
       <h2 className="text-xl font-extrabold mb-2">Producto no encontrado</h2>
       <button onClick={() => navigate('/')} className="text-purple-600 font-bold text-sm mt-2 hover:underline">Volver al inicio</button>
@@ -52,6 +54,7 @@ const ListingDetail: React.FC = () => {
         </div>
       </header>
       <main className="max-w-2xl mx-auto">
+      <SEO title={listing.title} description={listing.description?.slice(0, 160)} />
         {/* Hero */}
         <div className="relative h-56 bg-gradient-to-br from-purple-50 via-indigo-50 to-gray-100 flex items-center justify-center">
           <span className="text-8xl">{listing.type === 'service' ? '🛠️' : listing.type === 'digital' ? '📱' : listing.categoryId?.includes('food') ? '🍕' : '📦'}</span>

@@ -3,6 +3,32 @@
 // Everything is a Listing. Every business is a Seller. Every sale is a Transaction.
 
 // ═══════════════════════════════════════════
+// REVIEW / RATING
+// ═══════════════════════════════════════════
+
+export interface Rating {
+  id: string;
+  transactionId: string;
+  fromUserId: string;
+  fromUserRole: UserRole;
+  toUserId: string;
+  toUserRole: UserRole;
+  score: number;
+  comment?: string;
+  listingId?: string;
+  sellerId?: string;
+  createdAt: string;
+}
+
+export interface RatingStats {
+  userId: string;
+  averageRating: number;
+  totalRatings: number;
+  breakdown: Record<number, number>;
+  lastUpdated: string;
+}
+
+// ═══════════════════════════════════════════
 // IDENTITY & AUTH
 // ═══════════════════════════════════════════
 

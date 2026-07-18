@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { CATEGORY_SEED, getRootCategories } from '../services/categorySeed';
-import { Search, ShoppingBag, ArrowLeft, Filter, SlidersHorizontal, Loader2, Star } from 'lucide-react';
-import type { Category, Listing } from '../types';
+import { getRootCategories } from '../services/categorySeed';
+import { Search, ShoppingBag, ArrowLeft, Filter, SlidersHorizontal, Loader2, Star, MapPin } from 'lucide-react';
+import SEO from '../components/seo/SEO';
+import type { Listing } from '../types';
+
+const CIUDADES = ['Bucaramanga', 'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Todo Colombia'];
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +16,7 @@ const Explore: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterCat, setFilterCat] = useState<string>('all');
+  const [selectedCity, setSelectedCity] = useState('');
   const categories = getRootCategories();
 
   useEffect(() => {
@@ -36,6 +40,7 @@ const Explore: React.FC = () => {
 
   return (
     <div className="pb-24 bg-brand-bg min-h-screen">
+      <SEO title="Buscar" description="Encuentra productos, servicios y contenido digital en Todo" />
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 mb-3">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0"><ArrowLeft size={22} /></button>
@@ -46,25 +51,24 @@ const Explore: React.FC = () => {
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           <button onClick={() => { setFilterType('all'); setFilterCat('all'); }}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'all' && filterCat === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>
-            Todo
-          </button>
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'all' && filterCat === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>Todo</button>
           <button onClick={() => setFilterType('product')}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'product' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>
-            📦 Productos
-          </button>
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'product' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>📦 Productos</button>
           <button onClick={() => setFilterType('service')}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'service' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>
-            🛠️ Servicios
-          </button>
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'service' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>🛠️ Servicios</button>
           <button onClick={() => setFilterType('digital')}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'digital' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>
-            📱 Digital
-          </button>
-          {categories.slice(0, 5).map(cat => (
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterType === 'digital' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>📱 Digital</button>
+          {categories.slice(0, 4).map(cat => (
             <button key={cat.id} onClick={() => setFilterCat(cat.id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterCat === cat.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>
-              {cat.icon} {cat.name.split(' ').slice(0, -1).join(' ')}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${filterCat === cat.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-secondary hover:bg-gray-200'}`}>{cat.icon} {cat.name.split(' ').slice(0, -1).join(' ')}</button>
+          ))}
+        </div>
+        {/* Location filter */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar mt-2 pb-1">
+          {CIUDADES.map(c => (
+            <button key={c} onClick={() => setSelectedCity(selectedCity === c ? '' : c)}
+              className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold transition-all ${selectedCity === c ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}>
+              <MapPin size={12} /> {c}
             </button>
           ))}
         </div>
@@ -74,11 +78,7 @@ const Explore: React.FC = () => {
         {loading ? (
           <div className="flex items-center justify-center py-16 text-text-muted gap-2"><Loader2 size={20} className="animate-spin" /> Cargando...</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <Search size={48} className="mx-auto mb-4 text-text-muted" />
-            <h2 className="text-lg font-extrabold mb-2">No encontramos resultados</h2>
-            <p className="text-sm text-text-secondary">Intenta con otros términos o filtros</p>
-          </div>
+          <div className="text-center py-16"><Search size={48} className="mx-auto mb-4 text-text-muted" /><h2 className="text-lg font-extrabold mb-2">No encontramos resultados</h2><p className="text-sm text-text-secondary">Intenta con otros términos o filtros</p></div>
         ) : (
           <>
             <p className="text-xs text-text-muted font-semibold mb-4">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</p>

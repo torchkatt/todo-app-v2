@@ -6,6 +6,7 @@ import { useNotifications } from '../context/NotificationContext';
 import { useFeaturedListings, useCategories, useSubcategories, useSellersByIds } from '../hooks/useFirestore';
 import { Search, ShoppingBag, MapPin, Bell, User, Sparkles, Star, Clock, TrendingUp, ChevronRight, Plus, Loader2 } from 'lucide-react';
 import { CATEGORY_SEED, getRootCategories as getSeedRoot, getSubcategories as getSeedSubs } from '../services/categorySeed';
+import SEO from '../components/seo/SEO';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="pb-24 bg-brand-bg min-h-screen font-sans">
+      <SEO title="Inicio" description="Compra productos, reserva servicios y descarga contenido digital en Colombia" />
 
       {/* ─── HEADER ─── */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">

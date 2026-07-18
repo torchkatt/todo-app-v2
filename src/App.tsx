@@ -7,6 +7,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AIChatButton } from './components/chat/AIChat';
 import BottomTabs from './components/layout/BottomTabs';
 import SEO from './components/seo/SEO';
+import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
+import Onboarding from './components/onboarding/Onboarding';
 
 const Home = lazy(() => import('./pages/Home'));
 const Explore = lazy(() => import('./pages/Explore'));
@@ -26,7 +28,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
-import Onboarding from './components/onboarding/Onboarding';
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
 const Loading = () => (
   <div className="min-h-screen bg-brand-bg dark:bg-gray-900 flex items-center justify-center">
@@ -62,13 +65,16 @@ const App: React.FC = () => (
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="*" element={<div className="p-8 text-center"><h1 className="text-xl font-extrabold mb-2 text-text-primary">404</h1><a href="/" className="text-purple-600 font-bold text-sm">Volver al inicio</a></div>} />
                 </Routes>
               </div>
               <BottomTabs />
             </Suspense>
-            <AIChatButton />
+            <PWAInstallPrompt />
             <Onboarding />
+            <AIChatButton />
           </ThemeProvider>
         </NotificationProvider>
       </CartProvider>
