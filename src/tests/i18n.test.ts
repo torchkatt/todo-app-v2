@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
 
@@ -7,7 +7,7 @@ describe('i18n — Locale files', () => {
   let es: Record<string, string>;
 
   beforeAll(async () => {
-    en = (await import('../locales/en.json')).default;
+    en = (await import('../locales/en.json')).default as Record<string, string>;
     es = (await import('../locales/es.json')).default;
   });
 
@@ -33,14 +33,14 @@ describe('i18n — Locale files', () => {
 
 describe('i18n — Navigation keys', () => {
   it('nav.home exists in both languages', async () => {
-    const en = (await import('../locales/en.json')).default;
-    const es = (await import('../locales/es.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
+    const es = (await import('../locales/es.json')).default as Record<string, string>;
     expect(en['nav.home']).toBeTruthy();
     expect(es['nav.home']).toBeTruthy();
   });
 
   it('nav keys exist: search, orders, profile, cart, notifications', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     const navKeys = ['nav.home', 'nav.search', 'nav.orders', 'nav.profile', 'nav.cart', 'nav.notifications'];
     for (const key of navKeys) {
       expect(en[key]).toBeTruthy();
@@ -48,7 +48,7 @@ describe('i18n — Navigation keys', () => {
   });
 
   it('legal nav keys exist: terms, privacy, help', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['nav.terms']).toBeTruthy();
     expect(en['nav.privacy']).toBeTruthy();
     expect(en['nav.help']).toBeTruthy();
@@ -57,7 +57,7 @@ describe('i18n — Navigation keys', () => {
 
 describe('i18n — Home keys', () => {
   it('home keys exist in EN', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['home.hero.title']).toBeTruthy();
     expect(en['home.hero.subtitle']).toBeTruthy();
     expect(en['home.hero.explore']).toBeTruthy();
@@ -74,7 +74,7 @@ describe('i18n — Home keys', () => {
   });
 
   it('home keys exist in ES', async () => {
-    const es = (await import('../locales/es.json')).default;
+    const es = (await import('../locales/es.json')).default as Record<string, string>;
     expect(es['home.categories']).toBe('Categorías');
     expect(es['home.featured']).toBe('Lo más popular');
     expect(es['home.viewAll']).toBe('Ver todos');
@@ -83,8 +83,8 @@ describe('i18n — Home keys', () => {
 
 describe('i18n — Auth keys', () => {
   it('auth keys exist in both languages', async () => {
-    const en = (await import('../locales/en.json')).default;
-    const es = (await import('../locales/es.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
+    const es = (await import('../locales/es.json')).default as Record<string, string>;
     const authKeys = ['auth.login', 'auth.register', 'auth.email', 'auth.password', 'auth.name',
       'auth.google', 'auth.guest', 'auth.logout'];
     for (const key of authKeys) {
@@ -94,8 +94,8 @@ describe('i18n — Auth keys', () => {
   });
 
   it('ES auth translations are different from EN', async () => {
-    const en = (await import('../locales/en.json')).default;
-    const es = (await import('../locales/es.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
+    const es = (await import('../locales/es.json')).default as Record<string, string>;
     expect(es['auth.login']).not.toBe(en['auth.login']);
     expect(es['auth.register']).not.toBe(en['auth.register']);
   });
@@ -103,7 +103,7 @@ describe('i18n — Auth keys', () => {
 
 describe('i18n — Search keys', () => {
   it('search keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['search.placeholder']).toBeTruthy();
     expect(en['search.results']).toBeTruthy();
     expect(en['search.empty']).toBeTruthy();
@@ -113,7 +113,7 @@ describe('i18n — Search keys', () => {
 
 describe('i18n — Cart keys', () => {
   it('cart keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['cart.empty']).toBeTruthy();
     expect(en['cart.checkout']).toBeTruthy();
   });
@@ -121,7 +121,7 @@ describe('i18n — Cart keys', () => {
 
 describe('i18n — Order keys', () => {
   it('order keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['orders.title']).toBeTruthy();
     expect(en['orders.empty']).toBeTruthy();
     expect(en['orders.empty.hint']).toBeTruthy();
@@ -130,7 +130,7 @@ describe('i18n — Order keys', () => {
 
 describe('i18n — Profile keys', () => {
   it('profile keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     const profileKeys = ['profile.title', 'profile.points', 'profile.purchases', 'profile.spent',
       'profile.streak', 'profile.favorites', 'profile.settings', 'profile.help'];
     for (const key of profileKeys) {
@@ -141,7 +141,7 @@ describe('i18n — Profile keys', () => {
 
 describe('i18n — Help keys', () => {
   it('help keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['help.title']).toBeTruthy();
     expect(en['help.metaDesc']).toBeTruthy();
     expect(en['help.questions']).toBeTruthy();
@@ -152,7 +152,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help buyer FAQ keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 5; i++) {
       expect(en[`help.buyer.q${i}`]).toBeTruthy();
       expect(en[`help.buyer.a${i}`]).toBeTruthy();
@@ -160,7 +160,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help seller FAQ keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 5; i++) {
       expect(en[`help.seller.q${i}`]).toBeTruthy();
       expect(en[`help.seller.a${i}`]).toBeTruthy();
@@ -168,7 +168,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help payments FAQ keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 3; i++) {
       expect(en[`help.payments.q${i}`]).toBeTruthy();
       expect(en[`help.payments.a${i}`]).toBeTruthy();
@@ -176,7 +176,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help AI FAQ keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 3; i++) {
       expect(en[`help.ai.q${i}`]).toBeTruthy();
       expect(en[`help.ai.a${i}`]).toBeTruthy();
@@ -184,7 +184,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help quick tips keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     ['safety', 'delivery', 'reviews', 'disputes'].forEach(tip => {
       expect(en[`help.quick.${tip}`]).toBeTruthy();
       expect(en[`help.quick.${tip}Desc`]).toBeTruthy();
@@ -192,7 +192,7 @@ describe('i18n — Help keys', () => {
   });
 
   it('help contact keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['help.contact.title']).toBeTruthy();
     expect(en['help.contact.desc']).toBeTruthy();
     expect(en['help.contact.hours']).toBeTruthy();
@@ -203,13 +203,13 @@ describe('i18n — Help keys', () => {
 
 describe('i18n — Landing keys', () => {
   it('landing SEO keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['landing.seoTitle']).toBeTruthy();
     expect(en['landing.seoDescription']).toBeTruthy();
   });
 
   it('landing nav keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     const navKeys = ['landing.nav.features', 'landing.nav.how', 'landing.nav.pricing', 'landing.nav.faq'];
     for (const key of navKeys) {
       expect(en[key]).toBeTruthy();
@@ -217,7 +217,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing hero keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     const heroKeys = ['landing.hero.badge', 'landing.hero.title1', 'landing.hero.title2',
       'landing.hero.subtitle', 'landing.hero.cta1', 'landing.hero.cta2',
       'landing.hero.trust1', 'landing.hero.trust2', 'landing.hero.trust3'];
@@ -227,7 +227,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing features keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['landing.features.badge']).toBeTruthy();
     expect(en['landing.features.title']).toBeTruthy();
     expect(en['landing.features.subtitle']).toBeTruthy();
@@ -238,7 +238,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing how-it-works keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 3; i++) {
       expect(en[`landing.how.step${i}.title`]).toBeTruthy();
       expect(en[`landing.how.step${i}.desc`]).toBeTruthy();
@@ -246,7 +246,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing pricing keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (let i = 1; i <= 3; i++) {
       expect(en[`landing.pricing.plan${i}.name`]).toBeTruthy();
       expect(en[`landing.pricing.plan${i}.desc`]).toBeTruthy();
@@ -256,7 +256,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing testimonials keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string> as Record<string, string>;
     expect(en['landing.testimonials.title']).toBeTruthy();
     expect(en['landing.testimonials.subtitle']).toBeTruthy();
     for (let i = 1; i <= 3; i++) {
@@ -268,7 +268,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing FAQ keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string> as Record<string, string>;
     for (let i = 1; i <= 5; i++) {
       expect(en[`landing.faq.q${i}`]).toBeTruthy();
       expect(en[`landing.faq.a${i}`]).toBeTruthy();
@@ -276,7 +276,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing CTA bottom keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string> as Record<string, string>;
     expect(en['landing.ctaBottom.title']).toBeTruthy();
     expect(en['landing.ctaBottom.subtitle']).toBeTruthy();
     expect(en['landing.ctaBottom.cta1']).toBeTruthy();
@@ -284,7 +284,7 @@ describe('i18n — Landing keys', () => {
   });
 
   it('landing footer keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['landing.footer.tagline']).toBeTruthy();
     expect(en['landing.footer.product']).toBeTruthy();
     expect(en['landing.footer.company']).toBeTruthy();
@@ -296,7 +296,7 @@ describe('i18n — Landing keys', () => {
 
 describe('i18n — App Home keys', () => {
   it('app home keys exist in EN', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['app.home.title']).toBeTruthy();
     expect(en['app.hero.badge']).toBeTruthy();
     expect(en['app.hero.title1']).toBeTruthy();
@@ -314,7 +314,7 @@ describe('i18n — App Home keys', () => {
 
 describe('i18n — Settings, seller, listing, checkout keys', () => {
   it('settings keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['settings.title']).toBeTruthy();
     expect(en['settings.save']).toBeTruthy();
     expect(en['settings.language']).toBeTruthy();
@@ -322,7 +322,7 @@ describe('i18n — Settings, seller, listing, checkout keys', () => {
   });
 
   it('seller keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['seller.create']).toBeTruthy();
     expect(en['seller.dashboard']).toBeTruthy();
     expect(en['seller.listings']).toBeTruthy();
@@ -330,13 +330,13 @@ describe('i18n — Settings, seller, listing, checkout keys', () => {
   });
 
   it('listing keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['listing.addToCart']).toBeTruthy();
     expect(en['listing.notFound']).toBeTruthy();
   });
 
   it('checkout keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['checkout.title']).toBeTruthy();
     expect(en['checkout.contact']).toBeTruthy();
     expect(en['checkout.summary']).toBeTruthy();
@@ -346,7 +346,7 @@ describe('i18n — Settings, seller, listing, checkout keys', () => {
 
 describe('i18n — Common and reviews keys', () => {
   it('common keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     const keys = ['common.loading', 'common.error', 'common.back', 'common.save',
       'common.cancel', 'common.delete', 'common.confirm', 'common.search'];
     for (const key of keys) {
@@ -355,14 +355,14 @@ describe('i18n — Common and reviews keys', () => {
   });
 
   it('reviews keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['reviews.title']).toBeTruthy();
     expect(en['reviews.cta']).toBeTruthy();
     expect(en['reviews.submit']).toBeTruthy();
   });
 
   it('AI keys exist', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     expect(en['ai.welcome']).toBeTruthy();
     expect(en['ai.placeholder']).toBeTruthy();
   });
@@ -370,7 +370,7 @@ describe('i18n — Common and reviews keys', () => {
 
 describe('i18n — No empty or missing values', () => {
   it('all EN values are non-empty strings', async () => {
-    const en = (await import('../locales/en.json')).default;
+    const en = (await import('../locales/en.json')).default as Record<string, string>;
     for (const [key, value] of Object.entries(en)) {
       expect(value, `Key ${key} has empty value`).toBeTruthy();
       expect(typeof value, `Key ${key} is not a string`).toBe('string');
@@ -379,7 +379,7 @@ describe('i18n — No empty or missing values', () => {
   });
 
   it('all ES values are non-empty strings', async () => {
-    const es = (await import('../locales/es.json')).default;
+    const es = (await import('../locales/es.json')).default as Record<string, string>;
     for (const [key, value] of Object.entries(es)) {
       expect(value, `Key ${key} has empty value`).toBeTruthy();
       expect(typeof value, `Key ${key} is not a string`).toBe('string');

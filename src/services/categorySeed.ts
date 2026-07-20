@@ -1,4 +1,4 @@
-import type { Category, CategoryAttribute } from '../types';
+import type { Category } from '../types';
 
 /**
  * Seed categories for Todo marketplace.

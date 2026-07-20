@@ -57,7 +57,13 @@ export async function chatWithDeepSeek(messages: Message[], userId?: string): Pr
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: fullMessages, tools: TODO_TOOLS, tool_choice: 'auto', max_tokens: 1000 }),
+      body: JSON.stringify({
+        model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
+        messages: fullMessages,
+        tools: TODO_TOOLS,
+        tool_choice: 'auto',
+        max_tokens: parseInt(import.meta.env.VITE_DEEPSEEK_MAX_TOKENS || '1000'),
+      }),
     });
 
     if (!response.ok) {
@@ -78,7 +84,7 @@ export async function chatWithDeepSeek(messages: Message[], userId?: string): Pr
       for (const toolCall of msg.tool_calls) {
         const fn = toolCall.function;
         let args: any = {};
-        try { args = JSON.parse(fn.arguments); } catch {}
+        try { args = JSON.parse(fn.arguments); } catch (e) { console.error('[AI] arg parse error:', e); }
         const toolResult = await executeToolCall(fn.name, args, userId);
 
         fullMessages.push({ role: 'assistant', content: result, tool_calls: msg.tool_calls });

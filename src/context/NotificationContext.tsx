@@ -59,7 +59,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setNotifications(prev => [n, ...prev]);
       setCurrentBanner(n);
       setShowBanner(true);
-    }).catch(() => {});
+    }).catch((err) => console.error('[NotificationContext] onMessageListener error:', err));
     return () => { cancelled = true; };
   }, []);
 

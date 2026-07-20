@@ -1,18 +1,70 @@
 import * as functions from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
 import axios from 'axios';
 
 admin.initializeApp();
 const db = admin.firestore();
 
+// ─── DDoS Protection ───
+const MAX_PAYLOAD_SIZE = 100_000; // 100KB
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 30; // per IP per window
+
+async function checkRateLimit(ip: string): Promise<boolean> {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const ref = db.collection('rate_limits').doc(`wompi_${ip}`);
+  try {
+    const snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({ count: 1, windowStart: now }, { merge: true });
+      return true;
+    }
+    const data = snap.data()!;
+    if (data.windowStart < windowStart) {
+      await ref.set({ count: 1, windowStart: now }, { merge: true });
+      return true;
+    }
+    if (data.count >= RATE_LIMIT_MAX_REQUESTS) return false;
+    await ref.update({ count: admin.firestore.FieldValue.increment(1) });
+    return true;
+  } catch { return true; } // fail open on DB error
+}
+
 // ─── Wompi Webhook ───
-// Register this URL in Wompi Dashboard → Webhooks
-// POST /wompi-webhook
 export const wompiWebhook = functions.https.onRequest(async (req, res) => {
-  // Verify signature
-  const signature = req.headers['x-wompi-signature'] as string;
+  // === DDoS Protection ===
+  // 1. Method check
+  if (req.method !== 'POST') { res.status(405).send('Method Not Allowed'); return; }
+  
+  // 2. Payload size check
+  const rawBody = JSON.stringify(req.body);
+  if (rawBody.length > MAX_PAYLOAD_SIZE) { res.status(413).send('Payload too large'); return; }
+  
+  // 3. Rate limit by IP
+  const ip = req.headers['x-forwarded-for'] as string || req.ip || 'unknown';
+  const allowed = await checkRateLimit(ip);
+  if (!allowed) { res.status(429).send('Too many requests'); return; }
+  
+  // 4. Basic payload validation
   const event = req.body;
   if (!event?.data?.transaction) { res.status(400).send('Invalid payload'); return; }
+  
+  // 5. Wompi signature verification (if webhook secret is configured)
+  const signature = req.headers['x-wompi-signature'] as string;
+  const webhookSecret = process.env.WOMPI_WEBHOOK_SECRET;
+  if (webhookSecret && signature) {
+    const expectedSig = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+    if (signature !== expectedSig) {
+      functions.logger.warn('Invalid Wompi signature from IP:', ip);
+      res.status(401).send('Invalid signature');
+      return;
+    }
+  }
 
   const tx = event.data.transaction;
   const orderRef = tx.reference;

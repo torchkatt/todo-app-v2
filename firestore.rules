@@ -88,9 +88,11 @@ service cloud.firestore {
     }
 
     // ─── ANALYTICS ─────────────────────────────────────────────────────
+    // Solo autenticados crean eventos. Solo admins leen/borran.
     match /analytics_events/{doc} {
-      allow write: if true;
+      allow create: if isAuthenticated();
       allow read: if isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }

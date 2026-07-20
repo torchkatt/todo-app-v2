@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, ShoppingBag, CreditCard, Shield, Truck, MapPin, Loader2, CheckCircle } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const CheckoutPage: React.FC = () => {
@@ -65,19 +65,17 @@ const CheckoutPage: React.FC = () => {
       await addDoc(collection(db, 'transactions'), transaction);
 
       // Update user impact stats
-      await import('firebase/firestore').then(async ({ updateDoc, doc }) => {
-        const ref = doc(db, 'users', user!.id);
-        const snap = await import('firebase/firestore').then(({ getDoc }) => getDoc(ref));
-        if (snap.exists()) {
-          const u = snap.data();
-          await updateDoc(ref, {
+      const userRef = doc(db, 'users', user!.id);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const u = snap.data();
+        await updateDoc(userRef, {
             'impact.totalTransactions': (u.impact?.totalTransactions || 0) + 1,
             'impact.totalSpent': (u.impact?.totalSpent || 0) + totalPrice,
             'impact.streak.current': (u.impact?.streak?.current || 0) + 1,
             'impact.streak.lastActivity': new Date().toISOString(),
           });
         }
-      });
 
       clearCart();
       setDone(true);

@@ -32,7 +32,7 @@ export const ReloadPrompt: React.FC = () => {
     // Also listen globally
     const handler = () => {
       navigator.serviceWorker?.ready.then((reg) => {
-        reg.update().catch(() => {});
+        reg.update().catch((err) => console.error('[ReloadPrompt] update error:', err));
       });
     };
     window.addEventListener('swUpdated', handler);

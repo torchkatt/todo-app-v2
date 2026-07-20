@@ -350,9 +350,9 @@ describe('PWA — Reload prompt states', () => {
   it('reload triggers skipWaiting and page reload', () => {
     let skipCalled = false;
     let reloadCalled = false;
-    const sw = { waiting: { postMessage: () => { skipCalled = true; } } };
+    const sw = { waiting: { postMessage: (_msg: any) => { skipCalled = true; } } };
     // Simulate reload callback
-    sw.waiting.postMessage({ type: 'SKIP_WAITING' });
+    sw.waiting.postMessage('SKIP_WAITING');
     reloadCalled = true;
     expect(skipCalled).toBe(true);
     expect(reloadCalled).toBe(true);

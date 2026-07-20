@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Sentry from '@sentry/react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
@@ -23,21 +24,8 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[ErrorBoundary]', error, errorInfo);
-    // Log to monitoring
-    try {
-      fetch('https://todo-a44f9.web.app/api/log-error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: error.message,
-          stack: error.stack?.slice(0, 500),
-          componentStack: (errorInfo as any)?.componentStack?.slice(0, 500) || '',
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          userAgent: navigator.userAgent,
-        }),
-      }).catch(() => {});
-    } catch {}
+    // Send to Sentry
+    Sentry.captureException(error, { extra: { componentStack: (errorInfo as any)?.componentStack || '' } });
   }
 
   render() {
