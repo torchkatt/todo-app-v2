@@ -63,7 +63,8 @@ const SellerDashboard: React.FC = () => {
       await addDoc(collection(db, 'listings'), {
         sellerId: seller.id, categoryId: 'cat-otros', type: form.type, title: form.name,
         description: form.description, price: form.price, quantity: 1, deliveryMethods: ['pickup'],
-        tags: [], isActive: true, isFeatured: false, isApproved: true, discountPercent: 0,
+        // isApproved queda en false: requiere revisión de un admin antes de aparecer en el catálogo.
+        tags: [], isActive: true, isFeatured: false, isApproved: false, discountPercent: 0,
         stats: { views: 0, favorites: 0, transactions: 0, rating: 0, ratingCount: 0 },
         createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
       });

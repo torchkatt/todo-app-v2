@@ -33,11 +33,15 @@ service cloud.firestore {
         request.resource.data.role == 'CUSTOMER';
     }
 
+    function unchangedKeys(keys) {
+      return request.resource.data.diff(resource.data).unchangedKeys().hasAll(keys);
+    }
+
     // ─── USERS ─────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if (isOwner(userId) && canCreateUser()) || (isAdmin() && isValidUserData());
-      allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) && 
+      allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'fullName', 'phone', 'avatarUrl', 'address', 'updatedAt'
         ]));
@@ -53,37 +57,59 @@ service cloud.firestore {
     // ─── SELLERS ───────────────────────────────────────────────────────
     match /sellers/{sellerId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAdmin() || isSellerOwner(sellerId);
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // El dueño edita su perfil de tienda; stats/subscription/isVerified/rating solo
+      // los mueve el backend (moderación, facturación, cálculo de reputación).
+      allow update: if isAdmin() || (
+        isSellerOwner(sellerId) &&
+        unchangedKeys(['stats', 'subscription', 'isVerified', 'rating', 'ratingCount', 'ownerId', 'createdAt'])
+      );
       allow delete: if isAdmin();
     }
 
     // ─── LISTINGS ──────────────────────────────────────────────────────
     match /listings/{listingId} {
       allow read: if true;
+      // El vendedor no puede publicar ya "aprobado", destacado, ni fijar sus propias stats.
       allow create: if isAuthenticated() &&
-        isSellerOwner(request.resource.data.sellerId);
-      allow update: if isAdmin() || isSellerOwner(resource.data.sellerId);
+        isSellerOwner(request.resource.data.sellerId) &&
+        request.resource.data.isApproved == false &&
+        request.resource.data.isFeatured == false &&
+        request.resource.data.stats.views == 0 &&
+        request.resource.data.stats.favorites == 0 &&
+        request.resource.data.stats.transactions == 0;
+      allow update: if isAdmin() || (
+        isSellerOwner(resource.data.sellerId) &&
+        unchangedKeys(['isApproved', 'isFeatured', 'stats', 'sellerId', 'createdAt'])
+      );
       allow delete: if isAdmin() || isSellerOwner(resource.data.sellerId);
     }
 
     // ─── TRANSACTIONS ──────────────────────────────────────────────────
+    // Toda la creación y confirmación de pago vive en Cloud Functions
+    // (createTransaction / wompiWebhook) — el cliente nunca origina montos.
     match /transactions/{transactionId} {
       allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.buyerId == request.auth.uid) ||
         (isAuthenticated() && resource.data.sellerId == request.auth.uid);
-      allow create: if false;  // Solo via Cloud Function
+      allow create: if false;
+      // El comprador solo puede cancelar mientras el pago está pendiente, y solo
+      // puede tocar 'status' y 'updatedAt' — nunca montos ni datos de pago.
       allow update: if isAdmin() ||
         (isAuthenticated() && resource.data.buyerId == request.auth.uid &&
-         resource.data.status == 'PENDING' &&
-         request.resource.data.status == 'CANCELLED');
+         resource.data.status == 'PENDING_PAYMENT' &&
+         request.resource.data.status == 'CANCELLED' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']));
       allow delete: if isAdmin();
     }
 
     // ─── NOTIFICATIONS ─────────────────────────────────────────────────
     match /notifications/{doc} {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // El usuario solo puede marcar como leída su propia notificación.
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
@@ -93,6 +119,26 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       allow read: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // ─── FINANZAS / IA — SOLO BACKEND (Admin SDK) ─────────────────────
+    match /processed_events/{doc} {
+      allow read, write: if false;
+    }
+    match /rate_limits/{doc} {
+      allow read, write: if false;
+    }
+    match /audit_logs/{doc} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /ai_usage/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if false;
+    }
+    match /ai_strikes/{doc} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
   }
 }

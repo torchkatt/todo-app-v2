@@ -1,0 +1,51 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['SUPER_ADMIN', 'ADMIN'];
+    }
+
+    function isSellerOwner(sellerId) {
+      return isAuthenticated() &&
+        firestore.get(/databases/(default)/documents/sellers/$(sellerId)).data.ownerId == request.auth.uid;
+    }
+
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+    }
+
+    // Avatars: el usuario sube el suyo propio, con límite de tamaño y tipo.
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if (isOwner(userId) || isAdmin()) && isValidImage();
+    }
+
+    // Imágenes de listados: solo el dueño del seller, con límite de tamaño y tipo.
+    match /listings/{sellerId}/{listingId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if (isSellerOwner(sellerId) || isAdmin()) && isValidImage();
+    }
+
+    // Admin uploads
+    match /admin/{allPaths=**} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Default: deny all writes, allow reads only for authenticated
+    match /{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+  }
+}

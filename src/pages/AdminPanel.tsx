@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Users, Package, TrendingUp, DollarSign, ShoppingBag, Loader2, Shield, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Users, Package, TrendingUp, DollarSign, ShoppingBag, Loader2, Shield, AlertTriangle, Check, X } from 'lucide-react';
 import { UserRole } from '../types';
 
 const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [stats, setStats] = useState<any>({});
+  const [pendingListings, setPendingListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [moderating, setModerating] = useState<string | null>(null);
+
+  const loadPendingListings = async () => {
+    const snap = await getDocs(query(collection(db, 'listings'), where('isApproved', '==', false), limit(20)));
+    setPendingListings(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+  };
 
   useEffect(() => {
     if (!user || user.role !== UserRole.SUPER_ADMIN) {
@@ -42,10 +49,20 @@ const AdminPanel: React.FC = () => {
           totalRevenue,
           recentTransactions: recentTxs,
         });
+        await loadPendingListings();
       } catch (e) { console.error('Admin panel error', e); }
       setLoading(false);
     })();
   }, [user]);
+
+  const moderateListing = async (listingId: string, approve: boolean) => {
+    setModerating(listingId);
+    try {
+      await updateDoc(doc(db, 'listings', listingId), approve ? { isApproved: true } : { isApproved: false, isActive: false });
+      setPendingListings(prev => prev.filter(l => l.id !== listingId));
+    } catch (e) { console.error('moderateListing error', e); }
+    setModerating(null);
+  };
 
   if (loading) return <div className="min-h-screen bg-brand-bg flex items-center justify-center"><Loader2 size={28} className="animate-spin text-purple-600" /></div>;
 
@@ -108,15 +125,44 @@ const AdminPanel: React.FC = () => {
           )}
         </div>
 
+        {/* Pending listings moderation */}
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-extrabold text-text-primary mb-4 flex items-center gap-2">
+            <Package size={16} className="text-purple-600" /> Listados pendientes de aprobación
+            {pendingListings.length > 0 && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">{pendingListings.length}</span>}
+          </h3>
+          {pendingListings.length > 0 ? (
+            <div className="space-y-2">
+              {pendingListings.map(l => (
+                <div key={l.id} className="flex items-center gap-3 p-2.5 hover:bg-gray-50 rounded-lg transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-text-primary truncate">{l.title}</div>
+                    <div className="text-[11px] text-text-muted">${(l.price || 0).toLocaleString('es-CO')} · {l.sellerId}</div>
+                  </div>
+                  <button disabled={moderating === l.id} onClick={() => moderateListing(l.id, true)}
+                    className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50" title="Aprobar">
+                    <Check size={14} />
+                  </button>
+                  <button disabled={moderating === l.id} onClick={() => moderateListing(l.id, false)}
+                    className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50" title="Rechazar">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-text-muted text-center py-4">No hay listados pendientes</p>
+          )}
+        </div>
+
         {/* Quick actions */}
         <div className="bg-white rounded-xl border border-border p-5">
           <h3 className="text-sm font-extrabold text-text-primary mb-3">Acciones rápidas</h3>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => navigate('/admin/users')} className="p-3 bg-purple-50 rounded-xl text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors">👥 Gestionar usuarios</button>
-            <button onClick={() => navigate('/admin/listings')} className="p-3 bg-blue-50 rounded-xl text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors">📦 Moderar listados</button>
             <button onClick={() => navigate('/admin/sellers')} className="p-3 bg-emerald-50 rounded-xl text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors">🏪 Ver vendedores</button>
-            <button onClick={() => navigate('/analytics')} className="p-3 bg-amber-50 rounded-xl text-xs font-bold text-amber-700 hover:bg-amber-100 transition-colors">📊 Analytics</button>
           </div>
+          <p className="text-[10px] text-text-muted mt-2">La moderación de listados ya está disponible arriba. Gestión de usuarios y vendedores: próximamente.</p>
         </div>
 
         {/* System status */}
