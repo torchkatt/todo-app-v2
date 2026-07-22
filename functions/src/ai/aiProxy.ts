@@ -2,14 +2,13 @@ import axios from 'axios';
 import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
-import { DEEPSEEK_API_KEY, SENTRY_DSN, deepseekConfigured } from '../config';
+import { DEEPSEEK_API_KEY, DEEPSEEK_MODEL, SENTRY_DSN, deepseekConfigured } from '../config';
 import { checkMessage } from './security';
 import { checkAndIncrementUsage, resolveTier } from './usage';
 import { TODO_TOOLS } from './tools';
 import { captureError } from '../lib/sentry';
 
 const API_URL = 'https://api.deepseek.com/chat/completions';
-const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_TOKENS = 1000;
 
 const SYSTEM_PROMPT = `Eres el asistente IA de **Todo** — un marketplace general de Colombia donde se puede comprar productos, contratar servicios, descargar contenido digital y más.
@@ -94,7 +93,7 @@ export const aiChat = onCall({ secrets: [DEEPSEEK_API_KEY, SENTRY_DSN] }, async 
     const response = await axios.post(
       API_URL,
       {
-        model: DEFAULT_MODEL,
+        model: DEEPSEEK_MODEL.value() || 'deepseek-v4-flash',
         messages: fullMessages,
         tools: TODO_TOOLS,
         tool_choice: 'auto',

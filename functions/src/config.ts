@@ -1,4 +1,4 @@
-import { defineSecret, defineInt, defineBoolean } from 'firebase-functions/params';
+import { defineSecret, defineInt, defineBoolean, defineString } from 'firebase-functions/params';
 
 // ─── Secretos (Secret Manager en prod; functions/.env en emulador) ───
 export const WOMPI_PRIVATE_KEY = defineSecret('WOMPI_PRIVATE_KEY');
@@ -8,6 +8,7 @@ export const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 export const SENTRY_DSN = defineSecret('SENTRY_DSN');
 
 // ─── Parámetros de negocio ───
+export const DEEPSEEK_MODEL = defineString('DEEPSEEK_MODEL', { default: 'deepseek-v4-flash' });
 export const PLATFORM_FEE_BPS = defineInt('PLATFORM_FEE_BPS', { default: 500 }); // 5%
 export const IVA_BPS = defineInt('IVA_BPS', { default: 1900 }); // 19%
 export const EMAIL_ENABLED = defineBoolean('EMAIL_ENABLED', { default: false });
