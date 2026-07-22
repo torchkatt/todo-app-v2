@@ -1,46 +1,64 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-bg: #faf9f7;
-  --color-brand-primary: #7c3aed;
-  --color-brand-dark: #5b21b6;
-  --color-accent: #f59e0b;
+  --color-brand-bg: #FAF8F5;
+  --color-brand-primary: #4F46E5;
+  --color-brand-dark: #3730A3;
+  --color-accent: #D97706;
   --color-surface: #ffffff;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
-  --color-border: #e2e8f0;
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-text-primary: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-border: #E2E8F0;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ─── Dark Mode ─── */
 .dark {
-  --color-brand-bg: #0f172a;
-  --color-brand-primary: #a78bfa;
-  --color-brand-dark: #8b5cf6;
-  --color-surface: #1e293b;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
+  --color-brand-bg: #0F172A;
+  --color-brand-primary: #818CF8;
+  --color-brand-dark: #6366F1;
+  --color-surface: #1E293B;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
   --color-border: #334155;
 }
 
-.dark body { background: #0f172a; color: #f1f5f9; }
-.dark .bg-white { background-color: #1e293b; }
-.dark .bg-gray-50 { background-color: #1e293b; }
+.dark body { background: #0F172A; color: #F8FAFC; }
+.dark .bg-white { background-color: #1E293B; }
+.dark .bg-gray-50 { background-color: #1E293B; }
 .dark .bg-gray-100 { background-color: #334155; }
-.dark .text-gray-900 { color: #f1f5f9; }
-.dark .text-gray-500 { color: #94a3b8; }
+.dark .text-gray-900 { color: #F8FAFC; }
+.dark .text-gray-500 { color: #94A3B8; }
 .dark .border-border { border-color: #334155; }
 .dark .shadow-md, .dark .shadow-lg, .dark .shadow-xl { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3); }
 .dark .hover\:bg-gray-100:hover { background-color: #334155; }
-.dark .hover\:bg-gray-50:hover { background-color: #1e293b; }
-.dark .hover\:border-purple-200:hover { border-color: #7c3aed; }
+.dark .hover\:bg-gray-50:hover { background-color: #1E293B; }
+.dark .hover\:border-purple-200:hover { border-color: #6366F1; }
 .dark .from-gray-100 { --tw-gradient-from: #334155; }
-.dark .to-gray-200 { --tw-gradient-to: #1e293b; }
+.dark .to-gray-200 { --tw-gradient-to: #1E293B; }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+.active-bounce { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
+.active-bounce:active { transform: scale(0.96); }
+
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-up { animation: fadeUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.dark .skeleton-shimmer {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
