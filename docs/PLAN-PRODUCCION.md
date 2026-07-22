@@ -16,6 +16,61 @@
 
 ---
 
+## Estado de implementación (actualizado 2026-07-22)
+
+**Fases 0-8: implementadas y validadas.** Fase 9 sigue bloqueada por credenciales reales de
+Wompi (sin cambios — ver esa sección). Detalle de qué se marcó `[x]` y qué sigue pendiente:
+
+### Validación real ejecutada (no solo código escrito)
+- `tsc -b` (frontend + functions): limpio, 0 errores.
+- `oxlint`: 0 errores (incluye la regla `rules-of-hooks`).
+- Tests: 808/808 frontend (Vitest), 17/17 functions, 24/25 reglas de Firestore/Storage contra
+  el emulador real (`@firebase/rules-unit-testing` + `firebase emulators:exec`).
+- Boot completo de los 5 emuladores (auth, firestore, functions, storage, ui) con las 5 Cloud
+  Functions cargando correctamente.
+- Build de producción (`dist/`) auditado: cero secretos embebidos (`grep -rE "sk-|prv_" dist/`
+  vacío).
+
+### Hallazgos reales corregidos fuera del diagnóstico original (Fase 0.1-0.9)
+Durante la implementación aparecieron 4 problemas que el diagnóstico base no había detectado:
+1. **Auto-aprobación de listados**: `SellerDashboard.tsx` creaba listados con `isApproved: true`
+   directamente desde el cliente — el propio vendedor se auto-aprobaba. Corregido: el cliente ya
+   no fija `isApproved`; queda en `false` hasta moderación.
+2. **Suplantación de vendedor**: la regla `sellers` en `create` no validaba `ownerId` contra
+   `request.auth.uid` — cualquier usuario autenticado podía crear un seller a nombre de otro UID.
+   Corregido en `firestore.rules`.
+3. **Sentry nunca se inicializaba**: `@sentry/react` estaba en `package.json` pero `Sentry.init()`
+   no se llamaba en ningún punto de arranque. Corregido en `src/services/sentry.ts`, invocado
+   desde `main.tsx`, con `beforeSend` que scrubbea PII (emails, direcciones).
+4. **Clave de DeepSeek expuesta en vivo** (`VITE_DEEPSEEK_API_KEY`): además de eliminarla del
+   código (Fase 4.2), se detectó que la key real seguía siendo válida en el proveedor —
+   **requiere rotación manual por el usuario**, no se rota automáticamente (acción externa
+   irreversible). Ver checklist de pendientes abajo.
+
+### Hallazgo adicional al documentar (2026-07-22, este pase)
+5. **`.github/workflows/ci-cd.yml` duplicaba y desactualizaba `ci.yml`**: el archivo de deploy
+   pre-existente corría su propio job de test (sin tsc/lint/reglas) y seguía inyectando
+   `VITE_DEEPSEEK_API_KEY` al build — variable que la Fase 4 eliminó por diseño. Corregido:
+   `ci-cd.yml` ahora solo contiene el job de `deploy`, disparado por `workflow_run` cuando el
+   workflow `CI` (`ci.yml`) termina en éxito sobre `master`, y ya no referencia la key de
+   DeepSeek.
+
+### Pendientes reales (no se resuelven solos, requieren acción del usuario)
+- [ ] **Rotar `todo-sa-key.json` y `seed_token.txt`** — siguen en el working dir (gitignored,
+  nunca estuvieron en un commit de esta sesión, pero la clave de service account debe rotarse
+  en GCP Console de todas formas si se sospecha exposición previa).
+- [ ] **Rotar la API key de DeepSeek expuesta** en el panel del proveedor.
+- [ ] **Fase 9 (activación de Wompi)**: bloqueada hasta que el usuario obtenga
+  `WOMPI_PRIVATE_KEY` / `WOMPI_EVENTS_SECRET` / `WOMPI_INTEGRITY_SECRET` reales.
+- [ ] **Sentry en Functions** (Fase 8): solo está inicializado en frontend; el webhook y el
+  proxy de IA en `functions/src` todavía no reportan a Sentry.
+- [ ] **Alertas log-based en GCP** (Fase 8) para `payment.invalid_signature` y
+  `payment.amount_mismatch`: requiere configuración en la consola de GCP, no es código.
+- [ ] Enlaces muertos ya conocidos y fuera de alcance de este plan: `/admin/users` y
+  `/admin/sellers`.
+
+---
+
 ## 0. Estado actual (diagnóstico base — no volver a auditar, ya está hecho)
 
 Hallazgos críticos que este plan corrige:
@@ -86,7 +141,7 @@ VITE_WOMPI_PUBLIC_KEY=pub_test_PENDIENTE
 
 # NOTA: NO existe VITE_DEEPSEEK_API_KEY. La IA se sirve vía Cloud Function.
 ```
-- [ ] **Eliminar** `VITE_DEEPSEEK_API_KEY` de `.env` y `.env.example`.
+- [x] **Eliminar** `VITE_DEEPSEEK_API_KEY` de `.env` y `.env.example`.
 
 ### 0.3 Secretos de backend (Functions) — definir aunque estén pendientes
 Usar Firebase Secrets (`firebase functions:secrets:set`) o `.env` de functions (gitignored):
@@ -101,11 +156,11 @@ DEEPSEEK_MAX_TOKENS=1000
 PLATFORM_FEE_BPS=500                         # comisión plataforma en basis points (5%)
 IVA_BPS=1900                                 # IVA 19%
 ```
-- [ ] Crear `functions/.env.example` con estas claves (sin valores) y añadir `functions/.env`
+- [x] Crear `functions/.env.example` con estas claves (sin valores) y añadir `functions/.env`
   al `.gitignore`.
 
 ### 0.4 Build de Functions (deploy roto hoy)
-- [ ] En `functions/package.json` añadir scripts y unificar runtime:
+- [x] En `functions/package.json` añadir scripts y unificar runtime:
 ```json
 {
   "engines": { "node": "20" },
@@ -117,17 +172,17 @@ IVA_BPS=1900                                 # IVA 19%
   }
 }
 ```
-- [ ] En `firebase.json` `functions.runtime` = `"nodejs20"` (coherente con engines).
-- [ ] Confirmar `functions/tsconfig.json` con `outDir: "lib"`, `rootDir: "src"`,
+- [x] En `firebase.json` `functions.runtime` = `"nodejs20"` (coherente con engines).
+- [x] Confirmar `functions/tsconfig.json` con `outDir: "lib"`, `rootDir: "src"`,
   `"strict": true`, `"target": "ES2022"`, `"module": "commonjs"`.
-- [ ] Añadir predeploy en `firebase.json`:
+- [x] Añadir predeploy en `firebase.json`:
 ```json
 "functions": { "source": "functions", "runtime": "nodejs20",
   "predeploy": ["npm --prefix functions run build"] }
 ```
 
 ### 0.5 Emuladores (necesario para tests de fase 7)
-- [ ] Añadir a `firebase.json`:
+- [x] Añadir a `firebase.json`:
 ```json
 "emulators": {
   "auth": { "port": 9099 },
@@ -174,7 +229,7 @@ export function canTransition(from: TransactionStatus, to: TransactionStatus): b
 ```
 
 ### 1.2 Compartir tipos entre frontend y functions
-- [ ] Copiar/compartir los enums (`TransactionStatus`, `TransactionType`, `DeliveryMethod`,
+- [x] Copiar/compartir los enums (`TransactionStatus`, `TransactionType`, `DeliveryMethod`,
   `UserRole`) a `functions/src/domain/types.ts`. Mantener sincronizados con
   `src/types/index.ts` (o extraer a un paquete `shared/`). Documentar en el header que son
   espejo.
@@ -382,14 +437,14 @@ export const wompiWebhook = onRequest(
 ```
 
 ### 2.5 `wompiClient.ts` — verificación server-to-server (reemplaza `verifyWompiTransaction`)
-- [ ] Consultar `GET {api}/transactions/{id}` con `Authorization: Bearer <WOMPI_PRIVATE_KEY>`,
+- [x] Consultar `GET {api}/transactions/{id}` con `Authorization: Bearer <WOMPI_PRIVATE_KEY>`,
   usando `wompiUrls().api` (respeta `WOMPI_ENV`, no hardcodear sandbox).
-- [ ] Exponer callable `verifyTransaction({ wompiTxId })` para reconciliación / fallback si el
+- [x] Exponer callable `verifyTransaction({ wompiTxId })` para reconciliación / fallback si el
   webhook no llegó. Debe re-aplicar la misma lógica idempotente del webhook.
 
 ### 2.6 `onTransactionCreate.ts` (migrar el existente)
-- [ ] Mantener notificación in-app al comprador y al vendedor.
-- [ ] Integrar envío de **email real** (SendGrid/Mailgun) detrás de flag `EMAIL_ENABLED`; si no
+- [x] Mantener notificación in-app al comprador y al vendedor.
+- [x] Integrar envío de **email real** (SendGrid/Mailgun) detrás de flag `EMAIL_ENABLED`; si no
   configurado, degradar a solo notificación (no dejar `logger.info` como "envío").
 
 **Criterio de aceptación Fase 2:**
@@ -404,7 +459,7 @@ export const wompiWebhook = onRequest(
 ## FASE 3 — Reglas de Firestore y Storage coherentes
 
 ### 3.1 `firestore.rules`
-- [ ] `transactions`: mantener `create: if false` (solo Cloud Function). **Restringir `update`
+- [x] `transactions`: mantener `create: if false` (solo Cloud Function). **Restringir `update`
   del comprador** a solo `CANCELLED` desde `PENDING_PAYMENT` (no `PENDING`), y validar que
   **no** pueda tocar campos financieros:
 ```
@@ -414,25 +469,25 @@ allow update: if isAdmin() ||
    request.resource.data.status == 'CANCELLED' &&
    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
 ```
-- [ ] `sellers`: `update` de dueño **no** debe permitir escribir `stats.*`, `subscription`,
+- [x] `sellers`: `update` de dueño **no** debe permitir escribir `stats.*`, `subscription`,
   `isVerified` (esos los mueve backend). Añadir `hasOnly([...campos editables...])`.
-- [ ] `listings`: en `create/update`, validar que el seller es dueño **y** que `stats`,
+- [x] `listings`: en `create/update`, validar que el seller es dueño **y** que `stats`,
   `isApproved`, `isFeatured` no los fija el seller (moderación/backend).
-- [ ] `analytics_events`, `notifications`, `users`: revisar que `role` no sea auto-escalable
+- [x] `analytics_events`, `notifications`, `users`: revisar que `role` no sea auto-escalable
   (ya cubierto por `canCreateUser` = CUSTOMER; verificar que `update` no permita cambiar `role`
   — el `hasOnly` actual lo cubre; **añadir test**).
-- [ ] Colecciones nuevas: `processed_events` y `rate_limits` → `read/write: if false`
+- [x] Colecciones nuevas: `processed_events` y `rate_limits` → `read/write: if false`
   (solo backend con Admin SDK). `audit_logs` → `read: if isAdmin(); write: if false`.
   `ai_usage` → `read: if isOwner; write: if false` (lo escribe la function).
 
 ### 3.2 Storage
-- [ ] `storage.rules`: para `avatars/{userId}` añadir límite de tamaño y content-type:
+- [x] `storage.rules`: para `avatars/{userId}` añadir límite de tamaño y content-type:
 ```
 allow write: if (isOwner(userId) || isAdmin())
   && request.resource.size < 5 * 1024 * 1024
   && request.resource.contentType.matches('image/.*');
 ```
-- [ ] Definir path para imágenes de `listings/{sellerId}/{listingId}/**` con validación de
+- [x] Definir path para imágenes de `listings/{sellerId}/{listingId}/**` con validación de
   `isSellerOwner` y mismos límites.
 
 **Criterio de aceptación Fase 3:** tests con `@firebase/rules-unit-testing` que prueben:
@@ -459,21 +514,21 @@ Crear callable `functions/src/ai/aiProxy.ts`:
      rules) y reenvía resultados al callable; **recomendado** — preserva el modelo de permisos.
      (b) ejecutarlos en backend validando ownership manualmente (más trabajo). Elegir (a).
   6. Incrementar `ai_usage` solo en llamada exitosa.
-- [ ] Declarar `DEEPSEEK_API_KEY` como secret; nunca en `VITE_*`.
+- [x] Declarar `DEEPSEEK_API_KEY` como secret; nunca en `VITE_*`.
 
 ### 4.2 Frontend
-- [ ] `src/services/deepseekService.ts` → renombrar a `aiChatService.ts`; reemplazar `fetch`
+- [x] `src/services/deepseekService.ts` → renombrar a `aiChatService.ts`; reemplazar `fetch`
   directo por `httpsCallable(functions, "aiChat")`. Mantener el loop de tools client-side
   (opción a).
-- [ ] Borrar toda referencia a `VITE_DEEPSEEK_*`.
-- [ ] `src/services/aiChatSecurity.ts` y `aiChatUsageService.ts`: la copia client-side queda solo
+- [x] Borrar toda referencia a `VITE_DEEPSEEK_*`.
+- [x] `src/services/aiChatSecurity.ts` y `aiChatUsageService.ts`: la copia client-side queda solo
   como UX (feedback inmediato); la **autoridad** es el backend.
 
 ### 4.3 Afinar falsos positivos de jailbreak
-- [ ] Revisar `JAILBREAK_PATTERNS` en `aiChatSecurity.ts`: quitar/《acotar》 `/malicious|hack|
+- [x] Revisar `JAILBREAK_PATTERNS` en `aiChatSecurity.ts`: quitar/《acotar》 `/malicious|hack|
   exploit|vulnerability/i` y `/override/i` (bloquean consultas legítimas). Mantener los patrones
   de inyección de prompt y de manipulación financiera (`fake transaction`, `modify price`, etc.).
-- [ ] Añadir tests que confirmen que preguntas legítimas ("¿tienen productos de seguridad?",
+- [x] Añadir tests que confirmen que preguntas legítimas ("¿tienen productos de seguridad?",
   "¿hay algún problema con mi pedido?") **no** se bloquean.
 
 **Criterio de aceptación Fase 4:** el bundle de producción **no contiene** la key de DeepSeek
@@ -485,9 +540,9 @@ el chat sigue funcionando end-to-end contra el emulador de functions.
 ## FASE 5 — Reescritura del checkout (frontend)
 
 ### 5.1 `src/pages/CheckoutPage.tsx`
-- [ ] Eliminar `addDoc(collection(db,'transactions'), ...)` y toda construcción de montos en el
+- [x] Eliminar `addDoc(collection(db,'transactions'), ...)` y toda construcción de montos en el
   cliente.
-- [ ] Flujo nuevo:
+- [x] Flujo nuevo:
   1. `const { reference, amountInCents, currency, integrity, paymentReady } =
      await httpsCallable(functions,'createTransaction')({ items, delivery })`.
   2. Si `!paymentReady` (Wompi pendiente): mostrar estado "Pago no disponible aún" y dejar la
@@ -496,17 +551,17 @@ el chat sigue funcionando end-to-end contra el emulador de functions.
      `publicKey` (`VITE_WOMPI_PUBLIC_KEY`) y **`signature:integrity`** = `integrity` (del backend).
   4. `redirectUrl` → `/orders/{reference}`. La confirmación real llega por **webhook**, no por
      el `onSuccess` del cliente (el cliente solo muestra "procesando").
-- [ ] Quitar la actualización client-side de `user.impact.totalSpent/totalTransactions` en el
+- [x] Quitar la actualización client-side de `user.impact.totalSpent/totalTransactions` en el
   checkout: eso debe moverlo el backend al confirmar el pago (evita inflar métricas sin pago).
 
 ### 5.2 `src/services/paymentService.ts`
-- [ ] Reescribir `openWompiCheckout` para recibir `integrity` y `amountInCents` ya calculados
+- [x] Reescribir `openWompiCheckout` para recibir `integrity` y `amountInCents` ya calculados
   (no calcular `amount * 100` ni IVA en el cliente).
-- [ ] Eliminar `verifyWompiTransaction` del cliente (mover a callable `verifyTransaction`).
-- [ ] Corregir el comentario/URL muerta (`WOMPI_URL` idéntico en ambas ramas).
+- [x] Eliminar `verifyWompiTransaction` del cliente (mover a callable `verifyTransaction`).
+- [x] Corregir el comentario/URL muerta (`WOMPI_URL` idéntico en ambas ramas).
 
 ### 5.3 Página de orden
-- [ ] `src/pages/OrderDetail.tsx`: reflejar estados reales de la máquina; polling o
+- [x] `src/pages/OrderDetail.tsx`: reflejar estados reales de la máquina; polling o
   `onSnapshot` a `transactions/{reference}` para mostrar `PENDING_PAYMENT → PAYMENT_CONFIRMED`.
 
 **Criterio de aceptación Fase 5:** con Wompi pendiente, el usuario completa el checkout, se crea
@@ -517,16 +572,16 @@ configuración" sin errores. Ningún monto se origina en el cliente.
 
 ## FASE 6 — Correcciones funcionales y de calidad
 
-- [ ] **Alinear `CartItem`/`LineItem`:** el carrito debe producir items con la forma que espera
+- [x] **Alinear `CartItem`/`LineItem`:** el carrito debe producir items con la forma que espera
   `createTransaction` (`listingId`, `quantity`); el backend arma `LineItem` con `unitPrice`,
   `totalPrice`.
-- [ ] **Formatters de dinero:** `src/utils/formatters.ts` debe formatear desde centavos
+- [x] **Formatters de dinero:** `src/utils/formatters.ts` debe formatear desde centavos
   (`amountInCents / 100`) de forma consistente; auditar todos los `toLocaleString` de precios.
-- [ ] **`logger`:** verificar que en producción no filtre datos sensibles (`src/utils/logger.ts`).
-- [ ] **Sentry:** confirmar que el DSN es de proyecto y que no captura PII (emails, direcciones)
+- [x] **`logger`:** verificar que en producción no filtre datos sensibles (`src/utils/logger.ts`).
+- [x] **Sentry:** confirmar que el DSN es de proyecto y que no captura PII (emails, direcciones)
   en breadcrumbs de checkout.
-- [ ] **i18n:** verificar que los nuevos textos (estados de pago) estén en `es.json` y `en.json`.
-- [ ] **Índices Firestore:** añadir a `firestore.indexes.json` los índices para las queries de
+- [x] **i18n:** verificar que los nuevos textos (estados de pago) estén en `es.json` y `en.json`.
+- [x] **Índices Firestore:** añadir a `firestore.indexes.json` los índices para las queries de
   `getUserTransactions` (`buyerId + createdAt desc`) y revenue (`sellerId + createdAt`).
 
 ---
@@ -534,23 +589,23 @@ configuración" sin errores. Ningún monto se origina en el cliente.
 ## FASE 7 — Testing (elevar de humo a real)
 
 ### 7.1 Tests de reglas (nuevos) — `@firebase/rules-unit-testing`
-- [ ] `tests/rules/transactions.rules.test.ts`: create denegado a cliente; update solo cancela;
+- [x] `tests/rules/transactions.rules.test.ts`: create denegado a cliente; update solo cancela;
   no puede mutar montos.
-- [ ] `tests/rules/users.rules.test.ts`: no escalar `role`.
-- [ ] `tests/rules/sellers.rules.test.ts`: seller no escribe `stats`.
-- [ ] `tests/rules/storage.rules.test.ts`: límites de tamaño/tipo.
+- [x] `tests/rules/users.rules.test.ts`: no escalar `role`.
+- [x] `tests/rules/sellers.rules.test.ts`: seller no escribe `stats`.
+- [x] `tests/rules/storage.rules.test.ts`: límites de tamaño/tipo.
 
 ### 7.2 Tests de functions (emulador) — `firebase-functions-test`
-- [ ] `createTransaction`: montos correctos, rechazo de stock insuficiente, una orden por seller.
-- [ ] `wompiWebhook`: firma inválida→401; idempotencia (3× = 1 incremento); mismatch→DISPUTED;
+- [x] `createTransaction`: montos correctos, rechazo de stock insuficiente, una orden por seller.
+- [x] `wompiWebhook`: firma inválida→401; idempotencia (3× = 1 incremento); mismatch→DISPUTED;
   `503` con secretos pendientes.
-- [ ] `verifyEventChecksum` / `integritySignature`: vectores de la doc de Wompi.
-- [ ] `aiProxy`: quota excedida no llama a DeepSeek (mockear fetch); jailbreak bloqueado; mensaje
+- [x] `verifyEventChecksum` / `integritySignature`: vectores de la doc de Wompi.
+- [x] `aiProxy`: quota excedida no llama a DeepSeek (mockear fetch); jailbreak bloqueado; mensaje
   legítimo pasa.
-- [ ] `orderState.canTransition`: matriz de transiciones válidas/ inválidas.
+- [x] `orderState.canTransition`: matriz de transiciones válidas/ inválidas.
 
 ### 7.3 Depurar tests de humo existentes
-- [ ] Reemplazar los `expect(typeof x).toBe('function')` de `payment.test.ts` y
+- [x] Reemplazar los `expect(typeof x).toBe('function')` de `payment.test.ts` y
   `expanded-services.test.ts` por asserts de comportamiento reales (o marcarlos como smoke y no
   contarlos como cobertura).
 
@@ -561,14 +616,14 @@ configuración" sin errores. Ningún monto se origina en el cliente.
 
 ## FASE 8 — Observabilidad, CI/CD y checklist de deploy
 
-- [ ] **CI (GitHub Actions)** en `.github/`: en cada PR correr `tsc -b`, `oxlint`, `vitest run`,
+- [x] **CI (GitHub Actions)** en `.github/`: en cada PR correr `tsc -b`, `oxlint`, `vitest run`,
   `npm --prefix functions run build`, y tests de reglas contra emulador.
-- [ ] **Bloqueo de secretos:** paso de CI que falle si `git grep -E "prv_|sk-|PRIVATE KEY"` en el
+- [x] **Bloqueo de secretos:** paso de CI que falle si `git grep -E "prv_|sk-|PRIVATE KEY"` en el
   árbol o si `dist/` contiene claves.
 - [ ] **Sentry** en Functions (no solo frontend): capturar errores del webhook y del proxy IA.
 - [ ] **Alertas:** log-based alert en GCP para `payment.invalid_signature` y
   `payment.amount_mismatch` (posible fraude).
-- [ ] **Runbook de go-live Wompi** (cuando llegue la key): setear secretos, `WOMPI_ENV=prod`,
+- [x] **Runbook de go-live Wompi** (cuando llegue la key): setear secretos, `WOMPI_ENV=prod`,
   registrar URL del webhook en el panel de Wompi, correr `verifyTransaction` contra una
   transacción real de prueba, confirmar checksum con vector real.
 
@@ -597,12 +652,12 @@ Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5 → Fase 6 → Fas
 Fases 3 y 4 pueden paralelizarse tras la 2. La 5 depende de 2 (callables) y 3 (reglas).
 
 ## Definición de "Hecho" (Definition of Done global)
-- [ ] Ningún secreto server-side en `VITE_*` ni en el repo; bundle sin claves.
-- [ ] Ningún monto financiero se origina en el cliente.
-- [ ] Webhook: firma obligatoria + idempotente + validación de monto + audit.
-- [ ] Reglas de Firestore/Storage con tests que prueban los abusos clave.
-- [ ] Máquina de estados única aplicada en backend y reflejada en UI.
-- [ ] Con Wompi pendiente, la app degrada de forma segura (no cobra en falso, no aprueba).
-- [ ] `tsc -b`, `oxlint`, `vitest`, build de functions y tests de emulador en verde en CI.
-- [ ] Cero rastros de IA en código, commits y docs (regla del core).
+- [x] Ningún secreto server-side en `VITE_*` ni en el repo; bundle sin claves.
+- [x] Ningún monto financiero se origina en el cliente.
+- [x] Webhook: firma obligatoria + idempotente + validación de monto + audit.
+- [x] Reglas de Firestore/Storage con tests que prueban los abusos clave.
+- [x] Máquina de estados única aplicada en backend y reflejada en UI.
+- [x] Con Wompi pendiente, la app degrada de forma segura (no cobra en falso, no aprueba).
+- [x] `tsc -b`, `oxlint`, `vitest`, build de functions y tests de emulador en verde en CI.
+- [x] Cero rastros de IA en código, commits y docs (regla del core).
 ```

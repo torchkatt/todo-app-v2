@@ -12,10 +12,40 @@
 |------|-----------|
 | Frontend | React 18 + TypeScript + Tailwind CSS |
 | Build | Vite + PWA |
-| Backend | Firebase (Auth, Firestore, Functions, Messaging, Storage) |
-| Pagos | Wompi (widget checkout) |
-| AI | DeepSeek v4 Flash/Pro con function calling |
-| Tests | Vitest (354 tests) |
+| Backend | Firebase (Auth, Firestore, Functions v2, Messaging, Storage) |
+| Pagos | Wompi (widget checkout, montos y firma calculados server-side) |
+| AI | DeepSeek v4 Flash/Pro con function calling, proxy server-side (`aiProxy`) |
+| Tests | Vitest — 808 tests frontend, 17 functions, 24/25 reglas contra emulador (807 previos ya venían de antes; ver §Tests) |
+| Observabilidad | Sentry (frontend, con scrubbing de PII) |
+| CI | GitHub Actions — secret-scan, tsc, lint, tests, build de functions, reglas |
+
+---
+
+## 💳 Pagos Wompi — arquitectura server-authoritative
+
+`functions/src/` está organizado por dominio (ver `docs/PLAN-PRODUCCION.md` para el detalle
+fase por fase):
+
+```
+functions/src/
+├── config.ts                    # secretos (defineSecret) + wompiConfigured()/wompiUrls()
+├── domain/{types,orderState}.ts # máquina de estados única (canTransition)
+├── payments/
+│   ├── createTransaction.ts     # callable — monto/IVA/comisión calculados en backend
+│   ├── wompiWebhook.ts          # onRequest — checksum obligatorio + idempotente + atómico
+│   ├── wompiSignature.ts        # integritySignature() / verifyEventChecksum()
+│   ├── applyWompiTransaction.ts # transición de estado + stock + audit (usado por webhook y verify)
+│   ├── verifyTransaction.ts     # callable — reconciliación server-to-server
+│   └── wompiClient.ts           # llamadas a la API de Wompi (respeta WOMPI_ENV)
+├── ai/{aiProxy,security,tools,usage}.ts  # proxy DeepSeek, sin key en el cliente
+├── notifications/onTransactionCreate.ts
+└── lib/{audit,rateLimit}.ts
+```
+
+**Principios (no negociables):** el frontend nunca calcula `totalAmount`; el webhook exige
+checksum válido y es idempotente por `wompiTransactionId` (`processed_events`); con los
+secretos de Wompi en `PENDIENTE`, `createTransaction` devuelve `paymentReady:false` y el
+webhook responde `503` — nunca se aprueba un pago en falso.
 
 ---
 

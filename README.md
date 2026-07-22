@@ -10,10 +10,10 @@
 |------|-----------|
 | Frontend | React 19 + TypeScript + Tailwind CSS |
 | Build | Vite + PWA (Workbox) |
-| Backend | Firebase (Auth, Firestore, Functions, Messaging, Storage) |
-| Pagos | Wompi (widget + webhook) |
-| AI | DeepSeek v4 Flash con function calling |
-| Tests | Vitest (807 tests) |
+| Backend | Firebase (Auth, Firestore, Functions v2, Messaging, Storage) |
+| Pagos | Wompi (widget + webhook seguro: checksum + idempotencia + monto server-side) |
+| AI | DeepSeek v4 Flash con function calling, proxy server-side |
+| Tests | Vitest (808 tests) + 24/25 reglas de Firestore/Storage contra emulador |
 
 ---
 
@@ -30,9 +30,11 @@ npm run dev            # Servidor local → http://localhost:4000
 ## 🧪 Tests
 
 ```bash
-npm run test       # 807 tests · 26 archivos
-npx tsc --noEmit   # 0 errores TypeScript
-npm run build      # Build producción + PWA
+npm run test        # 808 tests · 26 archivos (frontend)
+npm --prefix functions test   # 17 tests (Cloud Functions)
+npm run test:rules  # reglas de Firestore/Storage contra el emulador
+npx tsc -b           # 0 errores TypeScript (frontend + functions)
+npm run build        # Build producción + PWA
 ```
 
 ---
@@ -57,17 +59,22 @@ npm run build      # Build producción + PWA
 - Revenue dashboard con filtros por fecha
 - i18n español/inglés
 - SEO (sitemap, robots, Open Graph, JSON-LD)
-- 807 tests · 0 errores TS · Pre-commit hook
+- 808 tests frontend + 17 functions + reglas contra emulador · 0 errores TS · Pre-commit hook
 
 ---
 
 ## 🔒 Seguridad
 
-- Firestore rules con helpers `isAdmin()`, `isOwner()`, `isSellerOwner()`
+- Montos financieros calculados solo en backend (nunca en el cliente)
+- Webhook de Wompi: checksum HMAC obligatorio + idempotencia + validación de monto + audit trail
+- Firestore/Storage rules con helpers `isAdmin()`, `isOwner()`, `isSellerOwner()` y `hasOnly()`
+  para bloquear escritura de campos financieros/de moderación desde el cliente
+- Proxy de IA server-side (sin API key de DeepSeek en el bundle)
+- Sentry (frontend) con scrubbing de PII
+- CI: bloqueo de secretos versionados + verificación de que `dist/` no contiene claves
 - Pre-commit hook para detección de secrets
 - CSP headers + HSTS
 - .env + gitignore para secrets
-- API key de Firebase limpiada del historial
 
 ---
 
