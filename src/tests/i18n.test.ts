@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 describe('i18n — Locale files', () => {
   let en: Record<string, string>;

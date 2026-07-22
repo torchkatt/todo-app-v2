@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 describe('PWA — OfflineBanner', () => {
   it('OfflineBanner component is importable', async () => {

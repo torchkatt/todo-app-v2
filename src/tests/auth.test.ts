@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserRole } from '../types';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 // ─── Mock firebase/auth ───
 vi.mock('firebase/auth', () => ({

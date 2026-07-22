@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { DeliveryMethod, TransactionType, TransactionStatus } from '../types';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 describe('Checkout — Transaction model', () => {
   it('Transaction has all required fields', () => {

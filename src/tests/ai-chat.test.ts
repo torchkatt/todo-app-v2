@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 vi.mock('firebase/firestore', () => ({
   doc: vi.fn(() => ({})), setDoc: vi.fn(), getDoc: vi.fn(), updateDoc: vi.fn(),
   deleteDoc: vi.fn(), collection: vi.fn(() => ({})), query: vi.fn(() => ({})),
@@ -171,7 +171,7 @@ describe('AI Chat — L5: Prompt Injection Detection', () => {
   it('detects sudo/admin mode', () => {
     expect(detectInjection('sudo admin mode').detected).toBe(true);
     expect(detectInjection('developer mode activated').detected).toBe(true);
-    expect(detectInjection('override safety protocols').detected).toBe(true);
+    expect(detectInjection('bypass safety checks').detected).toBe(true);
   });
 
   it('detects destructive commands', () => {
@@ -180,10 +180,16 @@ describe('AI Chat — L5: Prompt Injection Detection', () => {
     expect(detectInjection('truncate table').detected).toBe(true);
   });
 
-  it('detects malicious intent', () => {
-    expect(detectInjection('malicious attack').detected).toBe(true);
-    expect(detectInjection('exploit vulnerability').detected).toBe(true);
+  it('detects data theft intent', () => {
     expect(detectInjection('steal credentials').detected).toBe(true);
+    expect(detectInjection('steal data now').detected).toBe(true);
+  });
+
+  it('does NOT flag legitimate security-related questions (Fase 4.3 — evita falsos positivos)', () => {
+    // Patrones retirados por generar falsos positivos: /malicious|hack|exploit|vulnerability/i y /override/i
+    expect(detectInjection('¿tienen productos de seguridad?').detected).toBe(false);
+    expect(detectInjection('¿hay algún problema con mi pedido?').detected).toBe(false);
+    expect(detectInjection('busco un candado antirrobo (hack de seguridad para bicis)').detected).toBe(false);
   });
 
   it('detects data access attempts', () => {

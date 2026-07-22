@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 // ─── analyticsService — extended ───
 describe('analyticsService — Extended', () => {
@@ -210,10 +210,9 @@ describe('aiChatMemoryService — Extended', () => {
 
 // ─── paymentService — extended ───
 describe('paymentService — Extended', () => {
-  it('payment service has expected methods', async () => {
+  it('payment service exposes openWompiCheckout; monto/firma ya no se calculan en cliente', async () => {
     const mod = await import('../services/paymentService');
     expect(typeof mod.openWompiCheckout).toBe('function');
-    expect(typeof mod.verifyWompiTransaction).toBe('function');
   });
 
   it('Wompi status is valid', () => {
@@ -228,11 +227,11 @@ describe('paymentService — Extended', () => {
   });
 });
 
-// ─── deepseekService — extended ───
-describe('deepseekService — Extended', () => {
-  it('deepseekService exists', async () => {
-    const mod = await import('../services/deepseekService');
-    expect(mod).toBeDefined();
+// ─── aiChatService — extended ───
+describe('aiChatService — Extended', () => {
+  it('aiChatService exposes chatWithAI (proxy vía Cloud Function, sin key en el cliente)', async () => {
+    const mod = await import('../services/aiChatService');
+    expect(typeof mod.chatWithAI).toBe('function');
   });
 });
 

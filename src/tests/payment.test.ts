@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('../services/firebase', () => ({ db: {}, auth: {} }));
+vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 describe('Payment — Wompi types', () => {
   it('WompiTransaction has all fields', () => {
@@ -197,16 +197,14 @@ describe('Payment — Amount validation', () => {
 });
 
 describe('Payment — Wompi service structure', () => {
-  it('paymentService exports expected functions', async () => {
+  it('paymentService exports openWompiCheckout (monto y firma vienen del backend)', async () => {
     const mod = await import('../services/paymentService');
     expect(typeof mod.openWompiCheckout).toBe('function');
-    expect(typeof mod.verifyWompiTransaction).toBe('function');
   });
 
-  it('WompiTransaction type is exported', async () => {
-    const mod = await import('../services/paymentService');
-    // Type exists at compile time; runtime check on the function that uses it
-    expect(mod.openWompiCheckout).toBeDefined();
+  it('paymentService ya no expone verifyWompiTransaction (movido a la callable verifyTransaction)', async () => {
+    const mod: any = await import('../services/paymentService');
+    expect(mod.verifyWompiTransaction).toBeUndefined();
   });
 });
 
