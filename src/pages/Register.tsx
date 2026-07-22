@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     setLoading(true);
     try {
       await register(email, password, name);
-      navigate('/');
+      navigate('/app', { replace: true });
     } catch (err: any) {
       const msg = err.code === 'auth/email-already-in-use' ? 'Este correo ya está registrado'
         : err.code === 'auth/weak-password' ? 'Contraseña muy débil'

@@ -7,7 +7,8 @@ import { Button } from '../components/ui/Button';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from || '/';
+  const from = (location.state as any)?.from;
+  const destination = (from && from !== '/' && from !== '/login') ? from : '/app';
   const { login, loginWithGoogle, loginAnonymously } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,8 +21,10 @@ const Login: React.FC = () => {
     setError('');
     if (!email || !password) { setError('Ingresa correo y contraseña'); return; }
     setLoading(true);
-    try { await login(email, password); navigate(from, { replace: true }); }
-    catch (err: any) {
+    try {
+      await login(email, password);
+      navigate(destination, { replace: true });
+    } catch (err: any) {
       const msg = err.code === 'auth/user-not-found' ? 'Usuario no encontrado'
         : err.code === 'auth/wrong-password' ? 'Contraseña incorrecta'
         : err.code === 'auth/invalid-credential' ? 'Credenciales inválidas'
@@ -37,7 +40,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       await loginWithGoogle();
-      navigate(from, { replace: true });
+      navigate(destination, { replace: true });
     } catch (err: any) {
       if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
         setLoading(false);
@@ -51,8 +54,12 @@ const Login: React.FC = () => {
 
   const handleGuest = async () => {
     setLoading(true);
-    try { await loginAnonymously(); navigate(from, { replace: true }); }
-    catch { setError('Error al entrar como invitado.'); }
+    try {
+      await loginAnonymously();
+      navigate(destination, { replace: true });
+    } catch {
+      setError('Error al entrar como invitado.');
+    }
     setLoading(false);
   };
 
