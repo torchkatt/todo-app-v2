@@ -20,7 +20,7 @@ const Home: React.FC = () => {
   const [searchFocused, setSearchFocused] = React.useState(false);
   const sellerIds = featuredListings.map(l => l.sellerId).filter(Boolean);
   const sellers = useSellersByIds(sellerIds);
-  const subs = expandedCat ? useSubcategories(expandedCat) : [];
+  const subs = useSubcategories(expandedCat);
 
   return (
     <div className="pb-24 bg-brand-bg min-h-screen font-sans">

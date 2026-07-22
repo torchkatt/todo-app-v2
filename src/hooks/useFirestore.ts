@@ -35,10 +35,10 @@ export function useCategories() {
   return { data, loading };
 }
 
-export function useSubcategories(parentId: string) {
+export function useSubcategories(parentId: string | null) {
   const [data, setData] = useState<Category[]>([]);
   useEffect(() => {
-    if (!parentId) return;
+    if (!parentId) { setData([]); return; }
     (async () => {
       try {
         const q = query(collection(db, 'categories'), where('parentId', '==', parentId), where('isActive', '==', true), orderBy('order'), limit(20));
