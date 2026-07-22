@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, ShoppingBag, CreditCard, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, ShoppingBag, CreditCard, MapPin } from 'lucide-react';
+import { formatCOP } from '../utils/formatters';
+import { PURCHASE_TIMELINE } from '../utils/orderState';
 
 const STATUS_MAP: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   PENDING_PAYMENT: { label: 'Pendiente de pago', icon: <Clock size={16} />, color: 'text-amber-600 bg-amber-50 border-amber-200' },
   PAYMENT_CONFIRMED: { label: 'Pago confirmado', icon: <CheckCircle size={16} />, color: 'text-blue-600 bg-blue-50 border-blue-200' },
   PREPARING: { label: 'Preparando pedido', icon: <Package size={16} />, color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  SHIPPED: { label: 'En camino', icon: <Truck size={16} />, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
+  READY: { label: 'Listo', icon: <Package size={16} />, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+  IN_TRANSIT: { label: 'En camino', icon: <Truck size={16} />, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
   DELIVERED: { label: 'Entregado', icon: <CheckCircle size={16} />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
   CANCELLED: { label: 'Cancelado', icon: <XCircle size={16} />, color: 'text-red-600 bg-red-50 border-red-200' },
+  DISPUTED: { label: 'En disputa', icon: <XCircle size={16} />, color: 'text-amber-600 bg-amber-50 border-amber-200' },
   REFUNDED: { label: 'Reembolsado', icon: <XCircle size={16} />, color: 'text-red-600 bg-red-50 border-red-200' },
 };
 
-const TIMELINE = ['PENDING_PAYMENT', 'PAYMENT_CONFIRMED', 'PREPARING', 'SHIPPED', 'DELIVERED'];
+const TIMELINE: string[] = PURCHASE_TIMELINE;
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,19 +29,17 @@ const OrderDetail: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    (async () => {
-      try {
-        const snap = await getDoc(doc(db, 'transactions', id));
-        if (!snap.exists()) { setLoading(false); return; }
-        const data = { id: snap.id, ...snap.data() } as any;
-        setOrder(data);
-        if (data.sellerId) {
-          const ss = await getDoc(doc(db, 'sellers', data.sellerId));
-          if (ss.exists()) setSeller(ss.data());
-        }
-      } catch (e) { console.error('OrderDetail error', e); }
+    // onSnapshot: el estado real llega vía webhook, no vía el cliente — se refleja solo.
+    const unsub = onSnapshot(doc(db, 'transactions', id), (snap) => {
+      if (!snap.exists()) { setLoading(false); return; }
+      const data = { id: snap.id, ...snap.data() } as any;
+      setOrder(data);
       setLoading(false);
-    })();
+      if (data.sellerId) {
+        getDoc(doc(db, 'sellers', data.sellerId)).then((ss) => { if (ss.exists()) setSeller(ss.data()); });
+      }
+    }, (e) => { console.error('OrderDetail snapshot error', e); setLoading(false); });
+    return () => unsub();
   }, [id]);
 
   if (loading) return <div className="min-h-screen bg-brand-bg flex items-center justify-center"><Loader2 size={28} className="animate-spin text-purple-600" /></div>;
@@ -102,25 +104,24 @@ const OrderDetail: React.FC = () => {
               <div key={i} className="flex items-center gap-3">
                 <span className="text-2xl">📦</span>
                 <div className="flex-1 min-w-0"><div className="text-sm font-bold text-text-primary truncate">{item.title}</div><div className="text-[11px] text-text-muted">x{item.quantity || 1}</div></div>
-                <div className="text-sm font-extrabold text-text-primary">${((item.price || 0) * (item.quantity || 1)).toLocaleString('es-CO')}</div>
+                <div className="text-sm font-extrabold text-text-primary">{formatCOP((item.totalPrice || 0) / 100)}</div>
               </div>
             ))}
           </div>
           <div className="border-t border-border mt-4 pt-4 space-y-1">
-            <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">${(order.totalAmount || 0).toLocaleString('es-CO')}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío</span><span className="font-bold text-emerald-600">Gratis</span></div>
-            <div className="flex justify-between text-sm border-t border-border pt-2 mt-2"><span className="font-extrabold text-text-primary">Total</span><span className="font-extrabold text-purple-700 text-lg">${(order.totalAmount || 0).toLocaleString('es-CO')}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">{formatCOP((order.subtotal || 0) / 100)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío</span><span className="font-bold">{order.deliveryFee ? formatCOP(order.deliveryFee / 100) : 'Gratis'}</span></div>
+            <div className="flex justify-between text-sm border-t border-border pt-2 mt-2"><span className="font-extrabold text-text-primary">Total</span><span className="font-extrabold text-purple-700 text-lg">{formatCOP((order.totalAmount || 0) / 100)}</span></div>
           </div>
         </div>
 
         {/* Delivery info */}
-        {order.delivery && (
+        {(order.shippingAddress || order.deliveryMethod) && (
           <div className="bg-white rounded-xl border border-border p-5">
             <h3 className="text-xs font-extrabold text-text-primary mb-3 flex items-center gap-2"><Truck size={14} className="text-purple-600" /> Entrega</h3>
             <div className="space-y-2 text-sm text-text-secondary">
-              {order.delivery.name && <div className="flex items-center gap-2"><Phone size={14} className="text-text-muted" /> {order.delivery.name} · {order.delivery.phone}</div>}
-              {order.delivery.address && <div className="flex items-center gap-2"><MapPin size={14} className="text-text-muted" /> {order.delivery.address}</div>}
-              {order.delivery.method && <div className="flex items-center gap-2"><Package size={14} className="text-text-muted" /> {order.delivery.method === 'pickup' ? 'Recogida local' : 'Envío a domicilio'}</div>}
+              {order.shippingAddress && <div className="flex items-center gap-2"><MapPin size={14} className="text-text-muted" /> {order.shippingAddress}</div>}
+              {order.deliveryMethod && <div className="flex items-center gap-2"><Package size={14} className="text-text-muted" /> {order.deliveryMethod === 'pickup' ? 'Recogida local' : 'Envío a domicilio'}</div>}
             </div>
           </div>
         )}
@@ -128,7 +129,7 @@ const OrderDetail: React.FC = () => {
         {/* Payment info */}
         <div className="bg-white rounded-xl border border-border p-5">
           <h3 className="text-xs font-extrabold text-text-primary mb-3 flex items-center gap-2"><CreditCard size={14} className="text-purple-600" /> Pago</h3>
-          <div className="text-sm text-text-secondary">{order.payment?.method ? `Método: ${order.payment.method}` : 'Método: No especificado'} · {order.payment?.status || 'Pendiente'}</div>
+          <div className="text-sm text-text-secondary">{order.payment?.method && order.payment.method !== 'unknown' ? `Método: ${order.payment.method}` : 'Método: No especificado'} · {order.payment?.status || 'Pendiente'}</div>
         </div>
 
         {/* Seller */}
