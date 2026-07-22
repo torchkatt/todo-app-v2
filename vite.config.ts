@@ -47,17 +47,23 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
         globIgnores: ['**/firebase-messaging-sw.js'],
-        // SPA fallback for offline navigation
-        navigateFallback: '/offline.html',
-        navigateFallbackAllowlist: [/^(?!\/__).*/],
+        // SPA navigation fallback — must point to /index.html for React Router
+        navigateFallback: '/index.html',
+        // Exclude Firebase Auth handlers and Google OAuth domains from SW intercept
+        navigateFallbackDenylist: [/^\/__/, /accounts\.google\.com/],
         runtimeCaching: [
-          // Firebase APIs — NetworkFirst, fallback to cache
+          // Firebase Auth & OAuth APIs — NetworkOnly (never cache auth tokens or OAuth handshakes)
           {
-            urlPattern: /firestore|identitytoolkit|securetoken\.googleapis\.com/,
+            urlPattern: /identitytoolkit|securetoken|accounts\.google\.com/,
+            handler: 'NetworkOnly',
+          },
+          // Firestore APIs — NetworkFirst
+          {
+            urlPattern: /firestore\.googleapis\.com/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'firebase-api-cache',
-              networkTimeoutSeconds: 5,
+              networkTimeoutSeconds: 10,
               expiration: { maxEntries: 100, maxAgeSeconds: 60 * 5 },
               cacheableResponse: { statuses: [0, 200] },
             },
@@ -72,7 +78,7 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // Firebase Storage — CacheFirst (images rarely change)
+          // Firebase Storage — CacheFirst (images)
           {
             urlPattern: /firebasestorage\.googleapis\.com/,
             handler: 'CacheFirst',
@@ -92,7 +98,7 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // Navigation requests — NetworkFirst with quick timeout
+          // Navigation requests — NetworkFirst
           {
             urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
