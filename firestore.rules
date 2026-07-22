@@ -43,7 +43,7 @@ service cloud.firestore {
       allow create: if (isOwner(userId) && canCreateUser()) || (isAdmin() && isValidUserData());
       allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'fullName', 'phone', 'avatarUrl', 'address', 'updatedAt'
+          'fullName', 'phone', 'avatarUrl', 'address', 'updatedAt', 'onboardingDone'
         ]));
       allow delete: if isAdmin();
     }

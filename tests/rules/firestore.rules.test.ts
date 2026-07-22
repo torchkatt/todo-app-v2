@@ -219,6 +219,16 @@ describe('users — no se puede escalar el propio rol', () => {
     await assertFails(updateDoc(doc(db, 'users', OTHER_USER), { role: 'ADMIN' }));
     await assertSucceeds(updateDoc(doc(db, 'users', OTHER_USER), { fullName: 'Nuevo nombre' }));
   });
+
+  it('un usuario puede marcar su propio onboarding como completado', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx.firestore().collection('users').doc(OTHER_USER).set({
+        email: 'x@x.com', role: 'CUSTOMER', createdAt: '2026-01-01T00:00:00Z', fullName: 'X',
+      });
+    });
+    const db = asOther();
+    await assertSucceeds(setDoc(doc(db, 'users', OTHER_USER), { onboardingDone: true }, { merge: true }));
+  });
 });
 
 describe('colecciones internas — solo backend (Admin SDK)', () => {
