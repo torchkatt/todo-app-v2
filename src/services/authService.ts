@@ -1,6 +1,12 @@
+/**
+ * @file authService.ts
+ * @description Servicio de autenticación con Firebase Auth y sincronización de perfiles en Firestore.
+ * Incluye fallback automático entre `signInWithPopup` y `signInWithRedirect` para evitar bloqueos por políticas COOP en navegadores web y móviles.
+ */
+
 import { 
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signInWithPopup, signInAnonymously, signOut, sendPasswordResetEmail,
+  signInWithPopup, signInWithRedirect, getRedirectResult, signInAnonymously, signOut, sendPasswordResetEmail,
   GoogleAuthProvider, OAuthProvider, FacebookAuthProvider, User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -8,11 +14,15 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User } from '../types';
 import { UserRole } from '../types';
+import { logger } from '../utils/logger';
 
 const GOOGLE = new GoogleAuthProvider();
 const APPLE = new OAuthProvider('apple.com');
 const FACEBOOK = new FacebookAuthProvider();
 
+/**
+ * Garantiza que el documento del usuario exista en la colección `users` de Firestore.
+ */
 async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promise<User> {
   const userId = fbUser.uid;
   const ref = doc(db, 'users', userId);
@@ -33,7 +43,7 @@ async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promi
     isActive: true,
     isVerified: fbUser.emailVerified || false,
     isEmailVerified: fbUser.emailVerified || false,
-    authProvider: fbUser.providerData[0]?.providerId || 'password',
+    authProvider: fbUser.providerData[0]?.providerId || 'google.com',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     impact: { points: 0, level: 'NOVICE' as any, totalSpent: 0, totalTransactions: 0, streak: { current: 0, lastActivity: new Date().toISOString() } } as any,
@@ -56,19 +66,60 @@ export const authService = {
     return ensureUserDoc(cred.user, { fullName, phone, role: UserRole.CUSTOMER });
   },
 
+  /**
+   * Inicia sesión con Google. Si el navegador bloquea la ventana emergente (COOP policy / popup blocker),
+   * hace fallback suave a `signInWithRedirect`.
+   */
   async loginWithGoogle(): Promise<User> {
-    const cred = await signInWithPopup(auth, GOOGLE);
-    return ensureUserDoc(cred.user);
+    try {
+      const cred = await signInWithPopup(auth, GOOGLE);
+      return await ensureUserDoc(cred.user);
+    } catch (err: any) {
+      logger.warn('Google Popup blocked or failed, falling back to redirect:', err?.code || err?.message);
+      if (
+        err?.code === 'auth/popup-blocked' ||
+        err?.code === 'auth/popup-closed-by-user' ||
+        err?.code === 'auth/cancelled-popup-request' ||
+        err?.message?.includes('Cross-Origin-Opener-Policy') ||
+        err?.message?.includes('window.close')
+      ) {
+        await signInWithRedirect(auth, GOOGLE);
+        return new Promise(() => {}); // Esperar a la redirección de Firebase
+      }
+      throw err;
+    }
   },
 
   async loginWithApple(): Promise<User> {
-    const cred = await signInWithPopup(auth, APPLE);
-    return ensureUserDoc(cred.user);
+    try {
+      const cred = await signInWithPopup(auth, APPLE);
+      return await ensureUserDoc(cred.user);
+    } catch (err: any) {
+      await signInWithRedirect(auth, APPLE);
+      return new Promise(() => {});
+    }
   },
 
   async loginWithFacebook(): Promise<User> {
-    const cred = await signInWithPopup(auth, FACEBOOK);
-    return ensureUserDoc(cred.user);
+    try {
+      const cred = await signInWithPopup(auth, FACEBOOK);
+      return await ensureUserDoc(cred.user);
+    } catch (err: any) {
+      await signInWithRedirect(auth, FACEBOOK);
+      return new Promise(() => {});
+    }
+  },
+
+  async handleRedirectResult(): Promise<User | null> {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result?.user) {
+        return await ensureUserDoc(result.user);
+      }
+    } catch (e) {
+      logger.error('Error handling redirect result', e);
+    }
+    return null;
   },
 
   async loginAnonymously(): Promise<User> {
@@ -95,7 +146,6 @@ export const authService = {
 
   async convertGuest(userId: string, email: string, password: string, fullName: string): Promise<User> {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    // Copy guest doc to new uid
     const guest = await getDoc(doc(db, 'users', userId));
     if (guest.exists()) {
       await setDoc(doc(db, 'users', cred.user.uid), { ...guest.data(), id: cred.user.uid, uid: cred.user.uid, email, fullName, isGuest: false, updatedAt: new Date().toISOString() });
