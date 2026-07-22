@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bloquear secretos versionados
+        # -P (PCRE) con negative lookahead para no marcar los placeholders "PENDIENTE"
+        # usados intencionalmente en .env.example / functions/.env.example / docs.
+        run: |
+          if git grep -IPn "prv_(test|prod)_(?!PENDIENTE)[a-zA-Z0-9]{10,}|sk-[a-zA-Z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----" -- . ; then
+            echo "::error::Se detectó un posible secreto en el repositorio. Revisa el output anterior."
+            exit 1
+          fi
+          echo "OK: sin coincidencias de patrones de secretos conocidos."
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc -b
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: dummy
+          VITE_FIREBASE_AUTH_DOMAIN: dummy.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: dummy
+          VITE_FIREBASE_STORAGE_BUCKET: dummy.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "0"
+          VITE_FIREBASE_APP_ID: dummy
+          VITE_FIREBASE_MEASUREMENT_ID: dummy
+          VITE_FIREBASE_VAPID_KEY: dummy
+          VITE_WOMPI_PUBLIC_KEY: pub_test_PENDIENTE
+      - name: Verificar que el bundle no contiene claves secretas
+        run: |
+          if grep -rE "sk-[a-zA-Z0-9]{20,}|prv_(test|prod)_" dist/ ; then
+            echo "::error::El bundle de producción contiene un secreto. No debe desplegarse."
+            exit 1
+          fi
+          echo "OK: bundle sin secretos de backend."
+
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+        working-directory: functions
+      - name: Build (tsc)
+        run: npm run build
+        working-directory: functions
+      - name: Unit tests
+        run: npm test
+        working-directory: functions
+
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - name: Reglas de Firestore/Storage contra el emulador
+        run: npm run test:rules
