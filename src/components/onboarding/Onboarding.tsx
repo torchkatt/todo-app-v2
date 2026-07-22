@@ -1,7 +1,7 @@
 /**
  * @file Onboarding.tsx
- * @description Tour/tutorial inicial de la aplicación. Muestra tarjetas con características
- * principales y guarda el estado `onboardingDone` en Firestore y localStorage.
+ * @description Tour/tutorial inicial de la aplicación.
+ * Se muestra ÚNICAMENTE cuando un usuario inicia sesión (autenticado) y aún no ha completado el tutorial.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -29,34 +29,42 @@ const Onboarding: React.FC = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Si ya completó el onboarding localmente, no mostrar modal
-    if (localStorage.getItem('todo_onboarding_done') === 'true') {
-      return;
-    }
+    // 🛑 ÚNICAMENTE MOSTRAR CUANDO EL USUARIO ESTÁ AUTENTICADO (No antes, ni a invitados)
     if (!isAuthenticated || !user?.id || user.isGuest) {
-      setVisible(true);
+      setVisible(false);
       return;
     }
+
+    // Si ya completó el onboarding localmente en este dispositivo, no mostrar modal
+    if (localStorage.getItem(`todo_onboarding_${user.id}`) === 'true') {
+      setVisible(false);
+      return;
+    }
+
+    // Consultar estado en Firestore para sincronización entre dispositivos
     (async () => {
       try {
         const ref = doc(db, 'users', user.id);
         const snap = await getDoc(ref);
         if (snap.exists() && snap.data()?.onboardingDone) {
-          localStorage.setItem('todo_onboarding_done', 'true');
+          localStorage.setItem(`todo_onboarding_${user.id}`, 'true');
+          setVisible(false);
           return;
         }
         setVisible(true);
       } catch (e) {
-        setVisible(true);
+        setVisible(false);
       }
     })();
-  }, [user?.id, isAuthenticated]);
+  }, [user?.id, user?.isGuest, isAuthenticated]);
 
   /**
-   * Finaliza el tutorial, guarda estado en Firestore (si está autenticado) y en localStorage.
+   * Finaliza el tutorial, guarda el estado en Firestore y en localStorage asociándolo al ID del usuario.
    */
   const finish = async () => {
-    localStorage.setItem('todo_onboarding_done', 'true');
+    if (user?.id) {
+      localStorage.setItem(`todo_onboarding_${user.id}`, 'true');
+    }
     setVisible(false);
 
     if (isAuthenticated && user?.id && !user.isGuest) {
@@ -67,7 +75,6 @@ const Onboarding: React.FC = () => {
           await setDoc(ref, { onboardingDone: true }, { merge: true });
         }
       } catch (e) {
-        // Capturar error de permisos de Firestore de forma segura sin romper la UX
         console.warn('[Onboarding] Firestore update skipped:', e);
       }
     }
