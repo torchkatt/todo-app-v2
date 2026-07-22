@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { setNavigateHook } from '../../services/aiChatTools';
 import { chatWithAI } from '../../services/aiChatService';
 import { MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
+import { AI_PROMPT_CHIPS } from '../../config/constants';
 
 const WELCOME = `¡Hola! Soy el asistente de **Todo**. Puedo ayudarte a:
 
@@ -115,6 +116,23 @@ const AIChat: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         )}
         <div ref={endRef} />
       </div>
+
+      {/* Prompt Chips */}
+      {messages.length <= 2 && (
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-2 bg-gray-50 border-t border-border shrink-0">
+          {AI_PROMPT_CHIPS.map(chip => (
+            <button
+              key={chip}
+              onClick={() => {
+                setInput(chip);
+              }}
+              className="shrink-0 px-2.5 py-1 rounded-full bg-white border border-border text-[11px] font-bold text-slate-700 hover:bg-purple-50 hover:border-purple-300 transition-all active-bounce"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="p-3 border-t border-border bg-white shrink-0">
