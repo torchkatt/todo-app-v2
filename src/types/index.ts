@@ -316,6 +316,7 @@ export interface LineItem {
   unitPrice: number;
   totalPrice: number;
   image?: string;
+  stockReserved?: boolean; // false = stock ilimitado, no se restituye al cancelar
 }
 
 export interface PaymentInfo {
