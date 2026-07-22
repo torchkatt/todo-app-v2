@@ -10,7 +10,7 @@ import { applyWompiTransaction } from './applyWompiTransaction';
  * (idempotente) el mismo camino de código del webhook.
  */
 export const verifyTransaction = onCall(
-  { secrets: [WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET] },
+  { cors: true, secrets: [WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET] },
   async (request) => {
     const auth = request.auth;
     if (!auth) throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');

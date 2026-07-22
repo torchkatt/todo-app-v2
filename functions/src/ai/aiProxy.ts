@@ -42,12 +42,10 @@ interface ProxyMessage {
 
 interface AiChatRequest {
   messages: ProxyMessage[];
-  // true cuando el cliente reenvía resultados de tool_calls ya ejecutados (mismo turno
-  // de usuario) — no vuelve a pasar por seguridad/cuota, es continuación de la misma llamada.
   continuation?: boolean;
 }
 
-export const aiChat = onCall({ secrets: [DEEPSEEK_API_KEY, SENTRY_DSN] }, async (request) => {
+export const aiChat = onCall({ cors: true, secrets: [DEEPSEEK_API_KEY, SENTRY_DSN] }, async (request) => {
   const auth = request.auth;
   if (!auth) throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
 
