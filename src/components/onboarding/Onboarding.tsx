@@ -1,9 +1,17 @@
+/**
+ * @file Onboarding.tsx
+ * @description Tour/tutorial inicial de la aplicación. Muestra tarjetas con características
+ * principales y guarda el estado `onboardingDone` en Firestore y localStorage.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { ShoppingBag, Search, Heart, MessageSquare } from 'lucide-react';
+import { Button } from '../ui/Button';
 
+/** Pasos del mini tutorial */
 const STEPS = [
   { icon: <Search size={24} />, title: 'Explora', desc: 'Busca productos, servicios y contenido digital de cientos de vendedores' },
   { icon: <ShoppingBag size={24} />, title: 'Compra', desc: 'Agrega al carrito y paga con Wompi, PSE, Nequi o tarjeta' },
@@ -11,27 +19,58 @@ const STEPS = [
   { icon: <MessageSquare size={24} />, title: 'Pregunta', desc: 'Usa el asistente AI para encontrar lo que necesitas' },
 ];
 
+/**
+ * Componente Modal Onboarding.
+ * @returns {JSX.Element | null} Modal de tutorial renderizado.
+ */
 const Onboarding: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) return;
+    // Si ya completó el onboarding localmente, no mostrar modal
+    if (localStorage.getItem('todo_onboarding_done') === 'true') {
+      return;
+    }
+    if (!isAuthenticated || !user?.id || user.isGuest) {
+      setVisible(true);
+      return;
+    }
     (async () => {
-      const ref = doc(db, 'users', user.id);
-      const snap = await getDoc(ref);
-      if (!snap.data()?.onboardingDone) {
+      try {
+        const ref = doc(db, 'users', user.id);
+        const snap = await getDoc(ref);
+        if (snap.exists() && snap.data()?.onboardingDone) {
+          localStorage.setItem('todo_onboarding_done', 'true');
+          return;
+        }
+        setVisible(true);
+      } catch (e) {
         setVisible(true);
       }
     })();
-  }, [user?.id]);
+  }, [user?.id, isAuthenticated]);
 
+  /**
+   * Finaliza el tutorial, guarda estado en Firestore (si está autenticado) y en localStorage.
+   */
   const finish = async () => {
-    if (user?.id) {
-      await setDoc(doc(db, 'users', user.id), { onboardingDone: true }, { merge: true });
-    }
+    localStorage.setItem('todo_onboarding_done', 'true');
     setVisible(false);
+
+    if (isAuthenticated && user?.id && !user.isGuest) {
+      try {
+        const ref = doc(db, 'users', user.id);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          await setDoc(ref, { onboardingDone: true }, { merge: true });
+        }
+      } catch (e) {
+        // Capturar error de permisos de Firestore de forma segura sin romper la UX
+        console.warn('[Onboarding] Firestore update skipped:', e);
+      }
+    }
   };
 
   if (!visible) return null;
@@ -40,32 +79,43 @@ const Onboarding: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[80] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl p-8 animate-fade-up">
-        {/* Dots */}
+      <div className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-8 animate-fade-up border border-slate-100 dark:border-slate-700/60 shadow-2xl">
+        {/* Dots de progreso */}
         <div className="flex justify-center gap-1.5 mb-8">
           {STEPS.map((_, i) => (
-            <div key={i} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-8 bg-purple-600' : 'w-1.5 bg-gray-300 dark:bg-gray-600'}`} />
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all ${
+                i === step ? 'w-8 bg-purple-600' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
+              }`}
+            />
           ))}
         </div>
 
-        {/* Content */}
+        {/* Contenido del paso actual */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center mx-auto mb-5 text-purple-600">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 flex items-center justify-center mx-auto mb-5 text-purple-600 dark:text-purple-400">
             {s.icon}
           </div>
-          <h2 className="text-xl font-extrabold text-text-primary mb-2">{s.title}</h2>
-          <p className="text-sm text-text-secondary max-w-xs mx-auto leading-relaxed">{s.desc}</p>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-2">{s.title}</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 max-w-xs mx-auto leading-relaxed">{s.desc}</p>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button onClick={finish} className="text-xs font-bold text-text-muted hover:text-text-secondary transition-colors px-2">
+        {/* Botones de acción */}
+        <div className="flex gap-3 items-center">
+          <button
+            onClick={finish}
+            className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors px-2"
+          >
             Saltar
           </button>
-          <button onClick={() => step < STEPS.length - 1 ? setStep(step + 1) : finish()}
-            className="flex-1 py-3 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-95 shadow-lg shadow-purple-200">
+          <Button
+            onClick={() => (step < STEPS.length - 1 ? setStep(step + 1) : finish())}
+            fullWidth
+            variant="primary"
+          >
             {step < STEPS.length - 1 ? 'Siguiente' : '¡Comenzar!'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
