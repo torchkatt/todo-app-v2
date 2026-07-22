@@ -24,6 +24,14 @@
       { "fieldPath": "sellerId", "order": "ASCENDING" },
       { "fieldPath": "createdAt", "order": "DESCENDING" }
     ]},
+    { "collectionGroup": "orders", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "orders", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "sellerId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
     { "collectionGroup": "notifications", "queryScope": "COLLECTION", "fields": [
       { "fieldPath": "userId", "order": "ASCENDING" },
       { "fieldPath": "createdAt", "order": "DESCENDING" }
@@ -37,9 +45,6 @@
       { "fieldPath": "parentId", "order": "ASCENDING" },
       { "fieldPath": "isActive", "order": "ASCENDING" },
       { "fieldPath": "order", "order": "ASCENDING" }
-    ]},
-    { "collectionGroup": "sellers", "queryScope": "COLLECTION", "fields": [
-      { "fieldPath": "ownerId", "order": "ASCENDING" }
     ]},
     { "collectionGroup": "sellers", "queryScope": "COLLECTION", "fields": [
       { "fieldPath": "isActive", "order": "ASCENDING" },
