@@ -43,12 +43,7 @@ const Login: React.FC = () => {
         setLoading(false);
         return;
       }
-      const msg = err?.code === 'auth/account-exists-with-different-credential'
-        ? 'Ya existe una cuenta vinculada a este correo.'
-        : err?.code === 'auth/unauthorized-domain'
-        ? 'Dominio no autorizado en Firebase Auth.'
-        : 'Error al iniciar sesión con Google. Intenta de nuevo.';
-      setError(msg);
+      setError('Error al iniciar sesión con Google. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

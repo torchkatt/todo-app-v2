@@ -68,25 +68,16 @@ export const authService = {
 
   /**
    * Inicia sesión con Google. Si el navegador bloquea la ventana emergente (COOP policy / popup blocker),
-   * hace fallback suave a `signInWithRedirect`.
+   * ejecuta automáticamente `signInWithRedirect`.
    */
   async loginWithGoogle(): Promise<User> {
     try {
       const cred = await signInWithPopup(auth, GOOGLE);
       return await ensureUserDoc(cred.user);
     } catch (err: any) {
-      logger.warn('Google Popup blocked or failed, falling back to redirect:', err?.code || err?.message);
-      if (
-        err?.code === 'auth/popup-blocked' ||
-        err?.code === 'auth/popup-closed-by-user' ||
-        err?.code === 'auth/cancelled-popup-request' ||
-        err?.message?.includes('Cross-Origin-Opener-Policy') ||
-        err?.message?.includes('window.close')
-      ) {
-        await signInWithRedirect(auth, GOOGLE);
-        return new Promise(() => {}); // Esperar a la redirección de Firebase
-      }
-      throw err;
+      logger.warn('Google Popup failed, executing redirect:', err?.code || err?.message);
+      await signInWithRedirect(auth, GOOGLE);
+      return new Promise(() => {});
     }
   },
 
