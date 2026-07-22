@@ -25,16 +25,17 @@ export const AIChatButton: React.FC = () => {
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — posicionado en bottom-20 en móvil para jamás tapar la barra inferior de navegación (BottomTabs) */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all active:scale-95 flex items-center justify-center"
+        aria-label="Abrir asistente de IA"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all active:scale-95 flex items-center justify-center cursor-pointer"
       >
         {open ? <X size={24} /> : <MessageSquare size={24} />}
       </button>
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-24px)] h-[560px] max-h-[calc(100vh-160px)] bg-white rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-fade-up">
+        <div className="fixed bottom-36 right-3 sm:bottom-24 sm:right-6 z-50 w-[380px] max-w-[calc(100vw-24px)] h-[520px] max-h-[calc(100vh-160px)] bg-white rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-fade-up">
           <AIChat onClose={() => setOpen(false)} />
         </div>
       )}
@@ -59,74 +60,77 @@ const AIChat: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (!input.trim() || loading || !user) return;
     const text = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    const newMsgs = [...messages, { role: 'user', content: text }];
+    setMessages(newMsgs);
     setLoading(true);
 
     try {
-      // Build conversation history for DeepSeek
-      const history = messages.slice(-12).map(m => ({ role: m.role as any, content: m.content }));
-      history.push({ role: 'user', content: text });
-
-      const response = await chatWithAI(history, user.id);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      const reply = await chatWithAI(
+        newMsgs.map(m => ({ role: m.role as any, content: m.content })),
+        user.id
+      );
+      setMessages([...newMsgs, { role: 'assistant', content: reply }]);
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Ocurrió un error. Por favor intenta de nuevo.' }]);
+      setMessages([...newMsgs, { role: 'assistant', content: '⚠️ Ocurrió un error. Intenta nuevamente.' }]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleChip = (prompt: string) => {
+    setInput(prompt);
   };
 
   return (
-    <>
+    <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white shrink-0">
-        <div className="flex items-center gap-2">
-          <Sparkles size={18} />
-          <h3 className="text-sm font-extrabold flex-1">Asistente Todo</h3>
-          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-lg transition-colors"><X size={16} /></button>
+      <div className="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-sm leading-none">Asistente Todo</h3>
+            <span className="text-[10px] text-purple-200 font-medium">Marketplace Inteligente</span>
+          </div>
         </div>
-        <p className="text-[10px] text-purple-100 mt-0.5">Marketplace inteligente</p>
+        <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white">
+          <X size={18} />
+        </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl p-3 text-sm leading-relaxed ${
-              msg.role === 'user'
-                ? 'bg-purple-600 text-white rounded-br-md'
-                : 'bg-white border border-border shadow-sm rounded-bl-md'
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed shadow-sm ${
+              m.role === 'user'
+                ? 'bg-purple-600 text-white rounded-br-none font-medium'
+                : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none border border-slate-200/80 dark:border-slate-700/80'
             }`}>
-              <div className="whitespace-pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>
-                {msg.content.split('\n').map((line, j) => {
-                  if (line.startsWith('•')) return <div key={j} className="flex gap-1.5"><span className="shrink-0">•</span><span>{line.slice(1).trim()}</span></div>;
-                  if (line.startsWith('🔍') || line.startsWith('🏪') || line.startsWith('📦') || line.startsWith('📊') || line.startsWith('💡') || line.startsWith('⭐') || line.startsWith('💰') || line.startsWith('🛒') || line.startsWith('💵') || line.startsWith('🔥')) return <div key={j}>{line}</div>;
-                  if (line.trim().startsWith('**') && line.trim().endsWith('**')) return <div key={j} className="font-extrabold mt-2 mb-1">{line.replace(/\*\*/g, '')}</div>;
-                  return <div key={j}>{line}</div>;
-                })}
-              </div>
+              <div className="whitespace-pre-wrap">{m.content}</div>
             </div>
           </div>
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-border rounded-2xl rounded-bl-md p-3">
-              <Loader2 size={16} className="animate-spin text-purple-600" />
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-2 text-slate-500">
+              <Loader2 size={14} className="animate-spin text-purple-600" />
+              <span className="text-[11px] font-semibold">Pensando...</span>
             </div>
           </div>
         )}
         <div ref={endRef} />
       </div>
 
-      {/* Prompt Chips */}
-      {messages.length <= 2 && (
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-2 bg-gray-50 border-t border-border shrink-0">
-          {AI_PROMPT_CHIPS.map(chip => (
+      {/* Suggestion Chips */}
+      {messages.length < 3 && (
+        <div className="px-3 py-2 overflow-x-auto flex gap-1.5 no-scrollbar bg-slate-100/60 dark:bg-slate-800/60 border-t border-slate-200/50 dark:border-slate-700/50">
+          {AI_PROMPT_CHIPS.map((chip, idx) => (
             <button
-              key={chip}
-              onClick={() => {
-                setInput(chip);
-              }}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-white border border-border text-[11px] font-bold text-slate-700 hover:bg-purple-50 hover:border-purple-300 transition-all active-bounce"
+              key={idx}
+              onClick={() => handleChip(chip)}
+              className="shrink-0 px-2.5 py-1.5 bg-white dark:bg-slate-700 hover:bg-purple-50 text-slate-700 dark:text-slate-200 rounded-xl text-[11px] font-medium border border-slate-200 dark:border-slate-600 transition-all active:scale-95"
             >
               {chip}
             </button>
@@ -135,23 +139,25 @@ const AIChat: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       )}
 
       {/* Input */}
-      <div className="p-3 border-t border-border bg-white shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+        <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
             placeholder="Ej: busca macbook..."
             disabled={loading}
-            className="flex-1 px-4 py-2.5 bg-gray-100 border border-transparent rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all disabled:opacity-50"
+            className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-purple-500 transition-all"
           />
-          <button onClick={handleSend} disabled={loading || !input.trim()}
-            className="p-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          <button
+            type="submit"
+            disabled={!input.trim() || loading}
+            className="p-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center shadow-md shadow-purple-200 dark:shadow-none"
+          >
+            <Send size={15} />
           </button>
-        </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 };

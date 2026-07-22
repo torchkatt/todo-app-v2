@@ -54,10 +54,10 @@ const AppHome: React.FC = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-0.5">
-              <button onClick={() => navigate('/explore')} aria-label={t('nav.search')} className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary">
+              <button onClick={() => navigate('/explore')} aria-label={t('nav.search')} className="hidden sm:flex p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary">
                 <MapPin size={20} />
               </button>
-              <button aria-label={t('nav.notifications')} className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary">
+              <button aria-label={t('nav.notifications')} className="hidden sm:flex p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary">
                 <Bell size={20} />
               </button>
               <button onClick={() => navigate('/cart')} aria-label={t('nav.cart')} className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary relative">
@@ -68,7 +68,7 @@ const AppHome: React.FC = () => {
                   </span>
                 )}
               </button>
-              <button onClick={() => navigate(isAuthenticated ? '/profile' : '/login')} aria-label={t('nav.profile')} className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary relative">
+              <button onClick={() => navigate(isAuthenticated ? '/profile' : '/login')} aria-label={t('nav.profile')} className="hidden sm:flex p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-text-secondary relative">
                 <User size={20} />
                 {isAuthenticated && <span className="absolute bottom-1 right-1 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white" />}
               </button>
