@@ -26,18 +26,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Procesar cualquier resultado de redirección activa de Google Auth
+    authService.handleRedirectResult().catch(err => {
+      logger.error('handleRedirectResult error', err);
+    });
+
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
         try {
-          const profile = await authService.getProfile(fbUser.uid);
-          if (profile) {
-            setUser(profile);
-          } else {
-            // Create user doc on first login
-            setUser({ id: fbUser.uid, uid: fbUser.uid, email: fbUser.email || '', fullName: fbUser.displayName || 'Usuario', role: UserRole.CUSTOMER, isGuest: false, isActive: true, isVerified: fbUser.emailVerified, isEmailVerified: fbUser.emailVerified, authProvider: fbUser.providerData[0]?.providerId || 'password', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), impact: { points: 0, level: 'NOVICE', totalSpent: 0, totalTransactions: 0, streak: { current: 0, longest: 0, lastActivity: new Date().toISOString() } }, favoriteListingIds: [] } as unknown as User);
-          }
-        } catch (e) { logger.error('Auth profile load', e); }
+          const profile = await authService.ensureUserDoc(fbUser);
+          setUser(profile);
+        } catch (e) {
+          logger.error('Auth profile load error, constructing fallback', e);
+          const fallbackUser = {
+            id: fbUser.uid,
+            uid: fbUser.uid,
+            email: fbUser.email || '',
+            fullName: fbUser.displayName || 'Usuario',
+            role: UserRole.CUSTOMER,
+            isGuest: fbUser.isAnonymous || false,
+            isActive: true,
+            isVerified: fbUser.emailVerified || false,
+            authProvider: fbUser.providerData[0]?.providerId || 'google.com',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            impact: { points: 0, level: 'NOVICE', totalSpent: 0, totalTransactions: 0, streak: { current: 0, lastActivity: new Date().toISOString() } },
+            favoriteListingIds: [],
+          } as unknown as User;
+          setUser(fallbackUser);
+        }
       } else {
         setUser(null);
       }
@@ -57,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []),
     loginWithGoogle: useCallback(async () => {
       const u = await authService.loginWithGoogle();
-      setUser(u);
+      if (u && u.id) setUser(u);
     }, []),
     loginAnonymously: useCallback(async () => {
       const u = await authService.loginAnonymously();

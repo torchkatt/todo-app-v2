@@ -26,20 +26,28 @@ const FACEBOOK = new FacebookAuthProvider();
 async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promise<User> {
   const userId = fbUser.uid;
   const ref = doc(db, 'users', userId);
-  const snap = await getDoc(ref);
+  
+  try {
+    const snap = await getDoc(ref);
 
-  if (snap.exists()) {
-    const data = snap.data() as User;
-    if (extra) await updateDoc(ref, { ...extra, lastLoginAt: new Date().toISOString() });
-    return { ...data, ...extra, id: userId } as User;
+    if (snap.exists()) {
+      const data = snap.data() as User;
+      if (extra) {
+        await updateDoc(ref, { ...extra, lastLoginAt: new Date().toISOString() }).catch(() => {});
+      }
+      return { ...data, ...extra, id: userId, uid: userId } as User;
+    }
+  } catch (e) {
+    logger.warn('getDoc users error in ensureUserDoc, creating fallback', e);
   }
 
   const userData = {
     id: userId,
+    uid: userId,
     email: fbUser.email || extra?.email || '',
     fullName: fbUser.displayName || extra?.fullName || 'Usuario',
     role: extra?.role || UserRole.CUSTOMER,
-    isGuest: false,
+    isGuest: fbUser.isAnonymous || false,
     isActive: true,
     isVerified: fbUser.emailVerified || false,
     isEmailVerified: fbUser.emailVerified || false,
@@ -51,8 +59,13 @@ async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promi
     ...extra,
   };
 
-  await setDoc(ref, userData);
-  return userData;
+  try {
+    await setDoc(ref, userData, { merge: true });
+  } catch (err) {
+    logger.error('Error writing user doc to Firestore', err);
+  }
+
+  return userData as User;
 }
 
 export const authService = {
@@ -127,8 +140,13 @@ export const authService = {
   },
 
   async getProfile(userId: string): Promise<User | null> {
-    const snap = await getDoc(doc(db, 'users', userId));
-    return snap.exists() ? { ...snap.data(), id: userId } as User : null;
+    try {
+      const snap = await getDoc(doc(db, 'users', userId));
+      return snap.exists() ? ({ ...snap.data(), id: userId, uid: userId } as unknown as User) : null;
+    } catch (e) {
+      logger.warn('getProfile failed for user', userId, e);
+      return null;
+    }
   },
 
   async updateProfile(userId: string, data: Partial<User>): Promise<void> {
@@ -144,4 +162,6 @@ export const authService = {
     await updateDoc(doc(db, 'users', userId), { mergedInto: cred.user.uid });
     return ensureUserDoc(cred.user, { fullName, email });
   },
+
+  ensureUserDoc,
 };

@@ -24,12 +24,11 @@ service cloud.firestore {
     }
 
     function isValidUserData() {
-      return request.resource.data.keys().hasAll(['email', 'role', 'createdAt']) &&
-             request.resource.data.role in ['CUSTOMER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'];
+      return request.resource.data.role in ['CUSTOMER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'];
     }
 
     function canCreateUser() {
-      return isOwner(request.resource.data.uid) &&
+      return (request.resource.data.uid == request.auth.uid || isOwner(request.resource.data.id)) &&
         request.resource.data.role == 'CUSTOMER';
     }
 
@@ -42,9 +41,7 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if (isOwner(userId) && canCreateUser()) || (isAdmin() && isValidUserData());
       allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'fullName', 'phone', 'avatarUrl', 'address', 'updatedAt', 'onboardingDone'
-        ]));
+        request.resource.data.role == resource.data.role);
       allow delete: if isAdmin();
     }
 
@@ -100,6 +97,16 @@ service cloud.firestore {
          resource.data.status == 'PENDING_PAYMENT' &&
          request.resource.data.status == 'CANCELLED' &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ─── ORDERS ────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid) ||
+        (isAuthenticated() && resource.data.sellerId == request.auth.uid);
+      allow create: if false;
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
