@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, CreditCard, Shield, Truck, MapPin, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, CreditCard, Shield, Lock, Truck, MapPin, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { functions } from '../services/firebase';
 import { openWompiCheckout } from '../services/paymentService';
 import { DeliveryMethod } from '../types';
+import { formatCOP, PAYMENT_METHODS } from '../config/constants';
+import Button from '../components/ui/Button';
+import TrustBadge from '../components/ui/TrustBadge';
 
 interface CreateTransactionResponse {
   reference: string;
@@ -149,28 +152,40 @@ const CheckoutPage: React.FC = () => {
               <div key={item.listingId} className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg">{item.icon || '📦'}</div>
                 <div className="flex-1 min-w-0"><div className="text-xs font-bold text-text-primary truncate">{item.title}</div><div className="text-[11px] text-text-muted">x{item.quantity}</div></div>
-                <div className="text-xs font-extrabold text-text-primary">${(item.price * item.quantity).toLocaleString('es-CO')}</div>
+                <div className="text-xs font-extrabold text-text-primary">{formatCOP(item.price * item.quantity)}</div>
               </div>
             ))}
           </div>
           <div className="border-t border-border pt-3 space-y-1.5">
-            <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">${totalPrice.toLocaleString('es-CO')}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">{formatCOP(totalPrice)}</span></div>
             <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío, comisión e impuestos</span><span className="font-bold text-text-muted">Se calculan al confirmar</span></div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-border p-5">
-          <h3 className="text-sm font-extrabold mb-4 flex items-center gap-2"><CreditCard size={16} className="text-purple-600" /> Pago</h3>
-          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-border"><Shield size={16} className="text-emerald-600" /><span className="text-xs font-semibold text-text-secondary">Pago seguro vía <strong className="text-text-primary">Wompi</strong></span></div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {['💳 Tarjeta', '🏦 PSE', '📱 Nequi', '💵 Efecty'].map(m => (<div key={m} className="px-3 py-1.5 bg-gray-50 rounded-lg border border-border text-xs font-semibold text-text-muted">{m}</div>))}
+
+        {/* Dynamic Trust Badge & Payment Methods */}
+        <div className="space-y-3">
+          <TrustBadge />
+          <div className="bg-white rounded-xl border border-border p-4">
+            <div className="text-xs font-extrabold mb-2.5 text-slate-800 dark:text-slate-200">Métodos de pago aceptados</div>
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map(m => (
+                <div key={m.id} className="px-3 py-1.5 bg-gray-50 dark:bg-slate-800 rounded-lg border border-border text-xs font-semibold text-text-secondary">
+                  {m.label}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <button onClick={handleCheckout} disabled={submitting || mixedSellers}
-          className="w-full py-3.5 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-[0.98] shadow-lg shadow-purple-200 disabled:opacity-50 flex items-center justify-center gap-2">
-          {submitting ? <Loader2 size={18} className="animate-spin" /> : null}
-          {submitting ? 'Procesando...' : `Pagar $${totalPrice.toLocaleString('es-CO')}`}
-          {!submitting && <CreditCard size={18} />}
-        </button>
+
+        <Button
+          fullWidth
+          size="lg"
+          onClick={handleCheckout}
+          loading={submitting}
+          disabled={submitting || mixedSellers}
+        >
+          Pagar {formatCOP(totalPrice)} <CreditCard size={18} />
+        </Button>
         <div className="flex items-center gap-2 justify-center text-[10px] text-text-muted">
           <Truck size={12} /> {address ? 'Envío a domicilio' : 'Recogida local'}
         </div>

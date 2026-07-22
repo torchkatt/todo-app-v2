@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, ShoppingBag, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
+import { formatCOP } from '../config/constants';
+import Button from '../components/ui/Button';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
@@ -47,7 +49,7 @@ const Cart: React.FC = () => {
                     <div className="text-sm font-extrabold text-text-primary truncate">{item.title}</div>
                     <div className="text-xs text-text-secondary font-semibold">{item.sellerName}</div>
                     <div className="text-sm font-extrabold text-purple-700 mt-0.5">
-                      ${(item.price * item.quantity).toLocaleString('es-CO')}
+                      {formatCOP(item.price * item.quantity)}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -71,7 +73,7 @@ const Cart: React.FC = () => {
 
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="font-semibold text-text-secondary">Subtotal</span>
-              <span className="font-extrabold text-text-primary">${totalPrice.toLocaleString('es-CO')}</span>
+              <span className="font-extrabold text-text-primary">{formatCOP(totalPrice)}</span>
             </div>
 
             <button onClick={clearCart}
@@ -82,9 +84,9 @@ const Cart: React.FC = () => {
             {/* Sticky checkout */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-4 z-50">
               <div className="max-w-2xl mx-auto">
-                <button onClick={() => navigate('/checkout')} className="w-full py-3.5 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-colors active:scale-[0.98] shadow-lg shadow-purple-200 flex items-center justify-center gap-2">
-                  Ir a pagar — ${totalPrice.toLocaleString('es-CO')} <ArrowRight size={18} />
-                </button>
+                <Button fullWidth onClick={() => navigate('/checkout')}>
+                  Ir a pagar — {formatCOP(totalPrice)} <ArrowRight size={18} />
+                </Button>
               </div>
             </div>
           </>

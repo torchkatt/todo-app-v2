@@ -82,16 +82,10 @@ describe('Explore — Loading state', () => {
     mockGetDocs.mockReturnValue(new Promise(() => {}));
   });
 
-  it('shows loading spinner on mount', () => {
-    renderExplore();
-    expect(screen.getByText('Cargando...')).toBeDefined();
-  });
-
-  it('renders Loader2 icon during loading', () => {
+  it('shows loading skeleton on mount', () => {
     const { container } = renderExplore();
-    // Loader2 is a lucide-react icon that renders SVG
-    const svg = container.querySelector('svg');
-    expect(svg).toBeTruthy();
+    const skeletons = container.querySelectorAll('.skeleton-shimmer');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 });
 

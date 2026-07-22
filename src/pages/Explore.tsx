@@ -7,7 +7,9 @@ import { Search, ArrowLeft, Loader2, Star, MapPin } from 'lucide-react';
 import SEO from '../components/seo/SEO';
 import type { Listing } from '../types';
 
-const CIUDADES = ['Bucaramanga', 'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Todo Colombia'];
+import ProductSkeleton from '../components/ui/ProductSkeleton';
+import ProductCard from '../components/ui/ProductCard';
+import { CIUDADES_COLOMBIA } from '../config/constants';
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ const Explore: React.FC = () => {
         </div>
         {/* Location filter */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar mt-2 pb-1">
-          {CIUDADES.map(c => (
+          {CIUDADES_COLOMBIA.map(c => (
             <button key={c} onClick={() => setSelectedCity(selectedCity === c ? '' : c)}
               className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold transition-all ${selectedCity === c ? 'bg-purple-600 text-white' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}>
               <MapPin size={12} /> {c}
@@ -76,7 +78,7 @@ const Explore: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-text-muted gap-2"><Loader2 size={20} className="animate-spin" /> Cargando...</div>
+          <ProductSkeleton count={6} />
         ) : filtered.length === 0 ? (
           <div className="text-center py-16"><Search size={48} className="mx-auto mb-4 text-text-muted" /><h2 className="text-lg font-extrabold mb-2">No encontramos resultados</h2><p className="text-sm text-text-secondary">Intenta con otros términos o filtros</p></div>
         ) : (
@@ -84,24 +86,11 @@ const Explore: React.FC = () => {
             <p className="text-xs text-text-muted font-semibold mb-4">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {filtered.map(item => (
-                <div key={item.id} onClick={() => navigate(`/listing/${item.id}`)}
-                  className="bg-white rounded-xl border border-border overflow-hidden hover:shadow-lg hover:border-purple-200 transition-all cursor-pointer active:scale-[0.98]">
-                  <div className="relative h-28 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <span className="text-4xl">{item.type === 'service' ? '🛠️' : item.type === 'digital' ? '📱' : '📦'}</span>
-                    {item.discountPercent ? <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500 text-white">-{item.discountPercent}%</span> : null}
-                  </div>
-                  <div className="p-3">
-                    <h4 className="text-xs font-extrabold text-text-primary truncate mb-1">{item.title}</h4>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-sm font-extrabold text-purple-700">${item.price.toLocaleString('es-CO')}</span>
-                      {item.originalPrice && <span className="text-[10px] text-text-muted line-through">${item.originalPrice.toLocaleString('es-CO')}</span>}
-                    </div>
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <Star size={10} className="text-amber-400 fill-amber-400" />
-                      <span className="text-[10px] text-text-muted font-semibold">{item.stats?.rating || 'Nuevo'}</span>
-                    </div>
-                  </div>
-                </div>
+                <ProductCard
+                  key={item.id}
+                  listing={item}
+                  onClick={() => navigate(`/listing/${item.id}`)}
+                />
               ))}
             </div>
           </>
