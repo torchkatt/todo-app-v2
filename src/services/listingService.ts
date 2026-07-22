@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, startAfter } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Listing, ListingType, DeliveryMethod } from '../types';
 import { incrementCategoryStats } from './categoryService';
@@ -71,7 +71,10 @@ export async function searchListings(params: {
 }): Promise<{ listings: Listing[]; lastDoc: any }> {
   const {
     query: searchTerm, categoryId, subcategoryId,
-    type, minPrice, maxPrice, city, isFeatured,
+    type, minPrice, maxPrice, isFeatured,
+    // city: no aplica todavía — Listing no denormaliza la ciudad del seller (vive en
+    // Seller.location.city). Filtrar por ciudad requeriría denormalizar el campo al
+    // crear/editar el listing o hacer un join con sellers en la búsqueda.
     maxResults = 20,
   } = params;
 
@@ -157,10 +160,5 @@ export async function deactivateListing(id: string): Promise<void> {
  * Increment view count.
  */
 export async function incrementViews(id: string): Promise<void> {
-  const ref = doc(db, COLLECTION, id);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    const listing = snap.data() as Listing;
-    await updateDoc(ref, { 'stats.views': listing.stats.views + 1 });
-  }
+  await updateDoc(doc(db, COLLECTION, id), { 'stats.views': increment(1) });
 }

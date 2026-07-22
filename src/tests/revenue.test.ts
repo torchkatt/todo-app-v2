@@ -56,7 +56,9 @@ describe('RevenueDashboard — Summary calculations', () => {
   });
 
   it('avg order value is 0 when no transactions', () => {
-    expect((0 / 0) || 0).toBe(0);
+    const totalRevenue = 0;
+    const totalTransactions = 0;
+    expect((totalRevenue / totalTransactions) || 0).toBe(0);
   });
 
   it('commission rate calculation', () => {

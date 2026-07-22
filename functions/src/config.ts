@@ -5,6 +5,7 @@ export const WOMPI_PRIVATE_KEY = defineSecret('WOMPI_PRIVATE_KEY');
 export const WOMPI_EVENTS_SECRET = defineSecret('WOMPI_EVENTS_SECRET');
 export const WOMPI_INTEGRITY_SECRET = defineSecret('WOMPI_INTEGRITY_SECRET');
 export const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
+export const SENTRY_DSN = defineSecret('SENTRY_DSN');
 
 // ─── Parámetros de negocio ───
 export const PLATFORM_FEE_BPS = defineInt('PLATFORM_FEE_BPS', { default: 500 }); // 5%

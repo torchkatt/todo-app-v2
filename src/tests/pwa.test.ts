@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
@@ -119,8 +119,6 @@ describe('PWA — Reload prompt behavior', () => {
   });
 
   it('reload function triggers window.location.reload', () => {
-    const reloadSpy = vi.fn();
-    const originalReload = window.location.reload;
     // We can't easily mock location.reload in jsdom, but validate the concept
     expect(typeof window.location.reload).toBe('function');
   });

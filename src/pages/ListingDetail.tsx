@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, Star, MapPin, Clock, Plus, Minus, BadgeCheck, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Star, MapPin, Plus, Minus, BadgeCheck, Loader2 } from 'lucide-react';
 import type { Listing, Seller } from '../types';
 import SEO from '../components/seo/SEO';
 
 const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { addItem } = useCart();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Seller | null>(null);

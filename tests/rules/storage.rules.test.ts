@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import {
   initializeTestEnvironment,
   assertFails,

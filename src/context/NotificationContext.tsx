@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { collection, query, where, orderBy, limit, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { requestPermission, onMessageListener } from '../services/firebase';
-import { Bell, X, Package, Star, AlertCircle } from 'lucide-react';
+import { X, Package, Star, AlertCircle } from 'lucide-react';
 
 interface Notification {
   id: string;

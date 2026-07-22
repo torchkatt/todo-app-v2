@@ -9,11 +9,6 @@ const PROJECT = 'todo-a44f9';
 const TOKEN = fs.readFileSync('./seed_token.txt', 'utf-8').trim();
 const BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 
-interface Document {
-  name: string;
-  fields: Record<string, { stringValue?: string; integerValue?: string; booleanValue?: boolean; arrayValue?: { values: any[] }; mapValue?: { fields: any } }>;
-}
-
 function toFields(obj: any): any {
   const fields: any = {};
   for (const [key, value] of Object.entries(obj)) {

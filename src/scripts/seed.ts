@@ -2,7 +2,7 @@
 // Run: npx tsx src/scripts/seed.ts
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { CATEGORY_SEED } from '../services/categorySeed';
 
 const firebaseConfig = {

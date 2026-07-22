@@ -37,7 +37,7 @@ describe('DateRangeFilter — Component rendering', () => {
 
 describe('DateRangeFilter — Active preset styling', () => {
   it('7d preset shows active state', () => {
-    const { container } = render(
+    render(
       <DateRangeFilter currentPreset="7d" onPresetChange={() => {}} />
     );
     const activeBtn = screen.getByText('Últimos 7 días');

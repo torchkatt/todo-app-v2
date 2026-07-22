@@ -2,9 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft, BookOpen, Shield, MessageSquare, Mail, ShoppingBag, Store,
-  CreditCard, Truck, Package, HelpCircle, ChevronDown, ChevronUp,
-  FileText, Headphones, AlertCircle, Star, Clock, Bot, Zap,
+  ArrowLeft, Shield, MessageSquare, Mail, ShoppingBag, Store,
+  CreditCard, Truck, HelpCircle, ChevronDown, ChevronUp,
+  AlertCircle, Star, Clock, Bot,
 } from 'lucide-react';
 import SEO from '../components/seo/SEO';
 

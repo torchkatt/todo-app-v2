@@ -34,14 +34,14 @@ const Login: React.FC = () => {
   const handleGoogle = async () => {
     setLoading(true);
     try { await loginWithGoogle(); navigate(from, { replace: true }); }
-    catch (e) { setError('Error con Google. Intenta de nuevo.'); }
+    catch { setError('Error con Google. Intenta de nuevo.'); }
     setLoading(false);
   };
 
   const handleGuest = async () => {
     setLoading(true);
     try { await loginAnonymously(); navigate(from, { replace: true }); }
-    catch (e) { setError('Error al entrar como invitado.'); }
+    catch { setError('Error al entrar como invitado.'); }
     setLoading(false);
   };
 

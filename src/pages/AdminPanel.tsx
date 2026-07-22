@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, getCountFromServer, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { ArrowLeft, Users, Package, TrendingUp, DollarSign, ShoppingBag, Loader2, Shield, AlertTriangle, Check, X } from 'lucide-react';
 import { UserRole } from '../types';
@@ -26,25 +26,20 @@ const AdminPanel: React.FC = () => {
     }
     (async () => {
       try {
-        const [usersSnap, sellersSnap, listingsSnap, txSnap] = await Promise.all([
-          getDocs(query(collection(db, 'users'), limit(1))),
-          getDocs(query(collection(db, 'sellers'), limit(1))),
-          getDocs(query(collection(db, 'listings'), limit(1))),
+        const [usersCount, sellersCount, listingsCount, txSnap] = await Promise.all([
+          getCountFromServer(collection(db, 'users')),
+          getCountFromServer(collection(db, 'sellers')),
+          getCountFromServer(collection(db, 'listings')),
           getDocs(query(collection(db, 'transactions'), orderBy('createdAt', 'desc'), limit(10))),
         ]);
-
-        // Get approximate counts by reading more
-        const allUsers = await getDocs(query(collection(db, 'users'), limit(100)));
-        const allSellers = await getDocs(query(collection(db, 'sellers'), limit(100)));
-        const allListings = await getDocs(query(collection(db, 'listings'), limit(100)));
 
         const recentTxs = txSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         const totalRevenue = recentTxs.reduce((sum, t: any) => sum + (t.totalAmount || 0), 0);
 
         setStats({
-          users: allUsers.size,
-          sellers: allSellers.size,
-          listings: allListings.size,
+          users: usersCount.data().count,
+          sellers: sellersCount.data().count,
+          listings: listingsCount.data().count,
           transactions: txSnap.size,
           totalRevenue,
           recentTransactions: recentTxs,
@@ -53,7 +48,7 @@ const AdminPanel: React.FC = () => {
       } catch (e) { console.error('Admin panel error', e); }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, navigate]);
 
   const moderateListing = async (listingId: string, approve: boolean) => {
     setModerating(listingId);
@@ -159,8 +154,8 @@ const AdminPanel: React.FC = () => {
         <div className="bg-white rounded-xl border border-border p-5">
           <h3 className="text-sm font-extrabold text-text-primary mb-3">Acciones rápidas</h3>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => navigate('/admin/users')} className="p-3 bg-purple-50 rounded-xl text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors">👥 Gestionar usuarios</button>
-            <button onClick={() => navigate('/admin/sellers')} className="p-3 bg-emerald-50 rounded-xl text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors">🏪 Ver vendedores</button>
+            <button disabled title="Próximamente" className="p-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-400 cursor-not-allowed">👥 Gestionar usuarios</button>
+            <button disabled title="Próximamente" className="p-3 bg-gray-50 rounded-xl text-xs font-bold text-gray-400 cursor-not-allowed">🏪 Ver vendedores</button>
           </div>
           <p className="text-[10px] text-text-muted mt-2">La moderación de listados ya está disponible arriba. Gestión de usuarios y vendedores: próximamente.</p>
         </div>

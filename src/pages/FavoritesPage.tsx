@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Heart, ShoppingBag, Loader2 } from 'lucide-react';
+import { ArrowLeft, Heart, Loader2 } from 'lucide-react';
 
 const FavoritesPage: React.FC = () => {
   const navigate = useNavigate();

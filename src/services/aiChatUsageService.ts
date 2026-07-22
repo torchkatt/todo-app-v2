@@ -163,14 +163,13 @@ export async function checkAndIncrementMessage(userId: string, user: User): Prom
   const { remaining, used, limit, tier, canSend } = await getRemainingMessages(userId, user);
 
   if (!canSend) {
-    const plan = AI_CHAT_PLANS[tier];
     return {
       allowed: false,
       remaining: 0,
       used,
       limit,
       tier,
-      error: `Has alcanzado el límite de ${used} mensajes de hoy.${tier === 'free' ? ' ¡Activa Rescatto Pass para obtener más!' : ''}`,
+      error: `Has alcanzado el límite de ${used} mensajes de hoy.${tier === 'free' ? ' ¡Activa tu Pass para obtener más!' : ''}`,
     };
   }
 

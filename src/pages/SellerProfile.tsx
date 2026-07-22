@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Star, ShoppingBag, MapPin, BadgeCheck, Loader2, Package, Clock, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, BadgeCheck, Loader2, Package } from 'lucide-react';
 import type { Seller, Listing } from '../types';
 
 const SellerProfile: React.FC = () => {

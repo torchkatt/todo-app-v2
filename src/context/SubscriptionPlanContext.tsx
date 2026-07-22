@@ -74,6 +74,9 @@ export const SubscriptionPlanProvider: React.FC<{ children: React.ReactNode }> =
       setLoading(false);
     };
     load();
+    // refreshPlans/refreshSubscription no están memoizadas: agregarlas dispararía
+    // un loop (nueva referencia en cada render). El id de seller es la dependencia real.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.sellerId]);
 
   return (

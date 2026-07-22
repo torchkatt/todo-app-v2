@@ -141,7 +141,6 @@ describe('useRevenue — Edge cases', () => {
 
   it('handles leap year', () => {
     // Feb 2024 (leap year)
-    const start = new Date(2024, 1, 1);
     const end = new Date(2024, 1, 29, 23, 59, 59);
     expect(end.getDate()).toBe(29);
   });

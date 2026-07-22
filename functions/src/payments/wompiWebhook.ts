@@ -1,15 +1,16 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
-import { WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET, wompiConfigured } from '../config';
+import { WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET, SENTRY_DSN, wompiConfigured } from '../config';
 import { verifyEventChecksum } from './wompiSignature';
 import { checkRateLimit } from '../lib/rateLimit';
 import { audit } from '../lib/audit';
 import { applyWompiTransaction } from './applyWompiTransaction';
+import { captureError } from '../lib/sentry';
 
 const MAX_PAYLOAD_SIZE = 100_000; // 100KB
 
 export const wompiWebhook = onRequest(
-  { secrets: [WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET], cors: false },
+  { secrets: [WOMPI_PRIVATE_KEY, WOMPI_EVENTS_SECRET, WOMPI_INTEGRITY_SECRET, SENTRY_DSN], cors: false },
   async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).send('Method Not Allowed');
@@ -52,6 +53,7 @@ export const wompiWebhook = onRequest(
       res.status(200).send({ received: true, ...outcome });
     } catch (e) {
       logger.error('wompiWebhook: error processing event', e);
+      captureError(e, { reference: event?.data?.transaction?.reference });
       res.status(500).send('Error processing webhook');
     }
   }

@@ -1,4 +1,3 @@
-import { Listing, Seller, Transaction, User } from '../types';
 
 // ─── Message Types ───
 
@@ -87,8 +86,8 @@ export interface AIChatPlan {
 export const AI_CHAT_PLANS: Record<AIChatPlanTier, AIChatPlan> = {
   guest: { tier: 'guest', dailyLimit: 5, label: 'Invitado' },
   free: { tier: 'free', dailyLimit: 20, label: 'Gratuito' },
-  pass_monthly: { tier: 'pass_monthly', dailyLimit: 100, label: 'Rescatto Pass Mensual' },
-  pass_annual: { tier: 'pass_annual', dailyLimit: Infinity, label: 'Rescatto Pass Anual' },
+  pass_monthly: { tier: 'pass_monthly', dailyLimit: 100, label: 'Pass Mensual' },
+  pass_annual: { tier: 'pass_annual', dailyLimit: Infinity, label: 'Pass Anual' },
   admin: { tier: 'admin', dailyLimit: Infinity, label: 'Administrador' },
 };
 

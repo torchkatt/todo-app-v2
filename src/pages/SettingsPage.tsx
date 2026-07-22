@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Bell, Shield, Globe, Smartphone, LogOut, Loader2, CheckCircle, Moon, Sun } from 'lucide-react';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { ArrowLeft, Bell, Shield, Globe, Smartphone, Loader2, CheckCircle, Moon, Sun } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();

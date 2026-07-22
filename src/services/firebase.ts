@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
@@ -17,7 +17,14 @@ const config = {
 
 const app = initializeApp(config);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// localCache persistente (IndexedDB): evita re-leer de Firestore documentos ya vistos
+// en recargas. persistentMultipleTabManager comparte la caché entre pestañas sin
+// errores de "failed-precondition".
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 

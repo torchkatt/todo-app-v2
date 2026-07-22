@@ -16,9 +16,6 @@ const fmtCOP = (n: number) =>
 
 const fmtNum = (n: number) => new Intl.NumberFormat('es-CO').format(n);
 
-// ─── Chart colors ───
-const COLORS = ['#7c3aed', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#8b5cf6'];
-
 // ─── Stat Card ───
 const StatCard: React.FC<{
   icon: React.ReactNode;

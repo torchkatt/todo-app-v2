@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Store, Plus, TrendingUp, Package, Star, Loader2, DollarSign, Users } from 'lucide-react';
+import { ArrowLeft, Store, Package, Star, Loader2, DollarSign } from 'lucide-react';
 import type { Seller, Listing } from '../types';
 import { UserRole } from '../types';
 
@@ -33,6 +33,9 @@ const SellerDashboard: React.FC = () => {
       } catch (e) { console.error('SellerDash error', e); }
       setLoading(false);
     })();
+    // Solo depende del id: usar el objeto 'user' completo dispararía el efecto en cada
+    // cambio de referencia sin relación con el seller (ej. al refrescar el perfil).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const createSeller = async () => {

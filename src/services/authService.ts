@@ -4,7 +4,7 @@ import {
   GoogleAuthProvider, OAuthProvider, FacebookAuthProvider, User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from './firebase';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User } from '../types';
 import { UserRole } from '../types';
@@ -12,10 +12,6 @@ import { UserRole } from '../types';
 const GOOGLE = new GoogleAuthProvider();
 const APPLE = new OAuthProvider('apple.com');
 const FACEBOOK = new FacebookAuthProvider();
-
-function generateId(data: { name?: string; email: string }): string {
-  return `user_${data.email.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now().toString(36)}`;
-}
 
 async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promise<User> {
   const userId = fbUser.uid;

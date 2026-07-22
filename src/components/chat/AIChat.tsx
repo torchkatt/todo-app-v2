@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { setNavigateHook } from '../../services/aiChatTools';
 import { chatWithAI } from '../../services/aiChatService';
-import { MessageSquare, Send, Loader2, X, Sparkles, ChevronDown } from 'lucide-react';
+import { MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
 
 const WELCOME = `¡Hola! Soy el asistente de **Todo**. Puedo ayudarte a:
 
@@ -68,7 +68,7 @@ const AIChat: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
       const response = await chatWithAI(history, user.id);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    } catch (e) {
+    } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ocurrió un error. Por favor intenta de nuevo.' }]);
     }
     setLoading(false);

@@ -38,9 +38,8 @@ async function flush() {
 }
 
 // Auto-flush every 5s
-let interval: any;
 if (typeof window !== 'undefined') {
-  interval = setInterval(flush, 5000);
+  setInterval(flush, 5000);
 }
 
 export const analytics = {

@@ -2,17 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNotifications } from '../context/NotificationContext';
 import { useFeaturedListings, useCategories, useSubcategories, useSellersByIds } from '../hooks/useFirestore';
 import { Search, ShoppingBag, MapPin, Bell, User, Sparkles, Star, Clock, TrendingUp, ChevronRight, Plus, Loader2 } from 'lucide-react';
-import { CATEGORY_SEED, getRootCategories as getSeedRoot, getSubcategories as getSeedSubs } from '../services/categorySeed';
+import { getRootCategories as getSeedRoot, getSubcategories as getSeedSubs } from '../services/categorySeed';
 import SEO from '../components/seo/SEO';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { totalItems, addItem } = useCart();
-  const { unreadCount } = useNotifications();
   const { data: categories } = useCategories();
   const { data: featuredListings, loading: featuredLoading } = useFeaturedListings();
   const rootCategories = categories.length > 0 ? categories : getSeedRoot();
@@ -205,7 +203,6 @@ const Home: React.FC = () => {
               </div>
             ) : featuredListings.map(item => {
               const seller = sellers[item.sellerId];
-              const badge = (item.discountPercent ?? 0) > 0 ? `-${item.discountPercent}%` : item.type === 'service' ? 'Servicio' : 'Nuevo';
               return (
               <div
                 key={item.id}

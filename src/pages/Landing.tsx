@@ -2,15 +2,28 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Sparkles, ShoppingBag, Bot, ShieldCheck, CreditCard, Zap,
-  BarChart3, Package, Truck, Store, ArrowRight, Check,
+  Sparkles, ShoppingBag, Bot, CreditCard, Zap,
+  BarChart3, Truck, Store, ArrowRight, Check,
   Star, ChevronDown, ChevronUp, Globe, Search, UserPlus,
 } from 'lucide-react';
 import SEO from '../components/seo/SEO';
+import { useSubscriptionPlans } from '../context/SubscriptionPlanContext';
+import { analytics } from '../services/analyticsService';
+
+const fmtCOP = (n: number) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { plans } = useSubscriptionPlans();
+  // Precio en vivo desde Firestore (mismo dato que PricingPage) — evita que la Landing
+  // muestre un precio desactualizado si se cambia en el admin. Fallback al copy de i18n
+  // mientras carga o si el plan aún no existe en Firestore.
+  const dynamicPrice = (planId: string, fallback: string) => {
+    const plan = plans.find(p => p.id === planId);
+    return plan ? fmtCOP(plan.price) : fallback;
+  };
   const [faqOpen, setFaqOpen] = React.useState<number | null>(null);
 
   return (
@@ -75,11 +88,11 @@ const Landing: React.FC = () => {
               {t('landing.hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => navigate('/register')} className="group px-8 py-4 bg-white text-violet-700 rounded-xl text-base font-extrabold shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">
+              <button onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'hero_register' } }); navigate('/register'); }} className="group px-8 py-4 bg-white text-violet-700 rounded-xl text-base font-extrabold shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">
                 {t('landing.hero.cta1')}
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button onClick={() => navigate('/app')} className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 rounded-xl text-base font-extrabold hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+              <button onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'hero_explore' } }); navigate('/app'); }} className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 rounded-xl text-base font-extrabold hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2">
                 <Store size={18} />
                 {t('landing.hero.cta2')}
               </button>
@@ -240,7 +253,7 @@ const Landing: React.FC = () => {
               {
                 name: t('landing.pricing.plan1.name'),
                 desc: t('landing.pricing.plan1.desc'),
-                price: t('landing.pricing.plan1.price'),
+                price: dynamicPrice('free', t('landing.pricing.plan1.price')),
                 period: '',
                 features: [
                   t('landing.pricing.plan1.f1'),
@@ -254,7 +267,7 @@ const Landing: React.FC = () => {
               {
                 name: t('landing.pricing.plan2.name'),
                 desc: t('landing.pricing.plan2.desc'),
-                price: t('landing.pricing.plan2.price'),
+                price: dynamicPrice('seller_pass_monthly', t('landing.pricing.plan2.price')),
                 period: t('landing.pricing.plan2.period'),
                 features: [
                   t('landing.pricing.plan2.f1'),
@@ -269,7 +282,7 @@ const Landing: React.FC = () => {
               {
                 name: t('landing.pricing.plan3.name'),
                 desc: t('landing.pricing.plan3.desc'),
-                price: t('landing.pricing.plan3.price'),
+                price: dynamicPrice('seller_pass_annual', t('landing.pricing.plan3.price')),
                 period: t('landing.pricing.plan3.period'),
                 features: [
                   t('landing.pricing.plan3.f1'),
@@ -312,7 +325,7 @@ const Landing: React.FC = () => {
                   ))}
                 </ul>
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'pricing_plan', plan: plan.name } }); navigate('/register'); }}
                   className={`w-full py-3 rounded-xl text-sm font-extrabold transition-all active:scale-95 ${
                     plan.popular
                       ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-200'
@@ -414,10 +427,10 @@ const Landing: React.FC = () => {
             {t('landing.ctaBottom.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={() => navigate('/register')} className="px-8 py-4 bg-white text-purple-700 rounded-xl text-base font-extrabold shadow-xl hover:shadow-2xl transition-all active:scale-95">
+            <button onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'bottom_register' } }); navigate('/register'); }} className="px-8 py-4 bg-white text-purple-700 rounded-xl text-base font-extrabold shadow-xl hover:shadow-2xl transition-all active:scale-95">
               {t('landing.ctaBottom.cta1')}
             </button>
-            <button onClick={() => navigate('/help')} className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 rounded-xl text-base font-extrabold hover:bg-white/20 transition-all active:scale-95">
+            <button onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'bottom_help' } }); navigate('/help'); }} className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 rounded-xl text-base font-extrabold hover:bg-white/20 transition-all active:scale-95">
               {t('landing.ctaBottom.cta2')}
             </button>
           </div>

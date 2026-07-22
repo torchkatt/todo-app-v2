@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { X, Sparkles, ShoppingBag, Search, Heart, MessageSquare } from 'lucide-react';
+import { ShoppingBag, Search, Heart, MessageSquare } from 'lucide-react';
 
 const STEPS = [
   { icon: <Search size={24} />, title: 'Explora', desc: 'Busca productos, servicios y contenido digital de cientos de vendedores' },
@@ -14,7 +13,6 @@ const STEPS = [
 
 const Onboarding: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 

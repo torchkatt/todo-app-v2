@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { UserRole } from '../types';
 
 vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));

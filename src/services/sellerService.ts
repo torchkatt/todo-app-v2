@@ -1,6 +1,6 @@
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, startAfter } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Seller, SellerType, SellerStats } from '../types';
+import type { Seller, SellerType } from '../types';
 
 const COLLECTION = 'sellers';
 

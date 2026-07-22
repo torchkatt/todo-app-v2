@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { CATEGORY_SEED } from '../services/categorySeed';
-import { ArrowLeft, ShoppingBag, MapPin, Star, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { Listing } from '../types';
 import { Category } from '../types';
 import SEO from '../components/seo/SEO';

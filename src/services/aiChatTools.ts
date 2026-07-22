@@ -1,8 +1,8 @@
 import { db } from './firebase';
-import { collection, query, where, getDocs, getDoc, doc, orderBy, limit, addDoc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, orderBy, limit, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { logger } from '../utils/logger';
-import { checkMessage, checkToolAction } from './aiChatSecurity';
-import type { Listing, Seller, Transaction, User, Category, UserRole } from '../types';
+import { checkToolAction } from './aiChatSecurity';
+import type { Listing, Seller } from '../types';
 
 let navigateToPath: ((path: string) => void) | null = null;
 export const setNavigateHook = (fn: (path: string) => void) => { navigateToPath = fn; };
@@ -152,7 +152,7 @@ async function execGetListingDetail(args: any) {
     const l = snap.data() as Listing;
     const ss = await getDoc(doc(db, 'sellers', l.sellerId));
     return JSON.stringify({ ...l, sellerName: ss.exists() ? (ss.data() as Seller).name : null });
-  } catch (e) { return JSON.stringify({ error: 'Error' }); }
+  } catch (e) { logger.error('getListingDetail error', e); return JSON.stringify({ error: 'Error' }); }
 }
 
 async function execGetUserTransactions(userId: string, args: any) {
@@ -162,7 +162,7 @@ async function execGetUserTransactions(userId: string, args: any) {
     let txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
     if (args.status) txs = txs.filter(t => t.status?.toLowerCase().includes(args.status.toLowerCase()));
     return JSON.stringify(txs.map(t => ({ id: t.id, status: t.status, total: t.totalAmount, items: t.lineItems?.length || 0, method: t.payment?.method, date: t.createdAt, sellerId: t.sellerId })));
-  } catch (e) { return '[]'; }
+  } catch (e) { logger.error('getUserTransactions error', e); return '[]'; }
 }
 
 async function execGetUserStats(userId: string) {
@@ -171,7 +171,7 @@ async function execGetUserStats(userId: string) {
     if (!snap.exists()) return JSON.stringify({});
     const u = snap.data();
     return JSON.stringify({ points: u.impact?.points || 0, level: u.impact?.level || 'NOVICE', totalSpent: u.impact?.totalSpent || 0, totalTransactions: u.impact?.totalTransactions || 0, streak: u.impact?.streak?.current || 0, joinedDate: u.createdAt, referralCode: u.referralCode });
-  } catch (e) { return JSON.stringify({}); }
+  } catch (e) { logger.error('getUserStats error', e); return JSON.stringify({}); }
 }
 
 async function execGetUserProfile(userId: string) {
@@ -180,7 +180,7 @@ async function execGetUserProfile(userId: string) {
     if (!snap.exists()) return JSON.stringify({ error: 'No encontrado' });
     const u = snap.data();
     return JSON.stringify({ fullName: u.fullName, email: u.email, role: u.role, phone: u.phone, city: u.city, address: u.address, isVerified: u.isVerified, isGuest: u.isGuest, createdAt: u.createdAt });
-  } catch (e) { return JSON.stringify({}); }
+  } catch (e) { logger.error('getUserProfile error', e); return JSON.stringify({}); }
 }
 
 async function execUpdateProfile(userId: string, args: any) {
@@ -192,7 +192,7 @@ async function execUpdateProfile(userId: string, args: any) {
     if (args.address) updates.address = args.address;
     await updateDoc(doc(db, 'users', userId), updates);
     return 'Perfil actualizado correctamente.';
-  } catch (e) { return 'Error al actualizar perfil.'; }
+  } catch (e) { logger.error('updateProfile error', e); return 'Error al actualizar perfil.'; }
 }
 
 async function execGetFavorites(userId: string) {
@@ -206,7 +206,7 @@ async function execGetFavorites(userId: string) {
       if (ls.exists()) results.push({ id, title: ls.data().title, price: ls.data().price, type: ls.data().type });
     }
     return JSON.stringify(results);
-  } catch (e) { return '[]'; }
+  } catch (e) { logger.error('getFavorites error', e); return '[]'; }
 }
 
 async function execToggleFavorite(userId: string, args: any) {
@@ -221,7 +221,7 @@ async function execToggleFavorite(userId: string, args: any) {
       await updateDoc(ref, { favoriteListingIds: [...favs, args.listingId] });
       return 'Agregado a favoritos.';
     }
-  } catch (e) { return 'Error al actualizar favoritos.'; }
+  } catch (e) { logger.error('toggleFavorite error', e); return 'Error al actualizar favoritos.'; }
 }
 
 async function execGetCart(userId: string) {
@@ -229,7 +229,7 @@ async function execGetCart(userId: string) {
     const snap = await getDoc(doc(db, 'carts', userId));
     if (!snap.exists()) return '[]';
     return JSON.stringify(snap.data().items || []);
-  } catch (e) { return '[]'; }
+  } catch (e) { logger.error('getCart error', e); return '[]'; }
 }
 
 async function execAddToCart(userId: string, args: any) {
@@ -243,7 +243,7 @@ async function execAddToCart(userId: string, args: any) {
     items.push({ listingId: args.listingId, title: l.title, price: l.price, quantity: args.quantity || 1, sellerId: l.sellerId });
     await setDoc(ref, { items, updatedAt: serverTimestamp() });
     return `Agregado al carrito: ${l.title}`;
-  } catch (e) { return 'Error al agregar al carrito.'; }
+  } catch (e) { logger.error('addToCart error', e); return 'Error al agregar al carrito.'; }
 }
 
 async function execRemoveFromCart(userId: string, args: any) {
@@ -254,7 +254,7 @@ async function execRemoveFromCart(userId: string, args: any) {
     const items = (snap.data().items || []).filter((i: any) => i.listingId !== args.listingId);
     await updateDoc(ref, { items, updatedAt: serverTimestamp() });
     return 'Item quitado del carrito.';
-  } catch (e) { return 'Error.'; }
+  } catch (e) { logger.error('removeFromCart error', e); return 'Error.'; }
 }
 
 async function execGetReviews(args: any) {
@@ -262,7 +262,7 @@ async function execGetReviews(args: any) {
     const q = query(collection(db, 'reviews'), where('targetType', '==', args.targetType), where('targetId', '==', args.targetId), orderBy('createdAt', 'desc'), limit(20));
     const snap = await getDocs(q);
     return JSON.stringify(snap.docs.map(d => d.data()));
-  } catch (e) { return '[]'; }
+  } catch (e) { logger.error('getReviews error', e); return '[]'; }
 }
 
 function execGetTodoInfo(args: any) {

@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, limit, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs, limit, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { logger } from '../utils/logger';
 
@@ -12,7 +12,6 @@ import { logger } from '../utils/logger';
  */
 
 const MEMORY_COLLECTION = 'ai_chat_memories';
-const CACHE_DOC = 'ai_chat_cache';
 
 // ─── Types ───
 
@@ -283,7 +282,7 @@ export function buildCacheOptimizedMessages(
 export async function extractMemoriesFromTurn(
   userId: string,
   userMessage: string,
-  aiResponse: string,
+  _aiResponse: string,
 ): Promise<void> {
   const lowerMsg = userMessage.toLowerCase();
 
@@ -326,10 +325,10 @@ export async function extractMemoriesFromTurn(
 }
 
 /**
- * Track when a user has an active Rescatto Pass
+ * Track when a user has an active Pass
  */
 export async function trackUserTier(userId: string, tier: string): Promise<void> {
   if (tier === 'pass_monthly' || tier === 'pass_annual') {
-    await saveMemory(userId, 'fact', 'subscription', `Tiene Rescatto Pass (${tier === 'pass_annual' ? 'Anual' : 'Mensual'})`, 0.9, 'system');
+    await saveMemory(userId, 'fact', 'subscription', `Tiene Pass (${tier === 'pass_annual' ? 'Anual' : 'Mensual'})`, 0.9, 'system');
   }
 }

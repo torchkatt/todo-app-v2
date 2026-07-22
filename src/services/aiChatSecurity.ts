@@ -174,7 +174,7 @@ export interface SecurityResult {
   error?: string;
 }
 
-export async function checkMessage(userId: string, text: string, userRole?: string): Promise<SecurityResult> {
+export async function checkMessage(userId: string, text: string, _userRole?: string): Promise<SecurityResult> {
   // L1: Sanitize
   const sanitized = sanitizeInput(text);
 

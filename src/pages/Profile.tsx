@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, User, ShoppingBag, Star, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award } from 'lucide-react';
+import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award } from 'lucide-react';
 import GuestConversion from '../components/auth/GuestConversion';
 
 const Profile: React.FC = () => {

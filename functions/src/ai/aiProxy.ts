@@ -2,10 +2,11 @@ import axios from 'axios';
 import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
-import { DEEPSEEK_API_KEY, deepseekConfigured } from '../config';
+import { DEEPSEEK_API_KEY, SENTRY_DSN, deepseekConfigured } from '../config';
 import { checkMessage } from './security';
 import { checkAndIncrementUsage, resolveTier } from './usage';
 import { TODO_TOOLS } from './tools';
+import { captureError } from '../lib/sentry';
 
 const API_URL = 'https://api.deepseek.com/chat/completions';
 const DEFAULT_MODEL = 'deepseek-chat';
@@ -47,7 +48,7 @@ interface AiChatRequest {
   continuation?: boolean;
 }
 
-export const aiChat = onCall({ secrets: [DEEPSEEK_API_KEY] }, async (request) => {
+export const aiChat = onCall({ secrets: [DEEPSEEK_API_KEY, SENTRY_DSN] }, async (request) => {
   const auth = request.auth;
   if (!auth) throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
 
@@ -112,6 +113,7 @@ export const aiChat = onCall({ secrets: [DEEPSEEK_API_KEY] }, async (request) =>
     return { content: msg.content || '👍 Listo. ¿Necesitas algo más?', toolCalls: null };
   } catch (e) {
     logger.error('aiChat: DeepSeek request failed', e);
+    captureError(e, { uid: auth.uid });
     return { content: '⚠️ Error al conectar con el asistente. Intenta de nuevo.', toolCalls: null };
   }
 });

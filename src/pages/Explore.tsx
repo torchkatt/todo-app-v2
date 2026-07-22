@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getRootCategories } from '../services/categorySeed';
-import { Search, ShoppingBag, ArrowLeft, Filter, SlidersHorizontal, Loader2, Star, MapPin } from 'lucide-react';
+import { Search, ArrowLeft, Loader2, Star, MapPin } from 'lucide-react';
 import SEO from '../components/seo/SEO';
 import type { Listing } from '../types';
 
