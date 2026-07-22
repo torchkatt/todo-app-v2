@@ -6,6 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+storage-debug.log
 
 node_modules
 dist
@@ -31,6 +35,9 @@ credentials.json
 token.json
 seed_token.txt
 functions/lib/
+functions/.env
+functions/.env.*
+!functions/.env.example
 
 # Firebase deploy cache
 .firebase/
