@@ -1,13 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
-import { formatCOP } from '../config/constants';
+import { ArrowLeft, ShoppingBag, Trash2, Minus, Plus, ArrowRight, Truck } from 'lucide-react';
+import { APP_CONFIG, formatCOP } from '../config/constants';
 import Button from '../components/ui/Button';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const { items, removeItem, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+  const shippingProgress = Math.min(100, Math.round((totalPrice / APP_CONFIG.freeShippingThreshold) * 100));
+  const amountRemaining = Math.max(0, APP_CONFIG.freeShippingThreshold - totalPrice);
 
   return (
     <div className="pb-32 bg-brand-bg min-h-screen">
@@ -38,6 +40,25 @@ const Cart: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* Free Shipping Incentive Progress Bar */}
+            <div className="mb-4 p-3.5 bg-amber-50/80 dark:bg-slate-800 border border-amber-200/70 dark:border-amber-900/40 rounded-2xl shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold mb-2 text-slate-800 dark:text-slate-200">
+                <span className="flex items-center gap-1.5">
+                  <Truck size={16} className="text-amber-600 dark:text-amber-400" />
+                  {amountRemaining > 0
+                    ? `¡Te faltan ${formatCOP(amountRemaining)} para Envío Gratis!`
+                    : '🎉 ¡Felicidades! Tienes Envío Gratis'}
+                </span>
+                <span className="text-amber-700 dark:text-amber-400 font-extrabold">{shippingProgress}%</span>
+              </div>
+              <div className="w-full bg-amber-200/60 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-amber-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${shippingProgress}%` }}
+                />
+              </div>
+            </div>
+
             <div className="space-y-3 mb-4">
               {items.map(item => (
                 <div key={item.listingId}
