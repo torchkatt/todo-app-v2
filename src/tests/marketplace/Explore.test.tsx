@@ -389,7 +389,7 @@ describe('Explore — Search filtering', () => {
   it('filters by search text in title', async () => {
     const listings = [
       mockListing({ id: '1', title: 'iPhone 15 Pro', price: 3500000, stats: {} }),
-      mockListing({ id: '2', title: 'Samsung Galaxy', price: 2000000, stats: {} }),
+      mockListing({ id: '2', title: 'Samsung Galaxy', description: 'Celular Android', tags: ['samsung'], price: 2000000, stats: {} }),
     ];
     mockGetDocs.mockResolvedValue(firestoreSnap(listings));
 
@@ -401,9 +401,10 @@ describe('Explore — Search filtering', () => {
     const input = screen.getByPlaceholderText('Buscar productos, servicios...');
     fireEvent.change(input, { target: { value: 'iPhone' } });
 
-    // After filtering by "iPhone", Samsung should be gone
-    expect(screen.queryByText('Samsung Galaxy')).toBeNull();
-    expect(screen.getByText('iPhone 15 Pro')).toBeDefined();
+    await waitFor(() => {
+      expect(screen.queryByText('Samsung Galaxy')).toBeNull();
+      expect(screen.getByText('iPhone 15 Pro')).toBeDefined();
+    });
   });
 
   it('filters by search text in description', async () => {
