@@ -1,10 +1,12 @@
 /**
  * @file Onboarding.tsx
  * @description Tour/tutorial inicial de la aplicación.
- * Se muestra ÚNICAMENTE cuando un usuario inicia sesión (autenticado) y aún no ha completado el tutorial.
+ * Se muestra ÚNICAMENTE cuando un usuario autenticado ingresa exitosamente (después del login)
+ * y sólo una única vez por usuario.
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../context/AuthContext';
@@ -25,29 +27,38 @@ const STEPS = [
  */
 const Onboarding: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // 🛑 ÚNICAMENTE MOSTRAR CUANDO EL USUARIO ESTÁ AUTENTICADO (No antes, ni a invitados)
+    // 🛑 1. NUNCA MOSTRAR en páginas públicas/pre-login (/login, /register, landing /)
+    const publicAuthPaths = ['/', '/login', '/register'];
+    if (publicAuthPaths.includes(location.pathname)) {
+      setVisible(false);
+      return;
+    }
+
+    // 🛑 2. ÚNICAMENTE evaluar si el usuario ha iniciado sesión exitosamente
     if (!isAuthenticated || !user?.id || user.isGuest) {
       setVisible(false);
       return;
     }
 
-    // Si ya completó el onboarding localmente en este dispositivo, no mostrar modal
-    if (localStorage.getItem(`todo_onboarding_${user.id}`) === 'true') {
+    // 🛑 3. Si ya completó el onboarding (en objeto user, o en localStorage), NUNCA MOSTRAR
+    const userStorageKey = `todo_onboarding_done_${user.id}`;
+    if (user.onboardingDone || localStorage.getItem(userStorageKey) === 'true') {
       setVisible(false);
       return;
     }
 
-    // Consultar estado en Firestore para sincronización entre dispositivos
+    // 🛑 4. Verificar en Firestore si ya lo realizó previamente en otro dispositivo
     (async () => {
       try {
         const ref = doc(db, 'users', user.id);
         const snap = await getDoc(ref);
         if (snap.exists() && snap.data()?.onboardingDone) {
-          localStorage.setItem(`todo_onboarding_${user.id}`, 'true');
+          localStorage.setItem(userStorageKey, 'true');
           setVisible(false);
           return;
         }
@@ -56,14 +67,14 @@ const Onboarding: React.FC = () => {
         setVisible(false);
       }
     })();
-  }, [user?.id, user?.isGuest, isAuthenticated]);
+  }, [user?.id, user?.isGuest, user?.onboardingDone, isAuthenticated, location.pathname]);
 
   /**
-   * Finaliza el tutorial, guarda el estado en Firestore y en localStorage asociándolo al ID del usuario.
+   * Finaliza el tutorial y guarda el estado permanentemente por usuario.
    */
   const finish = async () => {
     if (user?.id) {
-      localStorage.setItem(`todo_onboarding_${user.id}`, 'true');
+      localStorage.setItem(`todo_onboarding_done_${user.id}`, 'true');
     }
     setVisible(false);
 
@@ -80,7 +91,10 @@ const Onboarding: React.FC = () => {
     }
   };
 
-  if (!visible) return null;
+  // NUNCA renderizar en rutas pre-login o cuando visible sea false
+  if (!visible || ['/', '/login', '/register'].includes(location.pathname)) {
+    return null;
+  }
 
   const s = STEPS[step];
 

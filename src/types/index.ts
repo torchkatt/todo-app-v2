@@ -58,6 +58,7 @@ export interface User {
   referralCode?: string;
   invitedBy?: string;
   hasSeenOnboarding?: boolean;
+  onboardingDone?: boolean;
   tosAcceptedAt?: string;
   createdAt: string;
 }
