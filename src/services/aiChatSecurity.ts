@@ -1,7 +1,12 @@
 import { logger } from '../utils/logger';
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { UserRole } from '../types';
+
+// NOTA: esta es la copia client-side, usada solo como feedback inmediato en la UI
+// (evita un roundtrip innecesario para casos obvios). La autoridad real es
+// functions/src/ai/security.ts, que corre en cada llamada al proxy de IA — el backend
+// nunca confía en este chequeo.
 
 // ─── L1: Input Validation ───
 
@@ -12,22 +17,23 @@ export const INPUT_LIMITS = {
   MAX_CONCURRENT_TOOLS: 5,
 } as const;
 
+// Acotado a inyección de prompt y manipulación financiera/de datos real. Se retiraron
+// patrones que bloqueaban consultas legítimas (p.ej. "¿tienen productos de seguridad?",
+// "¿hay algún problema con mi pedido?"): /malicious|hack|exploit|vulnerability/i y /override/i.
 const JAILBREAK_PATTERNS = [
   /ignore\s+(all\s+)?(previous|above|prior)/i,
   /forget\s+(all\s+)?(previous|instructions|rules)/i,
   /system\s+(prompt|instruction|message)/i,
   /you\s+are\s+(now|free|liberated)/i,
-  /DAN|JAILBREAK|BYPASS/i,
+  /\bDAN\b|JAILBREAK|BYPASS/i,
   /sudo|admin\s+mode|developer\s+mode/i,
-  /override|bypass\s+(security|safety)/i,
+  /bypass\s+(security|safety|payment|checkout|verification)/i,
   /delete\s+(all\s+)?data|drop\s+database|truncate/i,
   /execute\s+(command|sql|query|code)/i,
-  /malicious|hack|exploit|vulnerability/i,
   /steal\s+(data|info|credentials|password)/i,
   /access\s+(other\s+)?users?\s+(data|account)/i,
   /fake\s+(transaction|order|payment|review)/i,
   /modify\s+(price|amount|balance|stock)/i,
-  /bypass\s+(payment|checkout|verification)/i,
 ];
 
 // ─── L2: Role Enforcement ───

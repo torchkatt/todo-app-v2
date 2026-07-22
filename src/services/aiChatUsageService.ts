@@ -7,12 +7,14 @@ import { AI_CHAT_PLANS } from './aiChatTypes';
 
 /**
  * AI Chat Usage Service
- * 
- * Tracks daily message usage per user and enforces limits based on subscription tier.
- * Usage data stored in Firestore: users/{userId}/aiChatUsage
+ *
+ * NOTA: la autoridad de la cuota es el backend (functions/src/ai/usage.ts), que escribe
+ * en esta misma colección `ai_usage` en cada llamada al proxy de IA. Las reglas de Firestore
+ * bloquean escritura directa del cliente (write: if false) — este servicio queda como
+ * lectura de solo-UX para mostrar "mensajes restantes hoy".
  */
 
-const USAGE_COLLECTION = 'ai_chat_usage';
+const USAGE_COLLECTION = 'ai_usage';
 
 function getTodayString(): string {
   return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { TODO_TOOLS, executeToolCall, setNavigateHook } from '../../services/aiChatTools';
-import { chatWithDeepSeek } from '../../services/deepseekService';
+import { setNavigateHook } from '../../services/aiChatTools';
+import { chatWithAI } from '../../services/aiChatService';
 import { MessageSquare, Send, Loader2, X, Sparkles, ChevronDown } from 'lucide-react';
 
 const WELCOME = `¡Hola! Soy el asistente de **Todo**. Puedo ayudarte a:
@@ -66,7 +66,7 @@ const AIChat: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       const history = messages.slice(-12).map(m => ({ role: m.role as any, content: m.content }));
       history.push({ role: 'user', content: text });
 
-      const response = await chatWithDeepSeek(history, user.id);
+      const response = await chatWithAI(history, user.id);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ocurrió un error. Por favor intenta de nuevo.' }]);
