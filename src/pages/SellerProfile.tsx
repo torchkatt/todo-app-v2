@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Star, MapPin, BadgeCheck, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, BadgeCheck, Loader2, Package, Heart } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useFollow } from '../hooks/useFollow';
 import type { Seller, Listing } from '../types';
 
 const SellerProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isFollowing, followerCount, toggleFollow } = useFollow(user?.id, id);
   const [seller, setSeller] = useState<Seller | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +61,23 @@ const SellerProfile: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Follow button */}
+        {user && id && user.id !== seller.ownerId && (
+          <button
+            onClick={toggleFollow}
+            className={`absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+              isFollowing
+                ? 'bg-white/20 text-white border border-white/30'
+                : 'bg-white text-purple-700 shadow-md'
+            }`}
+          >
+            <Heart size={14} className={isFollowing ? 'fill-white' : ''} />
+            {isFollowing ? 'Siguiendo' : 'Seguir'}
+            {followerCount > 0 && (
+              <span className="ml-1 opacity-70">· {followerCount}</span>
+            )}
+          </button>
+        )}
       </div>
 
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
