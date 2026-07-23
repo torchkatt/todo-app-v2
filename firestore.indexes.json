@@ -99,6 +99,10 @@
     { "collectionGroup": "seller_follows", "queryScope": "COLLECTION", "fields": [
       { "fieldPath": "userId", "order": "ASCENDING" },
       { "fieldPath": "sellerId", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "gift_card_transactions", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "cardId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
     ]}
   ],
   "fieldOverrides": []
