@@ -11,7 +11,19 @@ import { captureError } from '../lib/sentry';
 const API_URL = 'https://api.deepseek.com/chat/completions';
 const MAX_TOKENS = 1000;
 
-const SYSTEM_PROMPT = `Eres el asistente IA de **Todo** — un marketplace general de Colombia donde se puede comprar productos, contratar servicios, descargar contenido digital y más.
+function buildSystemPrompt(role?: string): string {
+  let roleBlock = '';
+  if (role === 'SELLER') {
+    roleBlock = `\n\n**Tu rol en esta conversación es: SELLER (vendedor).** Además de lo anterior:
+- Puede ver los pedidos de su tienda con getSellerOrders
+- Puede avanzar el estado de un pedido con updateOrderStatus (solo preparando/listo/en camino/entregado — nunca cancelar, reembolsar ni abrir disputa)`;
+  } else if (role === 'COURIER') {
+    roleBlock = `\n\n**Tu rol en esta conversación es: COURIER (domiciliario).** Además de lo anterior:
+- Puede ver sus entregas asignadas con getCourierDeliveries
+- Puede marcarlas en camino o entregadas con updateOrderStatus`;
+  }
+
+  return `Eres el asistente IA de **Todo** — un marketplace general de Colombia donde se puede comprar productos, contratar servicios, descargar contenido digital y más.
 
 **Tus capacidades:**
 - Buscar productos y servicios usando la función searchListings
@@ -21,8 +33,9 @@ const SYSTEM_PROMPT = `Eres el asistente IA de **Todo** — un marketplace gener
 - Ver detalles de vendedores con getSellerDetail
 - Consultar pedidos del usuario con getUserTransactions
 - Ver estadísticas con getUserStats
+- Ver notificaciones con getNotifications
 - Responder preguntas generales sobre Todo con getTodoInfo
-- Navegar a secciones con navigateTo
+- Navegar a secciones con navigateTo${roleBlock}
 
 **Reglas:**
 1. Siempre responde en español colombiano
@@ -32,6 +45,7 @@ const SYSTEM_PROMPT = `Eres el asistente IA de **Todo** — un marketplace gener
 5. NO inventes información sobre productos o precios
 6. Recomienda usar los filtros de categoría cuando sea relevante
 7. Los precios están en pesos colombianos (COP)`;
+}
 
 interface ProxyMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
@@ -60,11 +74,11 @@ export const aiChat = onCall({ cors: true, secrets: [DEEPSEEK_API_KEY, SENTRY_DS
 
   const messages = [...data.messages];
 
-  if (!data.continuation) {
-    const userDoc = await admin.firestore().collection('users').doc(auth.uid).get();
-    if (!userDoc.exists) throw new HttpsError('not-found', 'Usuario no encontrado.');
-    const user = userDoc.data()!;
+  const userDoc = await admin.firestore().collection('users').doc(auth.uid).get();
+  if (!userDoc.exists) throw new HttpsError('not-found', 'Usuario no encontrado.');
+  const user = userDoc.data()!;
 
+  if (!data.continuation) {
     const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
     if (lastUserMsg) {
       const secCheck = await checkMessage(auth.uid, lastUserMsg.content);
@@ -85,7 +99,7 @@ export const aiChat = onCall({ cors: true, secrets: [DEEPSEEK_API_KEY, SENTRY_DS
     }
   }
 
-  const fullMessages: ProxyMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }, ...messages];
+  const fullMessages: ProxyMessage[] = [{ role: 'system', content: buildSystemPrompt(user.role) }, ...messages];
 
   try {
     const response = await axios.post(

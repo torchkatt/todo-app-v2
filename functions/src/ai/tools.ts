@@ -50,6 +50,30 @@ export const TODO_TOOLS: ToolDefinition[] = [
       address: { type: 'string', description: 'Dirección' },
     },
   }}},
+  { type: 'function', function: { name: 'getSellerOrders', description: 'Ver los pedidos recibidos en la tienda del usuario (solo si tiene una tienda registrada). Filtra por estado.', parameters: {
+    type: 'object', properties: {
+      status: { type: 'string', description: 'Filtrar por estado, ej. PREPARING, READY' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'getCourierDeliveries', description: 'Ver las entregas asignadas al domiciliario. Filtra por estado.', parameters: {
+    type: 'object', properties: {
+      status: { type: 'string', description: 'Filtrar por estado, ej. IN_TRANSIT, DELIVERED' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'getNotifications', description: 'Ver las notificaciones del usuario.', parameters: {
+    type: 'object', properties: {
+      unreadOnly: { type: 'boolean', description: 'Solo no leídas' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'updateOrderStatus', description: 'Cambiar el estado de un pedido — solo para vendedores (avance de preparación/entrega) o domiciliarios (en camino/entregado). Antes de llamarla, SIEMPRE confirma en un mensaje de texto con el usuario qué pedido y a qué estado va a cambiar, y solo procede tras confirmación explícita. Nunca la uses para cancelar, reembolsar o abrir disputas — eso no está permitido.', parameters: {
+    type: 'object', properties: {
+      transactionId: { type: 'string', description: 'ID del pedido' },
+      status: { type: 'string', enum: ['PREPARING', 'READY', 'IN_TRANSIT', 'DELIVERED'], description: 'Nuevo estado' },
+    }, required: ['transactionId', 'status'],
+  }}},
   { type: 'function', function: { name: 'getFavorites', description: 'Obtener lista de favoritos del usuario.', parameters: { type: 'object', properties: {} }}},
   { type: 'function', function: { name: 'toggleFavorite', description: 'Agregar o quitar un favorito.', parameters: {
     type: 'object', properties: {

@@ -88,7 +88,8 @@ service cloud.firestore {
     match /transactions/{transactionId} {
       allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.buyerId == request.auth.uid) ||
-        (isAuthenticated() && isSellerOwner(resource.data.sellerId));
+        (isAuthenticated() && isSellerOwner(resource.data.sellerId)) ||
+        (isAuthenticated() && resource.data.courierId == request.auth.uid);
       allow create: if false;
       // El comprador solo puede cancelar mientras el pago está pendiente, y solo
       // puede tocar 'status' y 'updatedAt' — nunca montos ni datos de pago.

@@ -15,6 +15,7 @@ const SELLER_OWNER = 'seller-owner-1';
 const OTHER_USER = 'other-user-1';
 const SELLER_ID = 'seller-1';
 const ADMIN = 'admin-1';
+const COURIER = 'courier-1';
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
@@ -47,6 +48,7 @@ beforeEach(async () => {
     await db.collection('transactions').doc('tx-1').set({
       buyerId: BUYER,
       sellerId: SELLER_ID,
+      courierId: COURIER,
       status: 'PENDING_PAYMENT',
       totalAmount: 100000,
       sellerEarnings: 95000,
@@ -68,6 +70,9 @@ function asOther() {
 }
 function asAdmin() {
   return testEnv.authenticatedContext(ADMIN, { role: 'ADMIN' }).firestore();
+}
+function asCourier() {
+  return testEnv.authenticatedContext(COURIER, { role: 'COURIER' }).firestore();
 }
 
 describe('transactions — el cliente nunca origina montos', () => {
@@ -122,6 +127,21 @@ describe('transactions — el cliente nunca origina montos', () => {
   it('el dueño de la tienda (ownerId del seller, no el sellerId) puede leer la transacción', async () => {
     const db = asSellerOwner();
     await assertSucceeds(getDoc(doc(db, 'transactions', 'tx-1')));
+  });
+
+  it('el domiciliario asignado (courierId) puede leer la transacción', async () => {
+    const db = asCourier();
+    await assertSucceeds(getDoc(doc(db, 'transactions', 'tx-1')));
+  });
+
+  it('un domiciliario que no es el asignado no puede leer la transacción', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx.firestore().collection('transactions').doc('tx-3').set({
+        buyerId: BUYER, sellerId: SELLER_ID, courierId: 'courier-other', status: 'IN_TRANSIT', totalAmount: 100000,
+      });
+    });
+    const db = asCourier();
+    await assertFails(getDoc(doc(db, 'transactions', 'tx-3')));
   });
 });
 
