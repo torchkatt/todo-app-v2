@@ -510,3 +510,151 @@ export type Permission =
   | 'manage_users' | 'manage_sellers' | 'manage_categories'
   | 'manage_transactions' | 'view_analytics' | 'manage_own_seller'
   | 'create_listings' | 'manage_bookings' | 'view_audit_logs';
+
+// ═══════════════════════════════════════════════════════════════
+// 🏦 FASE RAPPI/WECHAT — Wallet, Cashback, Social, Analytics
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Todo Wallet ──────────────────────────────────────────────────────────
+export interface Wallet {
+  id: string;                // = userId
+  balance: number;           // Saldo disponible en COP
+  pendingCashback: number;   // Cashback no reclamado
+  lifetimeCashback: number;  // Cashback total acumulado
+  lifetimeSpent: number;     // Gasto total con wallet
+  updatedAt: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  userId: string;
+  type: 'TOP_UP' | 'PAYMENT' | 'CASHBACK_EARNED' | 'CASHBACK_CLAIMED'
+      | 'REFUND' | 'WITHDRAWAL' | 'GIFT_SENT' | 'GIFT_RECEIVED';
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  description: string;
+  referenceType?: 'transaction' | 'top_up' | 'gift';
+  referenceId?: string;
+  createdAt: string;
+}
+
+// ─── Cashback ─────────────────────────────────────────────────────────────
+export interface CashbackRule {
+  id: string;
+  name: string;
+  rateBps: number;           // basis points: 300 = 3%
+  minPurchaseAmount: number;
+  maxCashbackAmount: number;
+  categoryId?: string;       // null = aplica a todas
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CashbackRecord {
+  id: string;
+  userId: string;
+  transactionId: string;
+  amount: number;
+  rateBps: number;
+  status: 'PENDING' | 'AVAILABLE' | 'CLAIMED' | 'EXPIRED';
+  expiresAt: string;         // 90 días
+  createdAt: string;
+  claimedAt?: string;
+}
+
+// ─── Social Commerce — Group Buying ────────────────────────────────────────
+export interface GroupDeal {
+  id: string;
+  listingId: string;
+  sellerId: string;
+  title: string;
+  originalPrice: number;
+  groupPrice: number;
+  discountPercent: number;
+  minParticipants: number;   // 3, 5, 10
+  maxParticipants: number;
+  currentCount: number;
+  status: 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
+  expiresAt: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface GroupDealParticipant {
+  id: string;
+  groupDealId: string;
+  userId: string;
+  transactionId?: string;
+  status: 'JOINED' | 'PAID' | 'REFUNDED';
+  joinedAt: string;
+}
+
+// ─── Seguir Sellers ──────────────────────────────────────────────────────
+export interface SellerFollow {
+  userId: string;
+  sellerId: string;
+  notifiedListing: boolean;
+  followedAt: string;
+}
+
+// ─── Seller Content (WeChat Official Accounts style) ─────────────────────
+export interface SellerPost {
+  id: string;
+  sellerId: string;
+  title: string;
+  content: string;
+  media: { type: 'image' | 'video'; url: string }[];
+  listingIds?: string[];
+  isPublished: boolean;
+  publishedAt?: string;
+  createdAt: string;
+}
+
+export interface SellerPostView {
+  postId: string;
+  userId: string;
+  viewedAt: string;
+}
+
+// ─── Seller Analytics (Brands by Rappi style) ────────────────────────────
+export interface SellerAnalytics {
+  sellerId: string;
+  date: string;
+  views: number;
+  uniqueVisitors: number;
+  listingViews: Record<string, number>;
+  transactions: number;
+  revenue: number;
+  conversionRate: number;
+  avgOrderValue: number;
+  topListings: { listingId: string; views: number; sales: number }[];
+}
+
+// ─── Featured / Sponsored Listings ───────────────────────────────────────
+export interface FeaturedListing {
+  id: string;
+  listingId: string;
+  sellerId: string;
+  campaignType: 'daily' | 'weekly' | 'monthly';
+  startDate: string;
+  endDate: string;
+  budget: number;
+  impressions: number;
+  clicks: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// ─── Todo Gift (Red Packets style) ───────────────────────────────────────
+export interface GiftCredit {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  amount: number;
+  message?: string;
+  status: 'SENT' | 'CLAIMED' | 'EXPIRED' | 'REFUNDED';
+  expiresAt: string;
+  createdAt: string;
+  claimedAt?: string;
+}
