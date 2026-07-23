@@ -43,6 +43,7 @@ const GroupDealPage = lazy(() => import('./pages/GroupDealPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const SellerAnalyticsPage = lazy(() => import('./pages/SellerAnalyticsPage'));
 const SellerFeedPage = lazy(() => import('./pages/SellerFeedPage'));
+const RechargePage = lazy(() => import('./pages/RechargePage'));
 
 const Loading = () => (
   <div className="min-h-screen bg-brand-bg dark:bg-gray-900 flex items-center justify-center">
@@ -92,6 +93,7 @@ const App: React.FC = () => (
                   <Route path="/wallet" element={<WalletPage />} />
                   <Route path="/group-deal/:id" element={<GroupDealPage />} />
                   <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />
+                  <Route path="/recharge" element={<RechargePage />} />
                   <Route path="/feed" element={<SellerFeedPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
