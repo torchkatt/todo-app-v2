@@ -14,8 +14,8 @@ export const BottomTabs: React.FC = () => {
   const { t } = useTranslation();
   const { hasUnread, openHub } = useChatUI();
 
-  // No mostrar en páginas de autenticación donde el usuario no ha iniciado sesión
-  if (['/login', '/register'].some(p => location.pathname === p)) return null;
+  // No mostrar en páginas de autenticación ni en la landing de marketing
+  if (['/login', '/register', '/landing'].some(p => location.pathname === p)) return null;
 
   const tabs = [
     { path: '/app', icon: Home, label: t('nav.home') },
