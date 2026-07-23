@@ -14,12 +14,6 @@ export const BottomTabs: React.FC = () => {
   const { t } = useTranslation();
   const { hasUnread, openHub } = useChatUI();
 
-  const appRoutes = ['/', '/app', '/explore', '/orders', '/profile', '/favorites', '/settings', '/help', '/reviews', '/seller', '/cart'];
-  const isAppRoute = appRoutes.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
-  if (!isAppRoute) return null;
-
-  if (['/login', '/register', '/checkout'].some(p => location.pathname.startsWith(p))) return null;
-
   const tabs = [
     { path: '/app', icon: Home, label: t('nav.home') },
     { path: '/explore', icon: Search, label: t('nav.search') },
