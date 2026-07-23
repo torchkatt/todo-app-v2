@@ -16,6 +16,15 @@ export interface SubscriptionPlan {
   price: number; // in COP — 0 for free
   period: 'monthly' | 'annual' | 'lifetime';
   commissionRate: number; // 0.10 = 10%
+  // ─── Beneficios TodoPass ───────────────────────────────────────
+  cashbackRateBps: number;      // Basis points: 300=3%, 500=5%, 700=7%
+  freeShipping: boolean;        // Envío gratis en pedidos >= freeShippingThreshold
+  maxListings: number;          // 20, -1 = ilimitado
+  analyticsAccess: 'basic' | 'advanced' | 'premium';
+  aiChatPriority: 'standard' | 'priority' | '247';
+  featuredListingsPerMonth: number;  // 0, 3, 10
+  sellerBadge: 'none' | 'pro' | 'verified';
+  // ───
   features: string[];
   highlight: boolean;
   isActive: boolean;
@@ -44,11 +53,19 @@ const DEFAULT_PLANS: Omit<SubscriptionPlan, 'createdAt' | 'updatedAt'>[] = [
     price: 0,
     period: 'monthly',
     commissionRate: 0.10,
+    cashbackRateBps: 300,
+    freeShipping: false,
+    maxListings: 20,
+    analyticsAccess: 'basic',
+    aiChatPriority: 'standard',
+    featuredListingsPerMonth: 0,
+    sellerBadge: 'none',
     features: [
       'Hasta 20 productos publicados',
       'Comisión 10% por venta',
-      'Soporte por chat IA',
+      'Cashback 3% para tus compradores',
       'Estadísticas básicas',
+      'Soporte por chat IA',
     ],
     highlight: false,
     isActive: true,
@@ -61,13 +78,23 @@ const DEFAULT_PLANS: Omit<SubscriptionPlan, 'createdAt' | 'updatedAt'>[] = [
     price: 49900,
     period: 'monthly',
     commissionRate: 0.05,
+    cashbackRateBps: 500,
+    freeShipping: true,
+    maxListings: -1,
+    analyticsAccess: 'advanced',
+    aiChatPriority: 'priority',
+    featuredListingsPerMonth: 3,
+    sellerBadge: 'pro',
     features: [
       'Productos ilimitados',
       'Comisión reducida 5%',
+      'Cashback 5% para tus compradores',
+      'Envío gratis para tus clientes',
       'Estadísticas avanzadas',
       'Dashboard de revenue',
+      '3 listings destacados/mes',
+      'Insignia verificada 🏆',
       'Soporte prioritario',
-      'Insignia verificada',
     ],
     highlight: true,
     isActive: true,
@@ -80,12 +107,20 @@ const DEFAULT_PLANS: Omit<SubscriptionPlan, 'createdAt' | 'updatedAt'>[] = [
     price: 499900,
     period: 'annual',
     commissionRate: 0.05,
+    cashbackRateBps: 700,
+    freeShipping: true,
+    maxListings: -1,
+    analyticsAccess: 'premium',
+    aiChatPriority: '247',
+    featuredListingsPerMonth: 10,
+    sellerBadge: 'verified',
     features: [
       'Todo lo del plan mensual',
       '2 meses gratis (vs mensual)',
-      'Comisión reducida 5%',
-      'Dashboard de revenue',
-      'Exportación de datos',
+      'Cashback 7% para tus compradores',
+      'Estadísticas premium con exportación',
+      '10 listings destacados/mes',
+      'Insignia verificada + Black ✨',
       'API access',
       'Soporte 24/7',
     ],

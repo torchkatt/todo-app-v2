@@ -6,6 +6,8 @@ interface PlanContextValue {
   plans: SubscriptionPlan[];
   currentPlan: SubscriptionPlan | null;
   currentSubscription: SellerSubscription | null;
+  /** 'free' | 'pro' | 'black' basado en el plan activo */
+  currentTier: 'free' | 'pro' | 'black';
   loading: boolean;
   error: string | null;
   refreshPlans: () => Promise<void>;
@@ -16,6 +18,7 @@ const PlanContext = createContext<PlanContextValue>({
   plans: [],
   currentPlan: null,
   currentSubscription: null,
+  currentTier: 'free',
   loading: true,
   error: null,
   refreshPlans: async () => {},
@@ -31,6 +34,11 @@ export const SubscriptionPlanProvider: React.FC<{ children: React.ReactNode }> =
   const [currentSubscription, setCurrentSubscription] = useState<SellerSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentTier: 'free' | 'pro' | 'black' =
+    currentPlan?.id === 'seller_pass_annual' ? 'black'
+    : currentPlan?.id === 'seller_pass_monthly' ? 'pro'
+    : 'free';
 
   const refreshPlans = async () => {
     try {
@@ -85,6 +93,7 @@ export const SubscriptionPlanProvider: React.FC<{ children: React.ReactNode }> =
         plans,
         currentPlan,
         currentSubscription,
+        currentTier,
         loading,
         error,
         refreshPlans,
