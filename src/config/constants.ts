@@ -67,3 +67,52 @@ export const PAYMENT_METHODS = [
 export function formatCOP(amount: number): string {
   return `$${amount.toLocaleString(APP_CONFIG.locale)}`;
 }
+
+// ─── Wallet ────────────────────────────────────────────────────────────────
+export const WALLET_CONFIG = {
+  minTopUp: 5_000,
+  maxTopUp: 5_000_000,
+  maxBalance: 10_000_000,
+} as const;
+
+// ─── Cashback ──────────────────────────────────────────────────────────────
+export const CASHBACK_CONFIG = {
+  defaultRateBps: 300,       // 3% base
+  todoPassProBonus: 200,     // +2% para TodoPass Pro
+  todoPassBlackBonus: 400,   // +4% para TodoPass Black
+  maxPerTransaction: 50_000,
+  expirationDays: 90,
+  minPurchaseForCashback: 10_000,
+} as const;
+
+// ─── Group Buying ──────────────────────────────────────────────────────────
+export const GROUP_DEAL_CONFIG = {
+  defaultDurationHours: 48,
+  minParticipants: 3,
+  maxParticipants: 20,
+  maxDiscountPercent: 40,
+  autoCompleteThreshold: 0.8,
+} as const;
+
+// ─── Seller Analytics ──────────────────────────────────────────────────────
+export const ANALYTICS_CONFIG = {
+  updateIntervalMinutes: 15,
+  retentionDays: 90,
+  maxTopListings: 10,
+} as const;
+
+// ─── Gift / Credits ────────────────────────────────────────────────────────
+export const GIFT_CONFIG = {
+  minAmount: 2_000,
+  maxAmount: 500_000,
+  expirationHours: 72,
+  maxDailySent: 5,
+} as const;
+
+// ─── Featured Listings ─────────────────────────────────────────────────────
+export const FEATURED_CONFIG = {
+  dailyPrice: 15_000,
+  weeklyPrice: 70_000,
+  monthlyPrice: 200_000,
+  maxPerSeller: 5,
+} as const;
