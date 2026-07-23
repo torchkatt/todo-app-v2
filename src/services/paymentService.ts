@@ -7,7 +7,7 @@
  * ya firmados.
  */
 
-const WOMPI_WIDGET_URL = 'https://checkout.wompi.co/v2';
+const WOMPI_WIDGET_URL = 'https://checkout.wompi.co';
 const WOMPI_PUBLIC_KEY = import.meta.env.VITE_WOMPI_PUBLIC_KEY;
 
 export interface WompiTransaction {

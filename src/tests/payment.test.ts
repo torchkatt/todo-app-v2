@@ -59,7 +59,7 @@ describe('Payment — Wompi public key', () => {
 
 describe('Payment — Wompi checkout URL', () => {
   it('checkout URL is valid', () => {
-    const url = 'https://checkout.wompi.co/v2';
+    const url = 'https://checkout.wompi.co';
     expect(url.startsWith('https://')).toBe(true);
     expect(url).toContain('wompi.co');
   });
@@ -210,7 +210,7 @@ describe('Payment — Wompi service structure', () => {
 
 describe('Payment — Script loading', () => {
   it('Wompi widget is loaded from CDN', () => {
-    const scriptUrl = 'https://checkout.wompi.co/v2/widget.js';
+    const scriptUrl = 'https://checkout.wompi.co/widget.js';
     expect(scriptUrl).toContain('wompi.co');
     expect(scriptUrl).toContain('widget.js');
   });
