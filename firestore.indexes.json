@@ -62,6 +62,43 @@
       { "fieldPath": "targetType", "order": "ASCENDING" },
       { "fieldPath": "targetId", "order": "ASCENDING" },
       { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "wallet_transactions", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "cashback_records", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "expiresAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "group_deals", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "status", "order": "ASCENDING" },
+      { "fieldPath": "expiresAt", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "group_deal_participants", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "groupDealId", "order": "ASCENDING" },
+      { "fieldPath": "userId", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "seller_posts", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "sellerId", "order": "ASCENDING" },
+      { "fieldPath": "publishedAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "seller_analytics", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "sellerId", "order": "ASCENDING" },
+      { "fieldPath": "date", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "featured_listings", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "isActive", "order": "ASCENDING" },
+      { "fieldPath": "endDate", "order": "ASCENDING" }
+    ]},
+    { "collectionGroup": "gift_credits", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "fromUserId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" }
+    ]},
+    { "collectionGroup": "seller_follows", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "userId", "order": "ASCENDING" },
+      { "fieldPath": "sellerId", "order": "ASCENDING" }
     ]}
   ],
   "fieldOverrides": []
