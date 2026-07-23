@@ -5,11 +5,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Loader2, ArrowUpRight, ArrowDownLeft, Gift, Clock } from 'lucide-react';
+import { ArrowLeft, Loader2, ArrowUpRight, ArrowDownLeft, Gift, Clock, Plus, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { walletService } from '../services/walletService';
 import WalletCard from '../components/wallet/WalletCard';
 import TopUpModal from '../components/wallet/TopUpModal';
+import GiftCardList from '../components/wallet/GiftCardList';
+import SendGiftCardModal from '../components/wallet/SendGiftCardModal';
+import AutoReloadSettings from '../components/wallet/AutoReloadSettings';
 import { formatCOP } from '../config/constants';
 import type { Wallet, WalletTransaction } from '../types';
 
@@ -39,6 +42,7 @@ const WalletPage: React.FC = () => {
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showSendGift, setShowSendGift] = useState(false);
 
   const load = async () => {
     if (!user?.id) return;
@@ -75,7 +79,13 @@ const WalletPage: React.FC = () => {
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {wallet && <WalletCard wallet={wallet} onTopUp={() => setShowTopUp(true)} />}
 
-        {/* Transactions */}
+        {/* Gift Cards (Starbucks-style) */}
+        <GiftCardList />
+
+        {/* Auto-Reload */}
+        <AutoReloadSettings />
+
+        {/* Send Gift Card Button */}
         <div>
           <h3 className="text-sm font-extrabold text-text-primary mb-3">{t('wallet.history')}</h3>
           {transactions.length === 0 ? (
@@ -114,6 +124,11 @@ const WalletPage: React.FC = () => {
         isOpen={showTopUp}
         onClose={() => setShowTopUp(false)}
         onSuccess={load}
+      />
+      <SendGiftCardModal
+        isOpen={showSendGift}
+        onClose={() => setShowSendGift(false)}
+        onSuccess={() => { setShowSendGift(false); load(); }}
       />
     </div>
   );
