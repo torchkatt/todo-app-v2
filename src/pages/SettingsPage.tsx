@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotifications } from '../context/NotificationContext';
 import { ArrowLeft, Bell, Shield, Globe, Smartphone, Loader2, CheckCircle, Moon, Sun, RefreshCw } from 'lucide-react';
+import i18n from '../i18n';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,13 @@ const SettingsPage: React.FC = () => {
     typeof Notification !== 'undefined' && Notification.permission === 'granted'
   );
   const [requestingPush, setRequestingPush] = useState(false);
+  const [lang, setLang] = useState(i18n.language?.startsWith('en') ? 'en' : 'es');
+
+  const toggleLang = () => {
+    const next = lang === 'es' ? 'en' : 'es';
+    i18n.changeLanguage(next);
+    setLang(next);
+  };
 
   const handleTogglePush = async () => {
     if (pushEnabled || requestingPush) return;
@@ -116,7 +124,7 @@ const SettingsPage: React.FC = () => {
               onClick: handleTogglePush,
             },
             { icon: <Shield size={18} />, title: 'Privacidad', desc: 'Datos, permisos, seguridad' },
-            { icon: <Globe size={18} />, title: 'Idioma', desc: 'Español (Colombia)' },
+            { icon: <Globe size={18} />, title: 'Idioma', desc: lang === 'es' ? 'Español' : 'English', onClick: toggleLang },
             { icon: theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />, title: 'Modo oscuro', desc: theme === 'dark' ? 'Activado' : 'Desactivado', onClick: toggle },
           ].map((item, i) => (
             <div key={i} onClick={(item as any).onClick} className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
