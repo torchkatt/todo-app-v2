@@ -34,7 +34,7 @@ export const sellerAnalyticsService = {
   /**
    * Obtener top listings por visitas.
    */
-  async getTopListings(sellerId: string, max = ANALYTICS_CONFIG.maxTopListings): Promise<{ listingId: string; views: number; sales: number }[]> {
+  async getTopListings(sellerId: string, max: number = ANALYTICS_CONFIG.maxTopListings): Promise<{ listingId: string; views: number; sales: number }[]> {
     const stats = await this.getDailyStats(sellerId, 30);
     const aggregated = new Map<string, { views: number; sales: number }>();
 
