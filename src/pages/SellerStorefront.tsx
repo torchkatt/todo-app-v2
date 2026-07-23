@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   collection,
   query,
@@ -62,6 +63,7 @@ const LISTINGS_LIMIT = 30;
 const SellerStorefront: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isFollowing, followerCount, toggleFollow } = useFollow(user?.id, id);
 
@@ -246,7 +248,7 @@ const SellerStorefront: React.FC = () => {
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold bg-white/20 text-white border border-white/30 hover:bg-white/30 transition-all"
           >
             <Share2 size={14} />
-            {shareCopied ? '¡Copiado!' : 'Compartir'}
+            {shareCopied ? '¡Copiado!' : t('seller.shareStore')}
           </button>
 
           {/* Follow */}
@@ -263,7 +265,7 @@ const SellerStorefront: React.FC = () => {
                 size={14}
                 className={isFollowing ? 'fill-white' : ''}
               />
-              {isFollowing ? 'Siguiendo' : 'Seguir'}
+              {isFollowing ? t('seller.following') : t('seller.follow')}
               {followerCount > 0 && (
                 <span className="ml-1 opacity-70">· {followerCount}</span>
               )}
@@ -296,7 +298,7 @@ const SellerStorefront: React.FC = () => {
               {followerCount}
             </div>
             <div className="text-[10px] text-text-muted dark:text-slate-400 font-semibold">
-              Seguidores
+              {t('follow.followers', { count: followerCount })}
             </div>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4 text-center">
@@ -304,7 +306,7 @@ const SellerStorefront: React.FC = () => {
               {listings.length}
             </div>
             <div className="text-[10px] text-text-muted dark:text-slate-400 font-semibold">
-              Productos
+              {t('seller.products', { count: listings.length })}
             </div>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4 text-center">
@@ -358,7 +360,7 @@ const SellerStorefront: React.FC = () => {
             <p className="text-sm text-text-muted dark:text-slate-400 text-center py-8">
               {selectedCategoryId
                 ? 'No hay productos en esta categoría.'
-                : 'Esta tienda no tiene productos activos aún.'}
+                : t('seller.noActiveListings')}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3">

@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { cashbackService } from '../../services/cashbackService';
 import { Gift } from 'lucide-react';
@@ -11,6 +12,7 @@ import { formatCOP } from '../../config/constants';
 
 const CashbackBadge: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,10 +39,10 @@ const CashbackBadge: React.FC = () => {
         <Gift size={18} className="text-white" />
       </div>
       <div className="flex-1 text-left">
-        <div className="text-xs font-extrabold text-amber-800">💰 Cashback disponible</div>
+        <div className="text-xs font-extrabold text-amber-800">💰 {t('cashback.title')}</div>
         <div className="text-lg font-extrabold text-amber-900">{formatCOP(total)}</div>
       </div>
-      <div className="text-amber-600 text-xs font-bold">Reclamar →</div>
+      <div className="text-amber-600 text-xs font-bold">{t('cashback.claim')} →</div>
     </button>
   );
 };

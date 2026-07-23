@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Eye, ShoppingCart, TrendingUp, DollarSign, Loader2, BarChart3 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { sellerAnalyticsService } from '../services/sellerAnalyticsService';
@@ -12,6 +13,7 @@ import { getSeller } from '../services/sellerService';
 
 const SellerAnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<any>(null);
@@ -39,10 +41,10 @@ const SellerAnalyticsPage: React.FC = () => {
   );
 
   const statCards = [
-    { label: 'Visitas (30d)', value: summary?.totalViews || 0, icon: Eye, color: 'bg-blue-50 text-blue-600' },
-    { label: 'Ventas (30d)', value: summary?.totalTransactions || 0, icon: ShoppingCart, color: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Ingresos (30d)', value: formatCOP(summary?.totalRevenue || 0), icon: DollarSign, color: 'bg-purple-50 text-purple-600' },
-    { label: 'Conversión', value: `${(summary?.avgConversionRate * 100).toFixed(1)}%`, icon: TrendingUp, color: 'bg-amber-50 text-amber-600' },
+    { label: t('analytics.visits'), value: summary?.totalViews || 0, icon: Eye, color: 'bg-blue-50 text-blue-600' },
+    { label: t('analytics.transactions'), value: summary?.totalTransactions || 0, icon: ShoppingCart, color: 'bg-emerald-50 text-emerald-600' },
+    { label: t('analytics.income'), value: formatCOP(summary?.totalRevenue || 0), icon: DollarSign, color: 'bg-purple-50 text-purple-600' },
+    { label: t('analytics.conversion'), value: `${(summary?.avgConversionRate * 100).toFixed(1)}%`, icon: TrendingUp, color: 'bg-amber-50 text-amber-600' },
   ];
 
   return (
@@ -50,7 +52,7 @@ const SellerAnalyticsPage: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/seller')} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={22} /></button>
-          <h1 className="text-lg font-extrabold">Mis Analíticas</h1>
+          <h1 className="text-lg font-extrabold">{t('analytics.title')}</h1>
         </div>
       </header>
 
@@ -71,21 +73,21 @@ const SellerAnalyticsPage: React.FC = () => {
         {/* Avg Order Value */}
         <div className="bg-white rounded-xl border border-border p-5">
           <h3 className="text-xs font-extrabold text-text-primary mb-3 flex items-center gap-2">
-            <BarChart3 size={14} className="text-purple-600" /> Ticket promedio
+            <BarChart3 size={14} className="text-purple-600" /> {t('analytics.avgTicket')}
           </h3>
           <div className="text-2xl font-extrabold text-purple-700">
             {formatCOP(summary?.avgOrderValue || 0)}
           </div>
-          <p className="text-[10px] text-text-muted mt-1">Basado en {summary?.totalTransactions || 0} transacciones de los últimos 30 días</p>
+          <p className="text-[10px] text-text-muted mt-1">{t('analytics.basedOn', { count: summary?.totalTransactions || 0 })}</p>
         </div>
 
         {/* Top Listings */}
         <div>
-          <h3 className="text-sm font-extrabold text-text-primary mb-3">Top productos</h3>
+          <h3 className="text-sm font-extrabold text-text-primary mb-3">{t('analytics.topProducts')}</h3>
           {topListings.length === 0 ? (
             <div className="bg-white rounded-xl border border-border p-6 text-center">
-              <p className="text-sm text-text-muted">Aún no hay datos suficientes</p>
-              <p className="text-xs text-text-muted mt-1">Las analíticas se actualizan cada 15 minutos</p>
+              <p className="text-sm text-text-muted">{t('analytics.noData')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('analytics.updatesEvery')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -95,7 +97,7 @@ const SellerAnalyticsPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-bold text-text-primary truncate">{item.listingId}</div>
                     <div className="text-[10px] text-text-muted mt-0.5">
-                      {item.views} visitas · {item.sales} ventas
+                      {item.views} {t('seller.views')} · {item.sales} {t('seller.sales')}
                     </div>
                   </div>
                   <div className="text-xs font-extrabold text-purple-600">

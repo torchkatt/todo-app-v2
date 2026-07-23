@@ -3,6 +3,7 @@
  * @description Lista de cashbacks pendientes con botón "Reclamar" y "Reclamar todo".
  */
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Gift, Loader2, Check, AlertTriangle, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cashbackService } from '../../services/cashbackService';
@@ -11,6 +12,7 @@ import type { CashbackRecord } from '../../types';
 
 const CashbackList: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [records, setRecords] = useState<CashbackRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ const CashbackList: React.FC = () => {
     <div className="bg-white rounded-xl border border-border p-5">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-extrabold text-text-primary flex items-center gap-1.5">
-          <Gift size={14} className="text-amber-500" /> Cashback disponible
+          <Gift size={14} className="text-amber-500" /> {t('cashback.total')}
         </h3>
         <span className="text-sm font-extrabold text-emerald-600">{formatCOP(total)}</span>
       </div>
@@ -72,7 +74,7 @@ const CashbackList: React.FC = () => {
       {expiringSoon.length > 0 && (
         <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg mb-3 text-xs font-semibold text-red-600">
           <AlertTriangle size={14} />
-          {expiringSoon.length} {expiringSoon.length === 1 ? 'cashback está por vencer' : 'cashbacks están por vencer'}
+          {t('cashback.expiringCount', { count: expiringSoon.length })}
         </div>
       )}
 
@@ -82,10 +84,10 @@ const CashbackList: React.FC = () => {
           return (
             <div key={r.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-text-primary">{formatCOP(r.amount)} al {r.rateBps}%</div>
+                <div className="text-xs font-bold text-text-primary">{t('cashback.atRate', { amount: formatCOP(r.amount), rate: r.rateBps })}</div>
                 <div className="text-[10px] text-text-muted flex items-center gap-1">
                   <Clock size={10} />
-                  {daysLeft > 0 ? `Vence en ${daysLeft} días` : 'Vence hoy'}
+                  {daysLeft > 0 ? t('cashback.expiresInDays', { days: daysLeft }) : t('cashback.expiresToday')}
                 </div>
               </div>
               <button
@@ -94,7 +96,7 @@ const CashbackList: React.FC = () => {
                 className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-extrabold hover:bg-emerald-100 transition-all disabled:opacity-50 flex items-center gap-1"
               >
                 {claimingId === r.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                Reclamar
+                {t('cashback.claim')}
               </button>
             </div>
           );
@@ -112,7 +114,7 @@ const CashbackList: React.FC = () => {
           className="w-full mt-3 py-2 bg-purple-50 text-purple-700 rounded-xl text-xs font-extrabold hover:bg-purple-100 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
         >
           {claimingAll ? <Loader2 size={14} className="animate-spin" /> : <Gift size={14} />}
-          Reclamar todo ({formatCOP(total)})
+          {t('cashback.claimAll', { total: formatCOP(total) })}
         </button>
       )}
     </div>

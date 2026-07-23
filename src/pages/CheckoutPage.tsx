@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -31,6 +32,7 @@ const createTransactionCallable = httpsCallable<
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const { items, totalPrice, clearCart } = useCart();
   const { currentTier, currentPlan } = useSubscriptionPlans();
   const [address, setAddress] = React.useState('');
@@ -60,13 +62,13 @@ const CheckoutPage: React.FC = () => {
       <div className="min-h-screen bg-brand-bg flex items-center justify-center p-8">
         <div className="text-center max-w-sm">
           <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4"><CheckCircle size={40} className="text-emerald-500" /></div>
-          <h2 className="text-xl font-extrabold mb-2">¡Pedido creado!</h2>
+          <h2 className="text-xl font-extrabold mb-2">{t('checkout.orderCreated')}</h2>
           <p className="text-sm text-text-secondary mb-6">
             {done.paymentReady
-              ? 'Recibirás una notificación cuando el vendedor confirme.'
-              : 'El pago con Wompi aún no está disponible. Tu pedido queda pendiente de pago — te avisaremos cuando puedas completarlo.'}
+              ? t('checkout.paymentReady')
+              : t('checkout.paymentPending')}
           </p>
-          <button onClick={() => navigate(`/orders/${done.reference}`)} className="px-6 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-95 shadow-md shadow-purple-200">Ver mi pedido</button>
+          <button onClick={() => navigate(`/orders/${done.reference}`)} className="px-6 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-95 shadow-md shadow-purple-200">{t('checkout.viewOrder')}</button>
         </div>
       </div>
     );
@@ -79,7 +81,7 @@ const CheckoutPage: React.FC = () => {
           <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={22} /></button>
         </header>
         <div className="flex-1 flex items-center justify-center text-center p-8">
-          <div><ShoppingBag size={48} className="mx-auto mb-4 text-text-muted" /><h2 className="text-lg font-extrabold mb-2">Tu carrito está vacío</h2><button onClick={() => navigate('/')} className="text-purple-600 font-bold">Ir al inicio</button></div>
+          <div><ShoppingBag size={48} className="mx-auto mb-4 text-text-muted" /><h2 className="text-lg font-extrabold mb-2">{t('checkout.empty')}</h2><button onClick={() => navigate('/')} className="text-purple-600 font-bold">{t('checkout.goHome')}</button></div>
         </div>
       </div>
     );
@@ -87,7 +89,7 @@ const CheckoutPage: React.FC = () => {
 
   const handleCheckout = async () => {
     if (mixedSellers) {
-      setError('Tu carrito tiene productos de distintos vendedores. Paga por separado a cada uno.');
+      setError(t('checkout.mixedSellers'));
       return;
     }
     setSubmitting(true);
@@ -162,14 +164,14 @@ const CheckoutPage: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={22} /></button>
-          <h1 className="text-lg font-extrabold">Finalizar compra</h1>
+          <h1 className="text-lg font-extrabold">{t('checkout.title')}</h1>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {mixedSellers && (
           <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
             <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-            <span className="text-xs font-semibold text-amber-700">Tu carrito tiene productos de distintos vendedores. Debes pagar por separado a cada uno — vuelve al carrito y quita los de un vendedor para continuar.</span>
+            <span className="text-xs font-semibold text-amber-700">{t('checkout.mixedSellers')}</span>
           </div>
         )}
         {error && (
@@ -179,15 +181,15 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
         <div className="bg-white rounded-xl border border-border p-5">
-          <h3 className="text-sm font-extrabold mb-4 flex items-center gap-2"><MapPin size={16} className="text-purple-600" /> Información de contacto</h3>
+          <h3 className="text-sm font-extrabold mb-4 flex items-center gap-2"><MapPin size={16} className="text-purple-600" /> {t('checkout.contactInfo')}</h3>
           <div className="space-y-3">
-            <div><label className="block text-xs font-bold text-text-secondary mb-1">Nombre</label><input value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder="Tu nombre" /></div>
-            <div><label className="block text-xs font-bold text-text-secondary mb-1">Teléfono</label><input value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder="300 123 4567" /></div>
-            <div><label className="block text-xs font-bold text-text-secondary mb-1">Dirección (opcional — vacío = recogida local)</label><input value={address} onChange={e => setAddress(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder="Calle 123 # 45-67" /></div>
+            <div><label className="block text-xs font-bold text-text-secondary mb-1">{t('checkout.name')}</label><input value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder={t('checkout.name')} /></div>
+            <div><label className="block text-xs font-bold text-text-secondary mb-1">{t('checkout.phone')}</label><input value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder="300 123 4567" /></div>
+            <div><label className="block text-xs font-bold text-text-secondary mb-1">{t('checkout.address')}</label><input value={address} onChange={e => setAddress(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all" placeholder="Calle 123 # 45-67" /></div>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-border p-5">
-          <h3 className="text-sm font-extrabold mb-4 flex items-center gap-2"><ShoppingBag size={16} className="text-purple-600" /> Resumen</h3>
+          <h3 className="text-sm font-extrabold mb-4 flex items-center gap-2"><ShoppingBag size={16} className="text-purple-600" /> {t('checkout.summary')}</h3>
           <div className="space-y-3 mb-4">
             {items.map(item => (
               <div key={item.listingId} className="flex items-center gap-3">
@@ -202,18 +204,18 @@ const CheckoutPage: React.FC = () => {
             {(currentTier === 'pro' || currentTier === 'black') && address.trim() && (
               <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg mb-2">
                 <Crown size={14} className="text-purple-600 shrink-0" />
-                <span className="text-[11px] font-bold text-purple-700">Envío gratis incluido en tu TodoPass 🏆</span>
+                <span className="text-[11px] font-bold text-purple-700">{t('checkout.freeShippingPro')}</span>
               </div>
             )}
             {/* Upsell for free users */}
             {currentTier === 'free' && address.trim() && totalPrice >= 150000 && (
               <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg mb-2">
                 <Crown size={14} className="text-amber-600 shrink-0" />
-                <span className="text-[11px] font-bold text-amber-700">💎 Ahorra en envíos — TodoPass desde $49.900/mes</span>
+                <span className="text-[11px] font-bold text-amber-700">{t('checkout.freeShippingUpsell')}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">{formatCOP(totalPrice)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío, comisión e impuestos</span><span className="font-bold text-text-muted">Se calculan al confirmar</span></div>
+            <div className="flex justify-between text-sm"><span className="text-text-secondary">{t('checkout.subtotal')}</span><span className="font-bold">{formatCOP(totalPrice)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío, comisión e impuestos</span><span className="font-bold text-text-muted">{t('checkout.shippingCalc')}</span></div>
           </div>
         </div>
 
@@ -232,11 +234,11 @@ const CheckoutPage: React.FC = () => {
                   <Wallet size={18} />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-extrabold text-text-primary">Pagar con mi saldo</div>
+                  <div className="text-sm font-extrabold text-text-primary">{t('checkout.payWithWallet')}</div>
                   <div className={`text-xs font-semibold ${walletBalance >= totalPrice ? 'text-emerald-600' : 'text-red-500'}`}>
                     {walletBalance >= totalPrice
-                      ? `Saldo disponible: ${formatCOP(walletBalance)}`
-                      : `Saldo insuficiente: ${formatCOP(walletBalance)} — recarga desde tu perfil`}
+                      ? t('wallet.available', { balance: formatCOP(walletBalance) })
+                      : t('wallet.insufficient', { balance: formatCOP(walletBalance) })}
                   </div>
                 </div>
                 {payWithWallet && <span className="text-purple-600 text-xs font-bold">✓</span>}
@@ -245,7 +247,7 @@ const CheckoutPage: React.FC = () => {
           )}
           <TrustBadge />
           <div className="bg-white rounded-xl border border-border p-4">
-            <div className="text-xs font-extrabold mb-2.5 text-slate-800 dark:text-slate-200">Métodos de pago aceptados</div>
+            <div className="text-xs font-extrabold mb-2.5 text-slate-800 dark:text-slate-200">{t('checkout.paymentMethods')}</div>
             <div className="flex flex-wrap gap-2">
               {PAYMENT_METHODS.map(m => (
                 <div key={m.id} className="px-3 py-1.5 bg-gray-50 dark:bg-slate-800 rounded-lg border border-border text-xs font-semibold text-text-secondary">
@@ -264,9 +266,9 @@ const CheckoutPage: React.FC = () => {
           disabled={submitting || mixedSellers || (payWithWallet && walletBalance !== null && walletBalance < totalPrice)}
         >
           {payWithWallet ? (
-            <>Pagar con Wallet {formatCOP(totalPrice)} <Wallet size={18} /></>
+            <>{t('checkout.payWithWallet')} {formatCOP(totalPrice)} <Wallet size={18} /></>
           ) : (
-            <>Pagar {formatCOP(totalPrice)} <CreditCard size={18} /></>
+            <>{t('checkout.pay')} {formatCOP(totalPrice)} <CreditCard size={18} /></>
           )}
         </Button>
         <div className="flex items-center gap-2 justify-center text-[10px] text-text-muted">

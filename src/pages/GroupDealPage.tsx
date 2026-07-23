@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Heart, Gift, Clock, Users, Share2, Loader2, Zap,
   BadgeCheck, AlertCircle,

@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { followService } from '../services/followService';
 import { sellerContentService } from '../services/sellerContentService';
@@ -41,6 +42,7 @@ const PostSkeleton: React.FC = () => (
 
 const SellerFeedPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [posts, setPosts] = useState<SellerPost[]>([]);
@@ -124,7 +126,7 @@ const SellerFeedPage: React.FC = () => {
               <ArrowLeft size={20} className="text-text-primary dark:text-slate-200" />
             </button>
             <h1 className="text-lg font-extrabold text-text-primary dark:text-slate-100">
-              Feed
+              {t('feed.title')}
             </h1>
           </div>
         </div>
@@ -138,7 +140,7 @@ const SellerFeedPage: React.FC = () => {
             onClick={() => navigate('/login')}
             className="mt-4 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-sm transition-all active:scale-[0.98]"
           >
-            Iniciar sesión
+            {t('auth.login')}
           </button>
         </div>
       </div>
@@ -160,7 +162,7 @@ const SellerFeedPage: React.FC = () => {
               <ArrowLeft size={20} className="text-text-primary dark:text-slate-200" />
             </button>
             <h1 className="text-lg font-extrabold text-text-primary dark:text-slate-100">
-              Feed
+              {t('feed.title')}
             </h1>
           </div>
         </div>
@@ -189,7 +191,7 @@ const SellerFeedPage: React.FC = () => {
               <ArrowLeft size={20} className="text-text-primary dark:text-slate-200" />
             </button>
             <h1 className="text-lg font-extrabold text-text-primary dark:text-slate-100">
-              Feed
+              {t('feed.title')}
             </h1>
           </div>
         </div>
@@ -225,7 +227,7 @@ const SellerFeedPage: React.FC = () => {
               <ArrowLeft size={20} className="text-text-primary dark:text-slate-200" />
             </button>
             <h1 className="text-lg font-extrabold text-text-primary dark:text-slate-100">
-              Feed
+              {t('feed.title')}
             </h1>
           </div>
         </div>
@@ -235,7 +237,7 @@ const SellerFeedPage: React.FC = () => {
             <Store size={32} className="text-purple-400 dark:text-purple-300" />
           </div>
           <p className="text-sm font-bold text-text-muted dark:text-slate-400">
-            Sigue vendedores para ver su contenido aquí
+            {t('feed.noContent')}
           </p>
           <button
             onClick={() => navigate('/explore')}

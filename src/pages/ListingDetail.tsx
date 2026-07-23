@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useCart } from '../context/CartContext';
@@ -13,6 +14,7 @@ const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { addItem } = useCart();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Seller | null>(null);
@@ -39,10 +41,10 @@ const ListingDetail: React.FC = () => {
 
   if (!listing) return (
     <div className="min-h-screen bg-brand-bg flex flex-col items-center justify-center p-8 text-center">
-      <SEO title="Producto no encontrado" />
+      <SEO title={t('listing.notFound')} />
       <span className="text-6xl mb-4">🔍</span>
-      <h2 className="text-xl font-extrabold mb-2">Producto no encontrado</h2>
-      <button onClick={() => navigate('/')} className="text-purple-600 font-bold text-sm mt-2 hover:underline">Volver al inicio</button>
+      <h2 className="text-xl font-extrabold mb-2">{t('listing.notFound')}</h2>
+      <button onClick={() => navigate('/')} className="text-purple-600 font-bold text-sm mt-2 hover:underline">{t('checkout.goHome')}</button>
     </div>
   );
 
@@ -80,8 +82,8 @@ const ListingDetail: React.FC = () => {
 
           {/* Description */}
           <div>
-            <h3 className="text-sm font-extrabold text-text-primary mb-2">Descripción</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">{listing.description || 'Sin descripción disponible.'}</p>
+            <h3 className="text-sm font-extrabold text-text-primary mb-2">{t('listing.description')}</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">{listing.description || t('listing.noDescription')}</p>
           </div>
 
           {/* Seller */}
@@ -97,7 +99,7 @@ const ListingDetail: React.FC = () => {
                   <Star size={12} className="text-amber-400 fill-amber-400" /> {seller.rating} ({seller.ratingCount})
                 </div>
               </div>
-              <span className="text-xs font-bold text-purple-600">Ver tienda →</span>
+              <span className="text-xs font-bold text-purple-600">{t('listing.viewStore')}</span>
             </div>
           )}
 
@@ -110,7 +112,7 @@ const ListingDetail: React.FC = () => {
 
           {/* Delivery */}
           <div className="p-4 bg-white rounded-xl border border-border">
-            <h3 className="text-xs font-extrabold text-text-primary mb-3 flex items-center gap-2"><MapPin size={14} className="text-purple-600" /> Métodos de entrega</h3>
+            <h3 className="text-xs font-extrabold text-text-primary mb-3 flex items-center gap-2"><MapPin size={14} className="text-purple-600" /> {t('listing.deliveryMethods')}</h3>
             <div className="space-y-2">
               {(listing.deliveryMethods || ['pickup']).map((m: string) => (
                 <div key={m} className="flex items-center gap-2 text-xs text-text-secondary">
@@ -133,7 +135,7 @@ const ListingDetail: React.FC = () => {
           </div>
           <button onClick={() => { addItem({ listingId: listing.id!, title: listing.title, price: listing.price, icon: listing.type === 'service' ? '🛠️' : '📦', quantity: qty, sellerId: listing.sellerId, sellerName: seller?.name || '' }); navigate('/cart'); }}
             className="flex-1 py-3 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-[0.98] shadow-lg shadow-purple-200 flex items-center justify-center gap-2">
-            <ShoppingBag size={18} /> Agregar
+            <ShoppingBag size={18} /> {t('listing.addToCart')}
           </button>
           {listing.type === 'product' && (
             <button
@@ -146,9 +148,9 @@ const ListingDetail: React.FC = () => {
                 navigate(`/group-deal/${deal.id}`);
               }}
               className="py-3 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-extrabold hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98] shadow-lg shadow-amber-200 flex items-center gap-1.5"
-              title="Comprar en grupo — hasta 40% OFF"
+              title={t('listing.groupBuyTitle')}
             >
-              <Users size={16} /> <span className="hidden sm:inline">Grupo</span>
+              <Users size={16} /> <span className="hidden sm:inline">{t('listing.groupBuy')}</span>
             </button>
           )}
         </div>

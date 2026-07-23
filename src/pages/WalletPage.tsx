@@ -4,6 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Loader2, ArrowUpRight, ArrowDownLeft, Gift, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { walletService } from '../services/walletService';
@@ -33,6 +34,7 @@ const TYPE_COLORS: Record<string, string> = {
 const WalletPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ const WalletPage: React.FC = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={22} />
           </button>
-          <h1 className="text-lg font-extrabold">Mi Billetera</h1>
+          <h1 className="text-lg font-extrabold">{t('wallet.title')}</h1>
         </div>
       </header>
 
@@ -75,12 +77,12 @@ const WalletPage: React.FC = () => {
 
         {/* Transactions */}
         <div>
-          <h3 className="text-sm font-extrabold text-text-primary mb-3">Movimientos</h3>
+          <h3 className="text-sm font-extrabold text-text-primary mb-3">{t('wallet.history')}</h3>
           {transactions.length === 0 ? (
             <div className="bg-white rounded-xl border border-border p-8 text-center">
               <Clock size={32} className="mx-auto mb-2 text-text-muted" />
-              <p className="text-sm text-text-muted">No hay movimientos aún</p>
-              <p className="text-xs text-text-muted mt-1">Recarga saldo para empezar</p>
+              <p className="text-sm text-text-muted">{t('wallet.noMovements')}</p>
+              <p className="text-xs text-text-muted mt-1">{t('wallet.topUpToStart')}</p>
             </div>
           ) : (
             <div className="space-y-2">

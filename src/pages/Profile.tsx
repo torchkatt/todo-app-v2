@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award, Wallet } from 'lucide-react';
 import GuestConversion from '../components/auth/GuestConversion';
@@ -9,6 +10,7 @@ import CashbackList from '../components/wallet/CashbackList';
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const { t } = useTranslation();
   const [showConversion, setShowConversion] = React.useState(false);
 
   if (loading) return <div className="min-h-screen bg-brand-bg flex items-center justify-center"><Loader2 size={28} className="animate-spin text-purple-600" /></div>;
@@ -25,7 +27,7 @@ const Profile: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={22} /></button>
-          <h1 className="text-lg font-extrabold">Mi Perfil</h1>
+          <h1 className="text-lg font-extrabold">{t('profile.title')}</h1>
         </div>
       </header>
 
@@ -59,25 +61,25 @@ const Profile: React.FC = () => {
               <div className="flex items-center justify-center gap-1 text-lg font-extrabold text-amber-500">
                 <Award size={16} /> {impact.points}
               </div>
-              <div className="text-[10px] text-text-muted font-semibold">Puntos</div>
+              <div className="text-[10px] text-text-muted font-semibold">{t('profile.points')}</div>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-lg font-extrabold text-purple-700">
                 <Package size={16} /> {impact.totalTransactions}
               </div>
-              <div className="text-[10px] text-text-muted font-semibold">Compras</div>
+              <div className="text-[10px] text-text-muted font-semibold">{t('profile.purchases')}</div>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-lg font-extrabold text-emerald-600">
                 <TrendingUp size={16} /> ${impact.totalSpent.toLocaleString('es-CO')}
               </div>
-              <div className="text-[10px] text-text-muted font-semibold">Gastado</div>
+              <div className="text-[10px] text-text-muted font-semibold">{t('profile.spent')}</div>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-lg font-extrabold text-red-500">
                 <Flame size={16} /> {impact.streak?.current || 0}
               </div>
-              <div className="text-[10px] text-text-muted font-semibold">Racha (días)</div>
+              <div className="text-[10px] text-text-muted font-semibold">{t('profile.streak')} (días)</div>
             </div>
           </div>
         </div>
@@ -86,27 +88,27 @@ const Profile: React.FC = () => {
         <div className="space-y-2">
           <button onClick={() => navigate('/orders')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center"><Package size={18} className="text-purple-600" /></div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Mis pedidos</div><div className="text-[10px] text-text-muted font-semibold">Historial y estado</div></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{t('orders.title')}</div><div className="text-[10px] text-text-muted font-semibold">Historial y estado</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
           <button onClick={() => navigate('/wallet')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center"><Wallet size={18} className="text-emerald-600" /></div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Mi Billetera</div><div className="text-[10px] text-text-muted font-semibold">Saldo, recargas y cashback</div></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{t('wallet.title')}</div><div className="text-[10px] text-text-muted font-semibold">Saldo, recargas y cashback</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
           <button onClick={() => navigate('/favorites')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center"><Heart size={18} className="text-pink-500" /></div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Favoritos</div><div className="text-[10px] text-text-muted font-semibold">Productos guardados</div></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{t('profile.favorites')}</div><div className="text-[10px] text-text-muted font-semibold">Productos guardados</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
           <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center"><Settings size={18} className="text-text-secondary" /></div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Configuración</div><div className="text-[10px] text-text-muted font-semibold">Cuenta, notificaciones, privacidad</div></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{t('profile.settings')}</div><div className="text-[10px] text-text-muted font-semibold">Cuenta, notificaciones, privacidad</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
           <button onClick={() => navigate('/help')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center"><CircleHelp size={18} className="text-amber-500" /></div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Ayuda</div><div className="text-[10px] text-text-muted font-semibold">FAQ, soporte, guías</div></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{t('profile.help')}</div><div className="text-[10px] text-text-muted font-semibold">FAQ, soporte, guías</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
         </div>
@@ -114,7 +116,7 @@ const Profile: React.FC = () => {
         {/* Contact info */}
         {!user?.isGuest && (
           <div className="bg-white rounded-2xl border border-border p-5">
-            <h3 className="text-xs font-extrabold text-text-primary mb-3">Información de contacto</h3>
+            <h3 className="text-xs font-extrabold text-text-primary mb-3">{t('checkout.contactInfo')}</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3"><Mail size={16} className="text-text-muted" /><span className="text-text-secondary">{user?.email || 'No registrado'}</span></div>
               <div className="flex items-center gap-3"><Phone size={16} className="text-text-muted" /><span className="text-text-secondary">{user?.phone || 'No registrado'}</span></div>
@@ -132,7 +134,7 @@ const Profile: React.FC = () => {
 
         {/* Logout */}
         <button onClick={logout} className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-red-500 bg-white rounded-xl border border-border hover:bg-red-50 transition-colors active:scale-[0.98]">
-          <LogOut size={18} /> Cerrar sesión
+          <LogOut size={18} /> {t('auth.logout')}
         </button>
       </main>
       {showConversion && <GuestConversion onClose={() => setShowConversion(false)} />}

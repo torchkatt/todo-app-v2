@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -9,6 +10,7 @@ import { UserRole } from '../types';
 
 const SellerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -101,47 +103,47 @@ const SellerDashboard: React.FC = () => {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={22} /></button>
-          <h1 className="text-lg font-extrabold">{seller ? `${seller.logo} ${seller.name}` : '🏪 Mi Tienda'}</h1>
+          <h1 className="text-lg font-extrabold">{seller ? `${seller.logo} ${seller.name}` : `🏪 ${t('seller.store')}`}</h1>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 py-6">
         {!seller ? (
           <div className="text-center py-16">
             <Store size={48} className="mx-auto mb-4 text-purple-600" />
-            <h2 className="text-xl font-extrabold mb-2">Crea tu tienda en Todo</h2>
-            <p className="text-sm text-text-secondary mb-6">Vende productos, servicios o contenido digital. Sin comisión el primer mes.</p>
+            <h2 className="text-xl font-extrabold mb-2">{t('seller.createStore')}</h2>
+            <p className="text-sm text-text-secondary mb-6">{t('seller.createStoreDesc')}</p>
             <button onClick={createSeller} className="px-6 py-3 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-95 shadow-lg shadow-purple-200">
-              🚀 Crear mi tienda ahora
+              {t('seller.createStoreBtn')}
             </button>
           </div>
         ) : (
           <>
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-white rounded-xl border border-border p-4 text-center"><DollarSign size={20} className="mx-auto mb-1 text-emerald-500" /><div className="text-lg font-extrabold">${seller.stats.totalRevenue.toLocaleString('es-CO')}</div><div className="text-[10px] text-text-muted font-semibold">Ingresos</div></div>
-              <div className="bg-white rounded-xl border border-border p-4 text-center"><Package size={20} className="mx-auto mb-1 text-purple-500" /><div className="text-lg font-extrabold">{seller.stats.totalTransactions}</div><div className="text-[10px] text-text-muted font-semibold">Ventas</div></div>
-              <div className="bg-white rounded-xl border border-border p-4 text-center"><Star size={20} className="mx-auto mb-1 text-amber-400" /><div className="text-lg font-extrabold">{seller.rating || 'Nuevo'}</div><div className="text-[10px] text-text-muted font-semibold">Rating</div></div>
+              <div className="bg-white rounded-xl border border-border p-4 text-center"><DollarSign size={20} className="mx-auto mb-1 text-emerald-500" /><div className="text-lg font-extrabold">${seller.stats.totalRevenue.toLocaleString('es-CO')}</div><div className="text-[10px] text-text-muted font-semibold">{t('seller.revenue')}</div></div>
+              <div className="bg-white rounded-xl border border-border p-4 text-center"><Package size={20} className="mx-auto mb-1 text-purple-500" /><div className="text-lg font-extrabold">{seller.stats.totalTransactions}</div><div className="text-[10px] text-text-muted font-semibold">{t('seller.sales')}</div></div>
+              <div className="bg-white rounded-xl border border-border p-4 text-center"><Star size={20} className="mx-auto mb-1 text-amber-400" /><div className="text-lg font-extrabold">{seller.rating || 'Nuevo'}</div><div className="text-[10px] text-text-muted font-semibold">{t('seller.rating')}</div></div>
             </div>
 
             {/* Quick actions */}
             <div className="grid grid-cols-3 gap-2 mb-6">
               <button onClick={() => navigate('/seller/analytics')} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
                 <BarChart3 size={18} className="text-purple-600" />
-                <span className="text-[10px] font-bold text-text-secondary">Analíticas</span>
+                <span className="text-[10px] font-bold text-text-secondary">{t('seller.analytics')}</span>
               </button>
               <button onClick={() => navigate(`/seller/${seller.id}/store`)} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
                 <Store size={18} className="text-emerald-600" />
-                <span className="text-[10px] font-bold text-text-secondary">Mi tienda</span>
+                <span className="text-[10px] font-bold text-text-secondary">{t('seller.store')}</span>
               </button>
               <button onClick={() => navigate('/pricing')} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
                 <Sparkles size={18} className="text-amber-500" />
-                <span className="text-[10px] font-bold text-text-secondary">Plan</span>
+                <span className="text-[10px] font-bold text-text-secondary">{t('seller.plan')}</span>
               </button>
             </div>
 
             {/* Listings */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-extrabold text-text-primary">Mis Listados ({listings.length})</h3>
+              <h3 className="text-sm font-extrabold text-text-primary">{t('seller.myListings', { count: listings.length })}</h3>
               <button onClick={() => setShowForm(!showForm)} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition-all active:scale-95 shadow-sm shadow-purple-200">{showForm ? '✕ Cancelar' : '+ Nuevo'}</button>
             </div>
 
@@ -155,7 +157,7 @@ const SellerDashboard: React.FC = () => {
                   </select>
                   <input type="number" value={form.price} onChange={e => setForm({ ...form, price: Number(e.target.value) })} placeholder="Precio COP" className="flex-1 px-3 py-2 bg-gray-50 border border-border rounded-lg text-sm outline-none focus:border-purple-400 transition-all" />
                 </div>
-                <button onClick={createListing} disabled={!form.name || form.price <= 0} className="w-full py-2.5 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-all active:scale-95 disabled:opacity-50">Publicar listado</button>
+                <button onClick={createListing} disabled={!form.name || form.price <= 0} className="w-full py-2.5 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-all active:scale-95 disabled:opacity-50">{t('seller.publish')}</button>
               </div>
             )}
 
@@ -165,7 +167,7 @@ const SellerDashboard: React.FC = () => {
                   <span className="text-2xl">{l.type === 'service' ? '🛠️' : l.type === 'digital' ? '📱' : '📦'}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-extrabold text-text-primary truncate">{l.title}</div>
-                    <div className="text-xs text-text-muted">${l.price.toLocaleString('es-CO')} · {l.isActive ? '✅' : '⛔'} · {l.stats?.views || 0} vistas</div>
+                    <div className="text-xs text-text-muted">${l.price.toLocaleString('es-CO')} · {l.isActive ? '✅' : '⛔'} · {l.stats?.views || 0} {t('seller.views')}</div>
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => editListing(l)} className="text-xs font-bold text-blue-600 hover:underline px-1.5">✏️</button>
@@ -175,7 +177,7 @@ const SellerDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {listings.length === 0 && <p className="text-center text-sm text-text-muted py-8">Aún no has creado listados. ¡Publica tu primero!</p>}
+              {listings.length === 0 && <p className="text-center text-sm text-text-muted py-8">{t('seller.noListings')}</p>}
             </div>
           </>
         )}

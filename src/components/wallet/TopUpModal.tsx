@@ -3,6 +3,7 @@
  * @description Modal para recargar saldo en la wallet con montos predefinidos.
  */
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Loader2, Wallet } from 'lucide-react';
 import { WALLET_CONFIG } from '../../config/constants';
 import { formatCOP } from '../../config/constants';
@@ -19,6 +20,7 @@ const PRESETS = [20_000, 50_000, 100_000, 200_000, 500_000];
 
 const TopUpModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,8 +67,8 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
             <Wallet size={20} className="text-purple-600" />
           </div>
           <div>
-            <h2 className="text-lg font-extrabold">Recargar saldo</h2>
-            <p className="text-xs text-text-secondary">Monto entre {formatCOP(WALLET_CONFIG.minTopUp)} y {formatCOP(WALLET_CONFIG.maxTopUp)}</p>
+            <h2 className="text-lg font-extrabold">{t('wallet.topUpAmount')}</h2>
+            <p className="text-xs text-text-secondary">{t('wallet.amountRange', { min: formatCOP(WALLET_CONFIG.minTopUp), max: formatCOP(WALLET_CONFIG.maxTopUp) })}</p>
           </div>
         </div>
 
@@ -87,7 +89,7 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
         </div>
 
         <div className="mb-6">
-          <label className="text-xs font-bold text-text-secondary mb-1 block">Otro monto</label>
+          <label className="text-xs font-bold text-text-secondary mb-1 block">{t('wallet.otherAmount')}</label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-bold">$</span>
             <input
@@ -106,7 +108,7 @@ const TopUpModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
           className="w-full py-3.5 bg-purple-600 text-white rounded-xl font-extrabold text-sm hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2"
         >
           {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-          {loading ? 'Procesando...' : `Recargar ${getAmount() ? formatCOP(getAmount()!) : ''}`}
+          {loading ? t('wallet.processing') : `${t('wallet.topUp')} ${getAmount() ? formatCOP(getAmount()!) : ''}`}
         </button>
       </div>
     </div>
