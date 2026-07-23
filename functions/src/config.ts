@@ -6,6 +6,11 @@ export const WOMPI_EVENTS_SECRET = defineSecret('WOMPI_EVENTS_SECRET');
 export const WOMPI_INTEGRITY_SECRET = defineSecret('WOMPI_INTEGRITY_SECRET');
 export const DEEPSEEK_API_KEY = defineSecret('DEEPSEEK_API_KEY');
 export const SENTRY_DSN = defineSecret('SENTRY_DSN');
+export const EMAIL_SMTP_HOST = defineSecret('EMAIL_SMTP_HOST');
+export const EMAIL_SMTP_PORT = defineSecret('EMAIL_SMTP_PORT');
+export const EMAIL_SMTP_USER = defineSecret('EMAIL_SMTP_USER');
+export const EMAIL_SMTP_PASS = defineSecret('EMAIL_SMTP_PASS');
+export const EMAIL_FROM = defineSecret('EMAIL_FROM');
 
 // ─── Parámetros de negocio ───
 export const DEEPSEEK_MODEL = defineString('DEEPSEEK_MODEL', { default: 'deepseek-v4-flash' });

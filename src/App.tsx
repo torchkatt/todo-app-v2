@@ -35,6 +35,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const AdminCouponsPage = lazy(() => import('./pages/AdminCouponsPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
@@ -90,6 +91,7 @@ const App: React.FC = () => (
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/admin" element={<AdminPanel />} />
+                  <Route path="/admin/coupons" element={<AdminCouponsPage />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/revenue" element={<RevenueDashboard />} />
                   <Route path="/wallet" element={<WalletPage />} />

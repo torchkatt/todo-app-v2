@@ -5,10 +5,11 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSubscriptionPlans } from '../context/SubscriptionPlanContext';
-import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle, Crown, Wallet } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle, Crown, Wallet, Ticket, Tag } from 'lucide-react';
 import { functions } from '../services/firebase';
 import { openWompiCheckout } from '../services/paymentService';
 import { walletService } from '../services/walletService';
+import { couponService } from '../services/couponService';
 import { DeliveryMethod } from '../types';
 import { formatCOP, PAYMENT_METHODS } from '../config/constants';
 import Button from '../components/ui/Button';
@@ -43,6 +44,17 @@ const CheckoutPage: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [walletBalance, setWalletBalance] = React.useState<number | null>(null);
   const [payWithWallet, setPayWithWallet] = React.useState(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = React.useState('');
+  const [couponApplying, setCouponApplying] = React.useState(false);
+  const [couponError, setCouponError] = React.useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = React.useState<{
+    code: string;
+    couponId: string;
+    discount: number;
+    finalTotal: number;
+  } | null>(null);
 
   React.useEffect(() => {
     if (!user?.id) return;
@@ -108,6 +120,9 @@ const CheckoutPage: React.FC = () => {
         throw new Error('No se recibió la referencia del pedido.');
       }
 
+      // Capture coupon for redemption after payment
+      const capturedCoupon = appliedCoupon;
+
       if (data.paymentReady && integrity) {
         openWompiCheckout({
           amountInCents: data.amountInCents,
@@ -117,11 +132,17 @@ const CheckoutPage: React.FC = () => {
           customerEmail: user!.email,
           customerFullName: name,
           customerPhone: phone,
-          onSuccess: () => {
+          onSuccess: async () => {
+            if (capturedCoupon) {
+              try { await couponService.redeem(capturedCoupon.couponId, user!.id, reference); } catch {}
+            }
             clearCart();
             setDone({ reference, paymentReady: true });
           },
-          onError: () => {
+          onError: async () => {
+            if (capturedCoupon) {
+              try { await couponService.redeem(capturedCoupon.couponId, user!.id, reference); } catch {}
+            }
             setError('El pago no se pudo procesar. Tu pedido sigue pendiente, puedes reintentarlo desde "Mis pedidos".');
             clearCart();
             setDone({ reference, paymentReady: true });
@@ -150,7 +171,12 @@ const CheckoutPage: React.FC = () => {
       const reference = data.reference || data.orderId;
       if (!reference) throw new Error('No se recibió referencia');
 
-      await walletService.payWithWallet(user.id, totalPrice, reference);
+      const capturedCoupon = appliedCoupon;
+
+      await walletService.payWithWallet(user.id, effectiveTotal, reference);
+      if (capturedCoupon) {
+        try { await couponService.redeem(capturedCoupon.couponId, user.id, reference); } catch {}
+      }
       clearCart();
       setDone({ reference, paymentReady: true });
     } catch (e: any) {
@@ -158,6 +184,34 @@ const CheckoutPage: React.FC = () => {
     }
     setSubmitting(false);
   };
+
+  const handleApplyCoupon = async () => {
+    if (!user?.id || !couponCode.trim()) return;
+    setCouponApplying(true);
+    setCouponError(null);
+    try {
+      const result = await couponService.apply(couponCode.trim(), user.id, totalPrice);
+      setAppliedCoupon({
+        code: result.coupon.code,
+        couponId: result.coupon.id,
+        discount: result.discount,
+        finalTotal: result.finalTotal,
+      });
+      setCouponCode('');
+    } catch (e: any) {
+      setCouponError(e?.message || 'Cupón inválido');
+      setAppliedCoupon(null);
+    }
+    setCouponApplying(false);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError(null);
+  };
+
+  const effectiveTotal = appliedCoupon ? appliedCoupon.finalTotal : totalPrice;
 
   return (
     <div className="pb-32 bg-brand-bg min-h-screen">
@@ -208,7 +262,7 @@ const CheckoutPage: React.FC = () => {
               </div>
             )}
             {/* Upsell for free users */}
-            {currentTier === 'free' && address.trim() && totalPrice >= 150000 && (
+            {currentTier === 'free' && address.trim() && effectiveTotal >= 150000 && (
               <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg mb-2">
                 <Crown size={14} className="text-amber-600 shrink-0" />
                 <span className="text-[11px] font-bold text-amber-700">{t('checkout.freeShippingUpsell')}</span>
@@ -217,6 +271,56 @@ const CheckoutPage: React.FC = () => {
             <div className="flex justify-between text-sm"><span className="text-text-secondary">{t('checkout.subtotal')}</span><span className="font-bold">{formatCOP(totalPrice)}</span></div>
             <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío, comisión e impuestos</span><span className="font-bold text-text-muted">{t('checkout.shippingCalc')}</span></div>
           </div>
+        </div>
+
+        {/* Coupon section */}
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-extrabold mb-3 flex items-center gap-2">
+            <Ticket size={16} className="text-purple-600" /> {t('checkout.coupon') || 'Cupón de descuento'}
+          </h3>
+
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <div className="flex items-center gap-2">
+                <Tag size={14} className="text-emerald-600" />
+                <div>
+                  <div className="text-xs font-extrabold text-emerald-700 font-mono">{appliedCoupon.code}</div>
+                  <div className="text-[11px] font-semibold text-emerald-600">
+                    {formatCOP(appliedCoupon.discount)} de descuento
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleRemoveCoupon}
+                className="text-[10px] font-bold text-emerald-700 hover:text-red-600 transition-colors"
+              >
+                Quitar
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <input
+                  value={couponCode}
+                  onChange={e => { setCouponCode(e.target.value); setCouponError(null); }}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                  placeholder="Código de cupón"
+                  className="flex-1 px-4 py-2.5 bg-gray-50 border border-border rounded-xl text-sm outline-none focus:border-purple-400 focus:bg-white transition-all uppercase"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleApplyCoupon}
+                  loading={couponApplying}
+                  disabled={couponApplying || !couponCode.trim()}
+                >
+                  Aplicar
+                </Button>
+              </div>
+              {couponError && (
+                <p className="mt-2 text-xs font-semibold text-red-500">{couponError}</p>
+              )}
+            </>
+          )}
         </div>
 
         {/* Wallet option & Payment Methods */}
@@ -235,8 +339,8 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-sm font-extrabold text-text-primary">{t('checkout.payWithWallet')}</div>
-                  <div className={`text-xs font-semibold ${walletBalance >= totalPrice ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {walletBalance >= totalPrice
+                  <div className={`text-xs font-semibold ${walletBalance >= effectiveTotal ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {walletBalance >= effectiveTotal
                       ? t('wallet.available', { balance: formatCOP(walletBalance) })
                       : t('wallet.insufficient', { balance: formatCOP(walletBalance) })}
                   </div>
@@ -258,17 +362,33 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Coupon discount line in order summary */}
+        {appliedCoupon && (
+          <div className="flex justify-between text-sm">
+            <span className="text-emerald-600 font-semibold flex items-center gap-1">
+              <Tag size={12} /> Descuento ({appliedCoupon.code})
+            </span>
+            <span className="font-bold text-emerald-600">-{formatCOP(appliedCoupon.discount)}</span>
+          </div>
+        )}
+        {appliedCoupon && (
+          <div className="flex justify-between text-sm pt-1 border-t border-border">
+            <span className="text-text-primary font-extrabold">Total</span>
+            <span className="font-extrabold text-purple-600">{formatCOP(effectiveTotal)}</span>
+          </div>
+        )}
+
         <Button
           fullWidth
           size="lg"
           onClick={payWithWallet ? handleWalletCheckout : handleCheckout}
           loading={submitting}
-          disabled={submitting || mixedSellers || (payWithWallet && walletBalance !== null && walletBalance < totalPrice)}
+          disabled={submitting || mixedSellers || (payWithWallet && walletBalance !== null && walletBalance < effectiveTotal)}
         >
           {payWithWallet ? (
-            <>{t('checkout.payWithWallet')} {formatCOP(totalPrice)} <Wallet size={18} /></>
+            <>{t('checkout.payWithWallet')} {formatCOP(effectiveTotal)} <Wallet size={18} /></>
           ) : (
-            <>{t('checkout.pay')} {formatCOP(totalPrice)} <CreditCard size={18} /></>
+            <>{t('checkout.pay')} {formatCOP(effectiveTotal)} <CreditCard size={18} /></>
           )}
         </Button>
         <div className="flex items-center gap-2 justify-center text-[10px] text-text-muted">

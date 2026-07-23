@@ -136,3 +136,11 @@ export const FEATURED_CONFIG = {
   monthlyPrice: 200_000,
   maxPerSeller: 5,
 } as const;
+
+// ─── Coupon System ────────────────────────────────────────────────────────
+export const COUPON_CONFIG = {
+  maxUsesPerUser: 1,           // Cada cupón solo una vez por usuario
+  maxDiscountPercent: 50,      // Máximo 50% de descuento
+  codeLength: 8,               // Longitud de códigos auto-generados
+  codePrefix: 'TODO',           // Prefijo: TODO-XXXX
+} as const;

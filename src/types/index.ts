@@ -706,3 +706,33 @@ export interface AutoReloadConfig {
   lastReloadAt?: string;
   updatedAt: string;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 🎫 COUPON SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+export interface Coupon {
+  id: string;
+  code: string;                 // e.g. "BIENVENIDO10"
+  description: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: number;        // 10 for 10% or 50000 for $50K
+  minPurchase?: number;         // Minimum order amount
+  maxDiscount?: number;         // Cap for percentage discounts
+  maxUses: number;              // Total times it can be used
+  currentUses: number;
+  expiresAt: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CouponRedemption {
+  id: string;
+  couponId: string;
+  code: string;
+  userId: string;
+  orderId?: string;
+  discountAmount: number;
+  createdAt: string;
+}
