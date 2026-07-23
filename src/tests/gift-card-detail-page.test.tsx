@@ -104,7 +104,7 @@ function renderPage(cardId = 'card_abc') {
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
-describe.skip('GiftCardDetailPage', () => {
+describe('GiftCardDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetCard.mockResolvedValue(mockCard);

@@ -270,7 +270,7 @@ const SendGiftCardModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
                     {name || 'Gift Card'}
                   </div>
                   <div className="text-xs text-text-muted">
-                    {chosenDesign.label}
+                    {chosenDesign.emoji} {t(chosenDesign.labelKey)}
                   </div>
                 </div>
               </div>

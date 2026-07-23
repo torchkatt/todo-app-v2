@@ -81,7 +81,7 @@ describe('SendGiftCardModal', () => {
   });
 
   // ── 2. Shows design picker ──
-  it.skip('shows design picker with all design options', () => {
+  it('shows design picker with all design options', () => {
     renderModal();
 
     expect(screen.getByText('Elige un diseño')).toBeDefined();
@@ -94,7 +94,7 @@ describe('SendGiftCardModal', () => {
   });
 
   // ── 3. Card name input works ──
-  it.skip('allows user to enter a card name', () => {
+  it('allows user to enter a card name', () => {
     renderModal();
 
     // Go to name step
