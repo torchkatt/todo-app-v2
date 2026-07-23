@@ -572,7 +572,7 @@ export interface GroupDeal {
   originalPrice: number;
   groupPrice: number;
   discountPercent: number;
-  minParticipants: number;   // 3, 5, 10
+  minParticipants: number;
   maxParticipants: number;
   currentCount: number;
   status: 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';

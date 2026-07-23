@@ -32,7 +32,7 @@ export const groupDealService = {
     originalPrice: number,
     sellerId: string,
     createdBy: string,
-    minParticipants = GROUP_DEAL_CONFIG.minParticipants,
+    minParticipants: number = 3,
   ): Promise<GroupDeal> {
     const discountPercent = calculateDiscount(minParticipants);
     const groupPrice = Math.round(originalPrice * (1 - discountPercent / 100));

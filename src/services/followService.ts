@@ -64,7 +64,7 @@ export const followService = {
       limit(max),
     );
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id } as SellerFollow));
+    return snap.docs.map(d => ({ ...d.data(), id: d.id } as unknown as SellerFollow));
   },
 
   /**
