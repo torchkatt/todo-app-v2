@@ -109,6 +109,26 @@ export const GIFT_CONFIG = {
   maxDailySent: 5,
 } as const;
 
+// ─── Gift Cards (Starbucks-style multi-wallet) ──────────────────────────────
+export const GIFT_CARD_CONFIG = {
+  minCreateAmount: 5_000,
+  maxCardsPerUser: 10,
+  defaultExpirationDays: 365,
+  designs: ['default', 'birthday', 'celebration', 'thanks', 'holiday'] as const,
+  transferMin: 1_000,
+} as const;
+
+// ─── Auto-Reload (Starbucks-style) ──────────────────────────────────────────
+export const AUTO_RELOAD_CONFIG = {
+  minThreshold: 10_000,
+  maxThreshold: 500_000,
+  minAmount: 20_000,
+  maxAmount: 1_000_000,
+  defaultThreshold: 50_000,
+  defaultAmount: 100_000,
+  maxMonthly: 5,
+} as const;
+
 // ─── Featured Listings ─────────────────────────────────────────────────────
 export const FEATURED_CONFIG = {
   dailyPrice: 15_000,
