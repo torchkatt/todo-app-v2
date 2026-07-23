@@ -4,9 +4,10 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSubscriptionPlans } from '../context/SubscriptionPlanContext';
-import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle, Crown } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle, Crown, Wallet } from 'lucide-react';
 import { functions } from '../services/firebase';
 import { openWompiCheckout } from '../services/paymentService';
+import { walletService } from '../services/walletService';
 import { DeliveryMethod } from '../types';
 import { formatCOP, PAYMENT_METHODS } from '../config/constants';
 import Button from '../components/ui/Button';
@@ -38,6 +39,13 @@ const CheckoutPage: React.FC = () => {
   const [submitting, setSubmitting] = React.useState(false);
   const [done, setDone] = React.useState<{ reference: string; paymentReady: boolean } | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = React.useState<number | null>(null);
+  const [payWithWallet, setPayWithWallet] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    walletService.getBalance(user.id).then(setWalletBalance).catch(() => {});
+  }, [user?.id]);
 
   if (!isAuthenticated) {
     navigate('/login', { state: { from: '/checkout' } });
@@ -127,6 +135,28 @@ const CheckoutPage: React.FC = () => {
     setSubmitting(false);
   };
 
+  const handleWalletCheckout = async () => {
+    if (!user?.id) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const deliveryMethod = address.trim() ? DeliveryMethod.SHIPPING : DeliveryMethod.PICKUP;
+      const { data } = await createTransactionCallable({
+        items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+        delivery: { method: deliveryMethod, address: address || undefined, name, phone },
+      });
+      const reference = data.reference || data.orderId;
+      if (!reference) throw new Error('No se recibió referencia');
+
+      await walletService.payWithWallet(user.id, totalPrice, reference);
+      clearCart();
+      setDone({ reference, paymentReady: true });
+    } catch (e: any) {
+      setError(e?.message || 'Error al pagar con wallet');
+    }
+    setSubmitting(false);
+  };
+
   return (
     <div className="pb-32 bg-brand-bg min-h-screen">
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border px-4 py-3">
@@ -187,8 +217,32 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic Trust Badge & Payment Methods */}
+        {/* Wallet option & Payment Methods */}
         <div className="space-y-3">
+          {/* Wallet toggle */}
+          {walletBalance !== null && (
+            <div className="bg-white rounded-xl border border-border p-4">
+              <button
+                onClick={() => setPayWithWallet(!payWithWallet)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  payWithWallet ? 'border-purple-400 bg-purple-50' : 'border-border hover:border-purple-200'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${payWithWallet ? 'bg-purple-600 text-white' : 'bg-gray-50 text-text-secondary'}`}>
+                  <Wallet size={18} />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-extrabold text-text-primary">Pagar con mi saldo</div>
+                  <div className={`text-xs font-semibold ${walletBalance >= totalPrice ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {walletBalance >= totalPrice
+                      ? `Saldo disponible: ${formatCOP(walletBalance)}`
+                      : `Saldo insuficiente: ${formatCOP(walletBalance)} — recarga desde tu perfil`}
+                  </div>
+                </div>
+                {payWithWallet && <span className="text-purple-600 text-xs font-bold">✓</span>}
+              </button>
+            </div>
+          )}
           <TrustBadge />
           <div className="bg-white rounded-xl border border-border p-4">
             <div className="text-xs font-extrabold mb-2.5 text-slate-800 dark:text-slate-200">Métodos de pago aceptados</div>
@@ -205,11 +259,15 @@ const CheckoutPage: React.FC = () => {
         <Button
           fullWidth
           size="lg"
-          onClick={handleCheckout}
+          onClick={payWithWallet ? handleWalletCheckout : handleCheckout}
           loading={submitting}
-          disabled={submitting || mixedSellers}
+          disabled={submitting || mixedSellers || (payWithWallet && walletBalance !== null && walletBalance < totalPrice)}
         >
-          Pagar {formatCOP(totalPrice)} <CreditCard size={18} />
+          {payWithWallet ? (
+            <>Pagar con Wallet {formatCOP(totalPrice)} <Wallet size={18} /></>
+          ) : (
+            <>Pagar {formatCOP(totalPrice)} <CreditCard size={18} /></>
+          )}
         </Button>
         <div className="flex items-center gap-2 justify-center text-[10px] text-text-muted">
           <Truck size={12} /> {address ? 'Envío a domicilio' : 'Recogida local'}

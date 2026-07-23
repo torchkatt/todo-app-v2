@@ -11,6 +11,7 @@ export { aiChat } from './ai/aiProxy';
 export { getOrCreateChat } from './chat/getOrCreateChat';
 export { onChatMessageCreate } from './chat/onChatMessageCreate';
 export { updateOrderStatus } from './chat/updateOrderStatus';
+export { onGroupDealComplete } from './social/onGroupDealComplete';
 export { handleUpgrade } from './subscriptions/handleUpgrade';
 export { onTransactionComplete } from './cashback/onTransactionComplete';
 export { createWompiTopUp } from './wallet/createWompiTopUp';
