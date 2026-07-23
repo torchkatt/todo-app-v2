@@ -18,12 +18,12 @@ interface Props {
   onSuccess?: () => void;
 }
 
-const DESIGNS: { key: GiftCard['design']; emoji: string; label: string }[] = [
-  { key: 'default', emoji: '🎁', label: 'Default' },
-  { key: 'birthday', emoji: '🎂', label: 'Cumpleaños' },
-  { key: 'celebration', emoji: '🎉', label: 'Celebración' },
-  { key: 'thanks', emoji: '🙏', label: 'Gracias' },
-  { key: 'holiday', emoji: '🎄', label: 'Navidad' },
+const DESIGNS: { key: GiftCard['design']; emoji: string; labelKey: string }[] = [
+  { key: 'default', emoji: '🎁', labelKey: 'giftCard.designDefault' },
+  { key: 'birthday', emoji: '🎂', labelKey: 'giftCard.designBirthday' },
+  { key: 'celebration', emoji: '🎉', labelKey: 'giftCard.designCelebration' },
+  { key: 'thanks', emoji: '🙏', labelKey: 'giftCard.designThanks' },
+  { key: 'holiday', emoji: '🎄', labelKey: 'giftCard.designHoliday' },
 ];
 
 const AMOUNT_PRESETS = [20_000, 50_000, 100_000, 200_000];
@@ -113,7 +113,7 @@ const SendGiftCardModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
       onSuccess?.();
       handleClose();
     } catch (e: any) {
-      setError(e.message || 'Error al crear la gift card');
+      setError(e.message || t('giftCard.insufficientBalance'));
     }
     setLoading(false);
   };
@@ -147,7 +147,7 @@ const SendGiftCardModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => {
                 >
                   <span className="text-3xl block mb-1">{d.emoji}</span>
                   <span className="text-[11px] font-bold text-text-primary">
-                    {d.label}
+                    {t(d.labelKey)}
                   </span>
                 </button>
               ))}

@@ -67,7 +67,7 @@ const AutoReloadSettings: React.FC = () => {
       setSuccess(true);
       await loadConfig();
     } catch (e: any) {
-      setError(e.message || 'Error al guardar');
+      setError(e.message || t('giftCard.autoReloadError'));
     }
     setSaving(false);
   };

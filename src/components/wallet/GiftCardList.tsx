@@ -19,13 +19,6 @@ const STATUS_STYLES: Record<GiftCard['status'], string> = {
   CANCELLED: 'bg-gray-100 text-gray-400',
 };
 
-const STATUS_LABELS: Record<GiftCard['status'], string> = {
-  ACTIVE: 'Activa',
-  DEPLETED: 'Agotada',
-  EXPIRED: 'Expirada',
-  CANCELLED: 'Cancelada',
-};
-
 const GiftCardList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -33,6 +26,16 @@ const GiftCardList: React.FC = () => {
   const [cards, setCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const statusLabel = (s: GiftCard['status']): string => {
+    const map: Record<GiftCard['status'], string> = {
+      ACTIVE: t('giftCard.statusActive'),
+      DEPLETED: t('giftCard.statusDepleted'),
+      EXPIRED: t('giftCard.statusExpired'),
+      CANCELLED: t('giftCard.statusCancelled'),
+    };
+    return map[s];
+  };
 
   const loadCards = async () => {
     if (!user?.id) return;
@@ -157,7 +160,7 @@ const GiftCardList: React.FC = () => {
               {/* Status badge */}
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[card.status]}`}>
-                  {STATUS_LABELS[card.status]}
+                  {statusLabel(card.status)}
                 </span>
                 {isActive && <ChevronRight size={14} className="text-text-muted" />}
               </div>
