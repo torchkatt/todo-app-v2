@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award } from 'lucide-react';
+import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award, Wallet } from 'lucide-react';
 import GuestConversion from '../components/auth/GuestConversion';
 import CashbackBadge from '../components/wallet/CashbackBadge';
 
@@ -85,6 +85,11 @@ const Profile: React.FC = () => {
           <button onClick={() => navigate('/orders')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center"><Package size={18} className="text-purple-600" /></div>
             <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Mis pedidos</div><div className="text-[10px] text-text-muted font-semibold">Historial y estado</div></div>
+            <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
+          </button>
+          <button onClick={() => navigate('/wallet')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center"><Wallet size={18} className="text-emerald-600" /></div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Mi Billetera</div><div className="text-[10px] text-text-muted font-semibold">Saldo, recargas y cashback</div></div>
             <span className="text-xs font-bold text-purple-600 group-hover:mr-1 transition-all">→</span>
           </button>
           <button onClick={() => navigate('/favorites')} className="w-full flex items-center gap-4 p-4 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all group">
