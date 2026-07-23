@@ -658,3 +658,50 @@ export interface GiftCredit {
   createdAt: string;
   claimedAt?: string;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 🎁 STARBUCKS-INSPIRED — Gift Cards + Auto-Reload
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Gift Card (multi-wallet style) ──────────────────────────
+export interface GiftCard {
+  id: string;
+  userId: string;
+  name: string;
+  balance: number;
+  originalAmount: number;
+  message?: string;
+  design?: 'default' | 'birthday' | 'celebration' | 'thanks' | 'holiday';
+  status: 'ACTIVE' | 'DEPLETED' | 'EXPIRED' | 'CANCELLED';
+  source: 'purchased' | 'received' | 'promo' | 'corporate';
+  isPrimary: boolean;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Gift Card Transaction ───────────────────────────────────
+export interface GiftCardTransaction {
+  id: string;
+  cardId: string;
+  userId: string;
+  type: 'LOAD' | 'PURCHASE' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'REFUND' | 'EXPIRATION';
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  description: string;
+  referenceId?: string;
+  createdAt: string;
+}
+
+// ─── Auto-Reload Configuration ───────────────────────────────
+export interface AutoReloadConfig {
+  enabled: boolean;
+  threshold: number;     // Recargar cuando saldo baje de X
+  amount: number;        // Monto a recargar
+  paymentMethod?: string; // "wompi" por ahora
+  maxMonthly: number;    // Tope mensual de recargas automáticas
+  monthlyCount: number;
+  lastReloadAt?: string;
+  updatedAt: string;
+}
