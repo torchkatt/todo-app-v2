@@ -6,6 +6,8 @@
 
 export * from './Button';
 export * from './Badge';
+export { default as TierBadge } from './TierBadge';
+export type { TierBadgeProps } from './TierBadge';
 export * from './PriceDisplay';
 export * from './ProductCard';
 export * from './TrustBadge';

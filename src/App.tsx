@@ -29,6 +29,7 @@ const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 const SellerDashboard = lazy(() => import('./pages/SellerDashboard'));
 const SellerProfile = lazy(() => import('./pages/SellerProfile'));
+const SellerStorefront = lazy(() => import('./pages/SellerStorefront'));
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
@@ -79,6 +80,7 @@ const App: React.FC = () => (
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/seller" element={<SellerDashboard />} />
                   <Route path="/seller/:id" element={<SellerProfile />} />
+                  <Route path="/seller/:id/store" element={<SellerStorefront />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/help" element={<HelpPage />} />
