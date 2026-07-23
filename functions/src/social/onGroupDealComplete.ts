@@ -32,7 +32,7 @@ export const onGroupDealComplete = onDocumentUpdated(
     }
 
     // Notificar a cada participante
-    const { title, groupPrice, discountPercent, sellerId } = after;
+    const { title, groupPrice, discountPercent } = after;
 
     for (const doc of participantsSnap.docs) {
       const p = doc.data();
