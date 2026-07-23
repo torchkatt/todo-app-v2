@@ -3,13 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, Star, MapPin, Plus, Minus, BadgeCheck, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, Star, MapPin, Plus, Minus, BadgeCheck, Loader2, Users } from 'lucide-react';
 import type { Listing, Seller } from '../types';
 import SEO from '../components/seo/SEO';
+import { groupDealService } from '../services/groupDealService';
+import { useAuth } from '../context/AuthContext';
 
 const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { addItem } = useCart();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<Seller | null>(null);
@@ -122,7 +125,7 @@ const ListingDetail: React.FC = () => {
 
       {/* Sticky buy */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-4 z-50 shadow-2xl">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+        <div className="max-w-2xl mx-auto flex items-center gap-2">
           <div className="flex items-center border border-border rounded-xl overflow-hidden">
             <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-3 py-3 hover:bg-gray-100 transition-colors"><Minus size={16} /></button>
             <span className="px-4 py-3 text-sm font-extrabold min-w-[2rem] text-center">{qty}</span>
@@ -130,8 +133,24 @@ const ListingDetail: React.FC = () => {
           </div>
           <button onClick={() => { addItem({ listingId: listing.id!, title: listing.title, price: listing.price, icon: listing.type === 'service' ? '🛠️' : '📦', quantity: qty, sellerId: listing.sellerId, sellerName: seller?.name || '' }); navigate('/cart'); }}
             className="flex-1 py-3 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all active:scale-[0.98] shadow-lg shadow-purple-200 flex items-center justify-center gap-2">
-            <ShoppingBag size={18} /> Agregar al carrito
+            <ShoppingBag size={18} /> Agregar
           </button>
+          {listing.type === 'product' && (
+            <button
+              onClick={async () => {
+                if (!user) { navigate('/login'); return; }
+                const deal = await groupDealService.create(
+                  listing.id!, listing.title, listing.price,
+                  listing.sellerId, user.id, 3
+                );
+                navigate(`/group-deal/${deal.id}`);
+              }}
+              className="py-3 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-extrabold hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98] shadow-lg shadow-amber-200 flex items-center gap-1.5"
+              title="Comprar en grupo — hasta 40% OFF"
+            >
+              <Users size={16} /> <span className="hidden sm:inline">Grupo</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
