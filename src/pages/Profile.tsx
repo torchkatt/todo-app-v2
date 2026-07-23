@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award } from 'lucide-react';
 import GuestConversion from '../components/auth/GuestConversion';
+import CashbackBadge from '../components/wallet/CashbackBadge';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,9 @@ const Profile: React.FC = () => {
           </div>
           <button onClick={() => navigate('/settings')} className="mt-4 px-4 py-1.5 bg-gray-100 rounded-lg text-xs font-bold text-text-secondary hover:bg-gray-200 transition-colors">Editar perfil</button>
         </div>
+
+        {/* Cashback Badge */}
+        <CashbackBadge />
 
         {/* Impact / Stats */}
         <div className="bg-white rounded-2xl border border-border p-5">
