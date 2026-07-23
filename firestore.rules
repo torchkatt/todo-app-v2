@@ -24,7 +24,7 @@ service cloud.firestore {
     }
 
     function isValidUserData() {
-      return request.resource.data.role in ['CUSTOMER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'];
+      return request.resource.data.role in ['CUSTOMER', 'SELLER', 'COURIER', 'ADMIN', 'SUPER_ADMIN'];
     }
 
     function canCreateUser() {
@@ -88,7 +88,7 @@ service cloud.firestore {
     match /transactions/{transactionId} {
       allow read: if isAdmin() ||
         (isAuthenticated() && resource.data.buyerId == request.auth.uid) ||
-        (isAuthenticated() && resource.data.sellerId == request.auth.uid);
+        (isAuthenticated() && isSellerOwner(resource.data.sellerId));
       allow create: if false;
       // El comprador solo puede cancelar mientras el pago está pendiente, y solo
       // puede tocar 'status' y 'updatedAt' — nunca montos ni datos de pago.
@@ -118,6 +118,37 @@ service cloud.firestore {
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─── CHATS ─────────────────────────────────────────────────────────
+    // El documento padre (participantes, último mensaje) solo lo escribe
+    // el backend (Admin SDK) vía getOrCreateChat / onChatMessageCreate.
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create, update, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        // El remitente solo puede publicar mensajes propios, salvo la respuesta del
+        // asistente IA en un hilo type=='ai' (el cliente la persiste porque el callable
+        // aiChat solo devuelve texto — es un hilo privado usuario↔IA, sin otra parte
+        // a la que un mensaje 'ai' falso pueda afectar).
+        allow create: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants &&
+          (
+            request.resource.data.senderId == request.auth.uid ||
+            (request.resource.data.senderId == 'ai' &&
+             get(/databases/$(database)/documents/chats/$(chatId)).data.type == 'ai')
+          ) &&
+          request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 && request.resource.data.text.size() < 4000;
+        allow update, delete: if false;
+      }
+
+      match /reads/{uid} {
+        allow read, write: if isAuthenticated() && request.auth.uid == uid;
+      }
     }
 
     // ─── ANALYTICS ─────────────────────────────────────────────────────

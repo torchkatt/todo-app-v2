@@ -9,7 +9,7 @@ export type ApplyOutcome =
   | { orderNotFound: true }
   | { mismatch: true }
   | { skipped: true }
-  | { applied: true; status: TransactionStatus };
+  | { applied: true; status: TransactionStatus; buyerId: string; push?: { title: string; body: string } };
 
 /**
  * Aplica el estado de una transacción Wompi a la orden correspondiente de forma idempotente
@@ -61,6 +61,12 @@ export async function applyWompiTransaction(tx: WompiTransactionData): Promise<A
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    // El push real (admin.messaging()) NO se dispara aquí: la transacción puede
+    // reintentar su callback ante contención, y un push ya enviado por un intento
+    // abortado no se puede "deshacer". Solo se prepara el mensaje; el caller lo
+    // envía después de que runTransaction resuelva con éxito, una sola vez.
+    let push: { title: string; body: string } | undefined;
+
     if (nextStatus === TransactionStatus.PAYMENT_CONFIRMED) {
       t.update(db.collection('sellers').doc(order.sellerId), {
         'stats.totalRevenue': admin.firestore.FieldValue.increment(order.sellerEarnings ?? 0),
@@ -71,10 +77,14 @@ export async function applyWompiTransaction(tx: WompiTransactionData): Promise<A
         'impact.totalTransactions': admin.firestore.FieldValue.increment(1),
         'impact.totalSpent': admin.firestore.FieldValue.increment(order.totalAmount ?? 0),
       });
-      t.set(db.collection('notifications').doc(), {
-        userId: order.buyerId,
+      push = {
         title: '✅ Pago confirmado',
         body: `Tu pago por $${((order.totalAmount ?? 0) / 100).toLocaleString('es-CO')} fue aprobado`,
+      };
+      t.set(db.collection('notifications').doc(), {
+        userId: order.buyerId,
+        title: push.title,
+        body: push.body,
         type: 'order_update',
         read: false,
         link: `/orders/${tx.reference}`,
@@ -90,10 +100,11 @@ export async function applyWompiTransaction(tx: WompiTransactionData): Promise<A
           quantity: admin.firestore.FieldValue.increment(li.quantity),
         });
       }
+      push = { title: '❌ Pago rechazado', body: 'Tu pago no pudo procesarse. Intenta de nuevo.' };
       t.set(db.collection('notifications').doc(), {
         userId: order.buyerId,
-        title: '❌ Pago rechazado',
-        body: 'Tu pago no pudo procesarse. Intenta de nuevo.',
+        title: push.title,
+        body: push.body,
         type: 'order_update',
         read: false,
         link: `/orders/${tx.reference}`,
@@ -109,6 +120,6 @@ export async function applyWompiTransaction(tx: WompiTransactionData): Promise<A
       { targetType: 'transaction', targetId: tx.reference }
     );
 
-    return { applied: true, status: nextStatus };
+    return { applied: true, status: nextStatus, buyerId: order.buyerId, push };
   });
 }

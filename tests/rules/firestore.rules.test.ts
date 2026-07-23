@@ -118,6 +118,11 @@ describe('transactions — el cliente nunca origina montos', () => {
     await assertSucceeds(getDoc(doc(db, 'transactions', 'tx-1')));
     await assertSucceeds(updateDoc(doc(db, 'transactions', 'tx-1'), { status: 'DISPUTED' }));
   });
+
+  it('el dueño de la tienda (ownerId del seller, no el sellerId) puede leer la transacción', async () => {
+    const db = asSellerOwner();
+    await assertSucceeds(getDoc(doc(db, 'transactions', 'tx-1')));
+  });
 });
 
 describe('sellers — el dueño no puede inflar sus propias stats', () => {
@@ -228,6 +233,105 @@ describe('users — no se puede escalar el propio rol', () => {
     });
     const db = asOther();
     await assertSucceeds(setDoc(doc(db, 'users', OTHER_USER), { onboardingDone: true }, { merge: true }));
+  });
+
+  it('un admin puede crear/promover un usuario a role COURIER (el auto-registro sigue siendo solo CUSTOMER)', async () => {
+    const db = asAdmin();
+    await assertSucceeds(
+      setDoc(doc(db, 'users', 'courier-1'), {
+        uid: 'courier-1', email: 'c@x.com', role: 'COURIER', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+    const selfDb = testEnv.authenticatedContext('courier-2', { role: 'COURIER' }).firestore();
+    await assertFails(
+      setDoc(doc(selfDb, 'users', 'courier-2'), {
+        uid: 'courier-2', email: 'c2@x.com', role: 'COURIER', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+});
+
+describe('chats — hilos IA / negocio / domiciliario', () => {
+  const AI_CHAT = 'ai_buyer-1';
+  const SELLER_CHAT = 'seller_buyer-1_seller-1';
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await db.collection('chats').doc(AI_CHAT).set({
+        type: 'ai', participants: [BUYER], buyerId: BUYER,
+        lastMessage: '', lastMessageAt: null, createdAt: '2026-01-01T00:00:00Z',
+      });
+      await db.collection('chats').doc(SELLER_CHAT).set({
+        type: 'seller', participants: [BUYER, SELLER_OWNER],
+        buyerId: BUYER, sellerId: SELLER_ID, sellerOwnerId: SELLER_OWNER,
+        lastMessage: '', lastMessageAt: null, createdAt: '2026-01-01T00:00:00Z',
+      });
+    });
+  });
+
+  it('el documento padre del chat nunca se crea ni actualiza desde el cliente', async () => {
+    const db = asBuyer();
+    await assertFails(
+      setDoc(doc(db, 'chats', 'chat-fake'), { type: 'ai', participants: [BUYER] })
+    );
+    await assertFails(updateDoc(doc(db, 'chats', SELLER_CHAT), { lastMessage: 'hackeado' }));
+  });
+
+  it('solo los participantes pueden leer el chat', async () => {
+    await assertSucceeds(getDoc(doc(asBuyer(), 'chats', SELLER_CHAT)));
+    await assertSucceeds(getDoc(doc(asSellerOwner(), 'chats', SELLER_CHAT)));
+    await assertFails(getDoc(doc(asOther(), 'chats', SELLER_CHAT)));
+  });
+
+  it('un participante puede publicar un mensaje propio', async () => {
+    await assertSucceeds(
+      setDoc(doc(asBuyer(), 'chats', SELLER_CHAT, 'messages', 'm1'), {
+        senderId: BUYER, text: 'Hola, ¿tienen stock?', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+
+  it('nadie puede publicar un mensaje suplantando a otro remitente', async () => {
+    await assertFails(
+      setDoc(doc(asBuyer(), 'chats', SELLER_CHAT, 'messages', 'm2'), {
+        senderId: SELLER_OWNER, text: 'suplantación', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+
+  it('un no-participante no puede leer ni escribir mensajes', async () => {
+    await assertFails(getDoc(doc(asOther(), 'chats', SELLER_CHAT, 'messages', 'm1')));
+    await assertFails(
+      setDoc(doc(asOther(), 'chats', SELLER_CHAT, 'messages', 'm3'), {
+        senderId: OTHER_USER, text: 'colado', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+
+  it('el participante de un hilo IA puede persistir la respuesta del asistente (senderId "ai")', async () => {
+    await assertSucceeds(
+      setDoc(doc(asBuyer(), 'chats', AI_CHAT, 'messages', 'm-ai'), {
+        senderId: 'ai', text: 'Te ayudo a buscar...', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+
+  it('senderId "ai" está prohibido fuera de un hilo type==ai', async () => {
+    await assertFails(
+      setDoc(doc(asBuyer(), 'chats', SELLER_CHAT, 'messages', 'm-fake-ai'), {
+        senderId: 'ai', text: 'finjo ser el asistente', createdAt: '2026-01-01T00:00:00Z',
+      })
+    );
+  });
+
+  it('cada participante solo puede leer/escribir su propio marcador de lectura', async () => {
+    await assertSucceeds(
+      setDoc(doc(asBuyer(), 'chats', SELLER_CHAT, 'reads', BUYER), { lastReadAt: '2026-01-01T00:00:00Z' })
+    );
+    await assertFails(
+      setDoc(doc(asBuyer(), 'chats', SELLER_CHAT, 'reads', SELLER_OWNER), { lastReadAt: '2026-01-01T00:00:00Z' })
+    );
   });
 });
 

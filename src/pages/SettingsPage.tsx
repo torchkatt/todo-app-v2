@@ -2,17 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotifications } from '../context/NotificationContext';
 import { ArrowLeft, Bell, Shield, Globe, Smartphone, Loader2, CheckCircle, Moon, Sun, RefreshCw } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateProfile } = useAuth();
   const { theme, toggle } = useTheme();
+  const { requestPushPermission } = useNotifications();
   const [name, setName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [city, setCity] = useState(user?.city || '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(
+    typeof Notification !== 'undefined' && Notification.permission === 'granted'
+  );
+  const [requestingPush, setRequestingPush] = useState(false);
+
+  const handleTogglePush = async () => {
+    if (pushEnabled || requestingPush) return;
+    setRequestingPush(true);
+    try {
+      await requestPushPermission();
+      setPushEnabled(typeof Notification !== 'undefined' && Notification.permission === 'granted');
+    } finally {
+      setRequestingPush(false);
+    }
+  };
 
   // Estado del Service Worker PWA para actualización manual en Ajustes
   const [swReg, setSwReg] = useState<ServiceWorkerRegistration | null>(null);
@@ -92,7 +109,12 @@ const SettingsPage: React.FC = () => {
         {/* Opciones Generales */}
         <div className="bg-white rounded-xl border border-border divide-y divide-border">
           {[
-            { icon: <Bell size={18} />, title: 'Notificaciones', desc: 'Push, email, ofertas' },
+            {
+              icon: requestingPush ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />,
+              title: 'Notificaciones push',
+              desc: pushEnabled ? 'Activadas' : requestingPush ? 'Solicitando permiso...' : 'Desactivadas — toca para activar',
+              onClick: handleTogglePush,
+            },
             { icon: <Shield size={18} />, title: 'Privacidad', desc: 'Datos, permisos, seguridad' },
             { icon: <Globe size={18} />, title: 'Idioma', desc: 'Español (Colombia)' },
             { icon: theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />, title: 'Modo oscuro', desc: theme === 'dark' ? 'Activado' : 'Desactivado', onClick: toggle },

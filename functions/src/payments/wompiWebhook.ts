@@ -6,6 +6,7 @@ import { checkRateLimit } from '../lib/rateLimit';
 import { audit } from '../lib/audit';
 import { applyWompiTransaction } from './applyWompiTransaction';
 import { captureError } from '../lib/sentry';
+import { sendPushToUser } from '../lib/push';
 
 const MAX_PAYLOAD_SIZE = 100_000; // 100KB
 
@@ -50,6 +51,9 @@ export const wompiWebhook = onRequest(
 
     try {
       const outcome = await applyWompiTransaction(event.data.transaction);
+      if ('applied' in outcome && outcome.push) {
+        await sendPushToUser(outcome.buyerId, outcome.push, { link: `/orders/${event.data.transaction.reference}` });
+      }
       res.status(200).send({ received: true, ...outcome });
     } catch (e) {
       logger.error('wompiWebhook: error processing event', e);

@@ -77,7 +77,14 @@ const OrdersPage: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {orders.map(order => (
-              <div key={order.id} className="bg-white rounded-xl border border-border p-4 hover:border-purple-200 transition-all">
+              <div
+                key={order.id}
+                onClick={() => navigate(`/orders/${order.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/orders/${order.id}`); }}
+                className="bg-white rounded-xl border border-border p-4 hover:border-purple-200 transition-all cursor-pointer"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="text-sm font-extrabold text-text-primary">#{order.id?.slice(-8)}</div>

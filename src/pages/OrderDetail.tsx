@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, ShoppingBag, CreditCard, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, ShoppingBag, CreditCard, MapPin, MessageCircle, Bike } from 'lucide-react';
 import { formatCOP } from '../utils/formatters';
 import { PURCHASE_TIMELINE } from '../utils/orderState';
+import { useChatUI } from '../context/ChatUIContext';
+import { getOrCreateSellerChat, getOrCreateCourierChat } from '../services/chatService';
 
 const STATUS_MAP: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   PENDING_PAYMENT: { label: 'Pendiente de pago', icon: <Clock size={16} />, color: 'text-amber-600 bg-amber-50 border-amber-200' },
@@ -23,9 +25,11 @@ const TIMELINE: string[] = PURCHASE_TIMELINE;
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { openChat } = useChatUI();
   const [order, setOrder] = useState<any>(null);
   const [seller, setSeller] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [chattingWith, setChattingWith] = useState<'seller' | 'courier' | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -36,11 +40,39 @@ const OrderDetail: React.FC = () => {
       setOrder(data);
       setLoading(false);
       if (data.sellerId) {
-        getDoc(doc(db, 'sellers', data.sellerId)).then((ss) => { if (ss.exists()) setSeller(ss.data()); });
+        // ss.data() no trae el campo `id` del documento — hay que agregarlo a mano
+        // (si no, "Chatear con el negocio"/"Ver tienda" navegan a un id vacío).
+        getDoc(doc(db, 'sellers', data.sellerId)).then((ss) => { if (ss.exists()) setSeller({ id: ss.id, ...ss.data() }); });
       }
     }, (e) => { console.error('OrderDetail snapshot error', e); setLoading(false); });
     return () => unsub();
   }, [id]);
+
+  const handleChatWithSeller = async () => {
+    if (!order?.sellerId || chattingWith) return;
+    setChattingWith('seller');
+    try {
+      const chatId = await getOrCreateSellerChat(order.sellerId);
+      openChat(chatId, 'seller');
+    } catch (e) {
+      console.error('No se pudo abrir el chat con el negocio', e);
+    } finally {
+      setChattingWith(null);
+    }
+  };
+
+  const handleChatWithCourier = async () => {
+    if (!order?.id || chattingWith) return;
+    setChattingWith('courier');
+    try {
+      const chatId = await getOrCreateCourierChat(order.id);
+      openChat(chatId, 'courier');
+    } catch (e) {
+      console.error('No se pudo abrir el chat con el domiciliario', e);
+    } finally {
+      setChattingWith(null);
+    }
+  };
 
   if (loading) return <div className="min-h-screen bg-brand-bg flex items-center justify-center"><Loader2 size={28} className="animate-spin text-purple-600" /></div>;
 
@@ -134,9 +166,33 @@ const OrderDetail: React.FC = () => {
 
         {/* Seller */}
         {seller && (
-          <button onClick={() => navigate(`/seller/${seller.id}`)} className="w-full bg-white rounded-xl border border-border p-4 flex items-center gap-3 hover:border-purple-200 transition-all">
-            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl">{seller.logo || '🏪'}</div>
-            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{seller.name}</div><div className="text-[11px] text-text-muted">Ver tienda →</div></div>
+          <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+            <button onClick={() => navigate(`/seller/${seller.id}`)} className="w-full flex items-center gap-3 text-left">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl">{seller.logo || '🏪'}</div>
+              <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">{seller.name}</div><div className="text-[11px] text-text-muted">Ver tienda →</div></div>
+            </button>
+            <button
+              onClick={handleChatWithSeller}
+              disabled={chattingWith === 'seller'}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-extrabold transition-all active:scale-95 disabled:opacity-50"
+            >
+              {chattingWith === 'seller' ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
+              Chatear con el negocio
+            </button>
+          </div>
+        )}
+
+        {/* Domiciliario */}
+        {order.courierId && (
+          <button
+            onClick={handleChatWithCourier}
+            disabled={chattingWith === 'courier'}
+            className="w-full bg-white rounded-xl border border-border p-4 flex items-center gap-3 hover:border-purple-200 transition-all disabled:opacity-50"
+          >
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              {chattingWith === 'courier' ? <Loader2 size={20} className="animate-spin" /> : <Bike size={22} />}
+            </div>
+            <div className="flex-1 text-left"><div className="text-sm font-extrabold text-text-primary">Domiciliario asignado</div><div className="text-[11px] text-text-muted">Chatear sobre la entrega →</div></div>
           </button>
         )}
       </main>

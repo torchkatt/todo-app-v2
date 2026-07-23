@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SubscriptionPlanProvider } from './context/SubscriptionPlanContext';
+import { ChatUIProvider } from './context/ChatUIContext';
 import { AIChatButton } from './components/chat/AIChat';
 import BottomTabs from './components/layout/BottomTabs';
 import SEO from './components/seo/SEO';
@@ -51,16 +52,18 @@ const App: React.FC = () => (
         <NotificationProvider>
           <ThemeProvider>
             <SubscriptionPlanProvider>
+            <ChatUIProvider>
             <SEO />
             <OfflineBanner />
             <Suspense fallback={<Loading />}>
               <ErrorBoundary>
               <div className="pb-20">
                 <Routes>
-                  {/* Marketing Landing */}
-                  <Route path="/" element={<Landing />} />
-                  {/* App (marketplace) */}
+                  {/* App (marketplace) — home por defecto */}
+                  <Route path="/" element={<AppHome />} />
                   <Route path="/app" element={<AppHome />} />
+                  {/* Marketing Landing */}
+                  <Route path="/landing" element={<Landing />} />
                   <Route path="/explore" element={<Explore />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -92,6 +95,7 @@ const App: React.FC = () => (
             <ReloadPrompt />
             <Onboarding />
             <AIChatButton />
+            </ChatUIProvider>
             </SubscriptionPlanProvider>
           </ThemeProvider>
         </NotificationProvider>

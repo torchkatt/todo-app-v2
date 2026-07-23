@@ -3,13 +3,13 @@ import { useAuth } from './AuthContext';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { requestPermission, onMessageListener } from '../services/firebase';
-import { X, Package, Star, AlertCircle } from 'lucide-react';
+import { X, Package, Star, AlertCircle, MessageCircle } from 'lucide-react';
 
 interface Notification {
   id: string;
   title: string;
   body: string;
-  type: 'order_update' | 'review' | 'promo' | 'system';
+  type: 'order_update' | 'review' | 'promo' | 'system' | 'chat_message';
   read: boolean;
   link?: string;
   createdAt: any;
@@ -85,9 +85,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <div className="fixed top-4 left-4 right-4 z-[60] max-w-sm mx-auto bg-white rounded-2xl border border-border shadow-2xl p-4 animate-fade-up flex items-start gap-3">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
             currentBanner.type === 'order_update' ? 'bg-purple-50 text-purple-600' :
-            currentBanner.type === 'review' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'
+            currentBanner.type === 'review' ? 'bg-amber-50 text-amber-500' :
+            currentBanner.type === 'chat_message' ? 'bg-indigo-50 text-indigo-600' : 'bg-blue-50 text-blue-500'
           }`}>
-            {currentBanner.type === 'order_update' ? <Package size={20} /> : currentBanner.type === 'review' ? <Star size={20} /> : <AlertCircle size={20} />}
+            {currentBanner.type === 'order_update' ? <Package size={20} /> :
+             currentBanner.type === 'review' ? <Star size={20} /> :
+             currentBanner.type === 'chat_message' ? <MessageCircle size={20} /> : <AlertCircle size={20} />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-extrabold text-text-primary">{currentBanner.title}</div>
