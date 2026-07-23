@@ -28,7 +28,7 @@ export const sellerAnalyticsService = {
       limit(days),
     );
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id } as SellerAnalytics));
+    return snap.docs.map(d => ({ ...d.data(), id: d.id } as unknown as SellerAnalytics));
   },
 
   /**
