@@ -1,17 +1,16 @@
 /**
  * @file giftService.ts
  * @description Servicio de créditos de regalo — enviar, reclamar, consultar.
- * Inspirado en WeChat Red Packets: crédito entre usuarios con expiración.
+ * Inspirado en WeChat Red Packets + Starbucks Gift Cards.
  */
 import { db } from './firebase';
 import {
-  collection, doc, getDoc, getDocs, addDoc, setDoc,
+  collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc,
   query, where, orderBy, limit,
-  serverTimestamp,
 } from 'firebase/firestore';
-import { GIFT_CONFIG } from '../config/constants';
+import { GIFT_CONFIG, GIFT_CARD_CONFIG } from '../config/constants';
 import { walletService } from './walletService';
-import type { GiftCredit } from '../types';
+import type { GiftCredit, GiftCard } from '../types';
 
 const GIFT_COLLECTION = 'gift_credits';
 
@@ -66,7 +65,29 @@ export const giftService = {
     };
 
     const ref = await addDoc(collection(db, GIFT_COLLECTION), gift);
-    return ref.id;
+    const giftId = ref.id;
+
+    // También crear una gift card para el receptor (Starbucks-style)
+    const gcRef = doc(collection(db, 'gift_cards'));
+    const expiresAtGC = new Date(Date.now() + GIFT_CARD_CONFIG.defaultExpirationDays * 86400000).toISOString();
+    const giftCard: GiftCard = {
+      id: gcRef.id,
+      userId: toUserId,
+      name: message ? `🎁 ${message.slice(0, 30)}` : 'Regalo recibido',
+      balance: amount,
+      originalAmount: amount,
+      message,
+      design: 'default',
+      status: 'ACTIVE',
+      source: 'received',
+      isPrimary: false,
+      expiresAt: expiresAtGC,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await setDoc(gcRef, giftCard);
+
+    return giftId;
   },
 
   /**
