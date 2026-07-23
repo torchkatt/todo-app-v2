@@ -9,7 +9,7 @@ export const BottomTabs: React.FC = () => {
   const { t } = useTranslation();
 
   // Mostrar bottom tabs solo en rutas de la app (no landing, auth, checkout)
-  const appRoutes = ['/app', '/explore', '/orders', '/profile', '/favorites', '/settings', '/help', '/reviews', '/seller', '/cart'];
+  const appRoutes = ['/', '/app', '/explore', '/orders', '/profile', '/favorites', '/settings', '/help', '/reviews', '/seller', '/cart'];
   const isAppRoute = appRoutes.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
   if (!isAppRoute) return null;
 
@@ -27,7 +27,7 @@ export const BottomTabs: React.FC = () => {
     <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-sm pointer-events-auto">
       <div className="bg-slate-950/90 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 rounded-full px-2 py-1.5 flex items-center justify-between">
         {tabs.map((tab) => {
-          const active = tab.path === '/app' ? location.pathname === '/app' : location.pathname.startsWith(tab.path);
+          const active = tab.path === '/app' ? (location.pathname === '/app' || location.pathname === '/') : location.pathname.startsWith(tab.path);
           const Icon = tab.icon;
 
           return (

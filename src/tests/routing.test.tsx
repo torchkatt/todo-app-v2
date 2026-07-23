@@ -114,8 +114,9 @@ describe('App Routing — Route definitions', () => {
 // ─── Route path definitions ───
 describe('App Routing — Route paths', () => {
   const routes = [
-    { path: '/', page: 'Landing' },
+    { path: '/', page: 'AppHome' },
     { path: '/app', page: 'AppHome' },
+    { path: '/landing', page: 'Landing' },
     { path: '/explore', page: 'Explore' },
     { path: '/login', page: 'Login' },
     { path: '/register', page: 'Register' },
@@ -143,13 +144,19 @@ describe('App Routing — Route paths', () => {
     expect(routes.length).toBeGreaterThanOrEqual(23);
   });
 
-  it('Landing is the root route', () => {
+  it('AppHome is the root route', () => {
     const root = routes.find(r => r.path === '/');
     expect(root).toBeDefined();
-    expect(root!.page).toBe('Landing');
+    expect(root!.page).toBe('AppHome');
   });
 
-  it('Landing → App route exists', () => {
+  it('Landing route exists at /landing', () => {
+    const landing = routes.find(r => r.path === '/landing');
+    expect(landing).toBeDefined();
+    expect(landing!.page).toBe('Landing');
+  });
+
+  it('/app route exists', () => {
     const app = routes.find(r => r.path === '/app');
     expect(app).toBeDefined();
     expect(app!.page).toBe('AppHome');
