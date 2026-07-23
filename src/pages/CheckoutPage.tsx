@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, CreditCard, Shield, Lock, Truck, MapPin, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
 import { functions } from '../services/firebase';
 import { openWompiCheckout } from '../services/paymentService';
 import { DeliveryMethod } from '../types';
@@ -13,9 +13,11 @@ import TrustBadge from '../components/ui/TrustBadge';
 
 interface CreateTransactionResponse {
   reference: string;
+  orderId?: string;
   amountInCents: number;
   currency: string;
   integrity?: string;
+  integritySignature?: string;
   paymentReady: boolean;
 }
 
@@ -87,28 +89,35 @@ const CheckoutPage: React.FC = () => {
         delivery: { method: deliveryMethod, address: address || undefined, name, phone },
       });
 
-      if (data.paymentReady && data.integrity) {
+      const reference = data.reference || data.orderId;
+      const integrity = data.integrity || data.integritySignature;
+
+      if (!reference) {
+        throw new Error('No se recibió la referencia del pedido.');
+      }
+
+      if (data.paymentReady && integrity) {
         openWompiCheckout({
           amountInCents: data.amountInCents,
-          reference: data.reference,
+          reference,
           currency: data.currency,
-          integrity: data.integrity,
+          integrity,
           customerEmail: user!.email,
           customerFullName: name,
           customerPhone: phone,
           onSuccess: () => {
             clearCart();
-            setDone({ reference: data.reference, paymentReady: true });
+            setDone({ reference, paymentReady: true });
           },
           onError: () => {
             setError('El pago no se pudo procesar. Tu pedido sigue pendiente, puedes reintentarlo desde "Mis pedidos".');
             clearCart();
-            setDone({ reference: data.reference, paymentReady: true });
+            setDone({ reference, paymentReady: true });
           },
         });
       } else {
         clearCart();
-        setDone({ reference: data.reference, paymentReady: false });
+        setDone({ reference, paymentReady: false });
       }
     } catch (e: any) {
       setError(e?.message || 'Error al crear el pedido. Intenta de nuevo.');
