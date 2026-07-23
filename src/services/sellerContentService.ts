@@ -34,7 +34,7 @@ export interface SellerPost {
   media: SellerPostMedia[];
   listingIds: string[];
   isPublished: boolean;
-  publishedAt: string | null;
+  publishedAt: string | undefined;
   createdAt: string;
 }
 
