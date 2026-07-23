@@ -16,3 +16,4 @@ export { handleUpgrade } from './subscriptions/handleUpgrade';
 export { onTransactionComplete } from './cashback/onTransactionComplete';
 export { createWompiTopUp } from './wallet/createWompiTopUp';
 export { aggregateSellerStats } from './analytics/aggregateSellerStats';
+export { processAutoReload } from './giftCards/processAutoReload';

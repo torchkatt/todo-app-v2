@@ -44,6 +44,8 @@ const WalletPage = lazy(() => import('./pages/WalletPage'));
 const SellerAnalyticsPage = lazy(() => import('./pages/SellerAnalyticsPage'));
 const SellerFeedPage = lazy(() => import('./pages/SellerFeedPage'));
 const RechargePage = lazy(() => import('./pages/RechargePage'));
+const GiftCardsPage = lazy(() => import('./pages/GiftCardsPage'));
+const GiftCardDetailPage = lazy(() => import('./pages/GiftCardDetailPage'));
 
 const Loading = () => (
   <div className="min-h-screen bg-brand-bg dark:bg-gray-900 flex items-center justify-center">
@@ -95,6 +97,8 @@ const App: React.FC = () => (
                   <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />
                   <Route path="/recharge" element={<RechargePage />} />
                   <Route path="/feed" element={<SellerFeedPage />} />
+                  <Route path="/gift-cards" element={<GiftCardsPage />} />
+                  <Route path="/gift-cards/:id" element={<GiftCardDetailPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
                   <Route path="*" element={<div className="p-8 text-center"><h1 className="text-xl font-extrabold mb-2 text-text-primary">404</h1><a href="/" className="text-purple-600 font-bold text-sm">Volver al inicio</a></div>} />
