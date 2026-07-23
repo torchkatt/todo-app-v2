@@ -38,7 +38,7 @@ function clearRecentSearches(): void {
 }
 
 // ─── Trends ──────────────────────────────────────────────────────────────
-const TRENDS = ['Tecnología', 'Hogar', 'Servicios', 'Moda'] as const;
+const TRENDS = ['📱 Electrónicos', '🏠 Hogar', '🔧 Reparaciones', '👗 Ropa'] as const;
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
