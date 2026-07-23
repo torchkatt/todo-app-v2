@@ -1,19 +1,23 @@
+/**
+ * @file components/layout/BottomTabs.tsx
+ * @description Bottom navigation bar con pestañas y badge de mensajes no leídos.
+ */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Package, User } from 'lucide-react';
+import { Home, Search, Package, User, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useChatUI } from '../../context/ChatUIContext';
 
 export const BottomTabs: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { hasUnread, openHub } = useChatUI();
 
-  // Mostrar bottom tabs solo en rutas de la app (no landing, auth, checkout)
   const appRoutes = ['/', '/app', '/explore', '/orders', '/profile', '/favorites', '/settings', '/help', '/reviews', '/seller', '/cart'];
   const isAppRoute = appRoutes.some(r => location.pathname === r || location.pathname.startsWith(r + '/'));
   if (!isAppRoute) return null;
 
-  // Ocultar en páginas de login, registro y checkout
   if (['/login', '/register', '/checkout'].some(p => location.pathname.startsWith(p))) return null;
 
   const tabs = [
@@ -50,6 +54,20 @@ export const BottomTabs: React.FC = () => {
             </button>
           );
         })}
+
+        {/* Mensajes button */}
+        <button
+          onClick={() => openHub()}
+          aria-label="Mensajes"
+          className="relative flex items-center justify-center px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-full transition-all"
+        >
+          <MessageCircle size={19} className="stroke-[1.8]" />
+          {hasUnread && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-purple-600 border-2 border-slate-950 rounded-full flex items-center justify-center">
+              <span className="w-1.5 h-1.5 bg-white rounded-full" />
+            </span>
+          )}
+        </button>
       </div>
     </nav>
   );

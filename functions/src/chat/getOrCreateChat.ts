@@ -4,7 +4,8 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 type GetOrCreateChatRequest =
   | { type: 'ai' }
   | { type: 'seller'; sellerId: string }
-  | { type: 'courier'; transactionId: string };
+  | { type: 'courier'; transactionId: string }
+  | { type: 'p2p'; otherUserId: string };
 
 /**
  * Obtiene (o crea, idempotente) el hilo de chat correspondiente. IDs
@@ -108,6 +109,43 @@ export const getOrCreateChat = onCall({ cors: true }, async (request) => {
         courierId,
         courierName: courierSnap.data()?.fullName ?? 'Domiciliario',
         transactionId,
+        lastMessage: '',
+        lastMessageAt: null,
+        lastMessageSenderId: null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    return { chatId };
+  }
+
+  // ─── P2P Chat (usuario a usuario) ───────────────
+  if (data?.type === 'p2p') {
+    const otherUserId = data.otherUserId;
+    if (!otherUserId) throw new HttpsError('invalid-argument', 'Falta otherUserId.');
+    if (otherUserId === uid) throw new HttpsError('invalid-argument', 'No puedes chatear contigo mismo.');
+
+    const otherSnap = await db.collection('users').doc(otherUserId).get();
+    if (!otherSnap.exists) throw new HttpsError('not-found', 'Usuario no encontrado.');
+
+    // ID determinístico: orden alfabético para que sea el mismo desde ambos lados
+    const [a, b] = [uid, otherUserId].sort();
+    const chatId = `p2p_${a}_${b}`;
+    const ref = db.collection('chats').doc(chatId);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      const [mySnap, otherUserSnap] = await Promise.all([
+        db.collection('users').doc(uid).get(),
+        db.collection('users').doc(otherUserId).get(),
+      ]);
+      const myName = mySnap.data()?.fullName ?? 'Usuario';
+      const otherName = otherUserSnap.data()?.fullName ?? 'Usuario';
+      await ref.set({
+        type: 'p2p',
+        participants: [uid, otherUserId],
+        buyerId: uid,
+        buyerName: myName,
+        sellerId: otherUserId,
+        sellerName: otherName,
         lastMessage: '',
         lastMessageAt: null,
         lastMessageSenderId: null,

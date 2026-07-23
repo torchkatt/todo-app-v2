@@ -4,7 +4,8 @@ import { db, functions } from './firebase';
 import { chatWithAI } from './aiChatService';
 import { logger } from '../utils/logger';
 
-export type ChatType = 'ai' | 'seller' | 'courier';
+export type ChatType = 'ai' | 'seller' | 'courier' | 'p2p';
+// 'p2p' = peer-to-peer entre usuarios de la plataforma
 
 export interface ChatDoc {
   id: string;
@@ -34,7 +35,8 @@ export interface ChatMessageDoc {
 type GetOrCreateChatRequest =
   | { type: 'ai' }
   | { type: 'seller'; sellerId: string }
-  | { type: 'courier'; transactionId: string };
+  | { type: 'courier'; transactionId: string }
+  | { type: 'p2p'; otherUserId: string };
 
 const getOrCreateChatCallable = httpsCallable<GetOrCreateChatRequest, { chatId: string }>(functions, 'getOrCreateChat');
 
@@ -50,6 +52,11 @@ export async function getOrCreateSellerChat(sellerId: string): Promise<string> {
 
 export async function getOrCreateCourierChat(transactionId: string): Promise<string> {
   const { data } = await getOrCreateChatCallable({ type: 'courier', transactionId });
+  return data.chatId;
+}
+
+export async function getOrCreateP2PChat(otherUserId: string): Promise<string> {
+  const { data } = await getOrCreateChatCallable({ type: 'p2p', otherUserId });
   return data.chatId;
 }
 

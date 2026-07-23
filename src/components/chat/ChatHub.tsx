@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Sparkles, Store, Bike, MessageCircle, Loader2 } from 'lucide-react';
+import { Sparkles, Store, Bike, MessageCircle, Loader2, Edit } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useChatUI } from '../../context/ChatUIContext';
 import { getOrCreateAIChat, type ChatDoc } from '../../services/chatService';
+import NewChatModal from './NewChatModal';
 
 function otherPartyLabel(chat: ChatDoc, uid: string): string {
+  if (chat.type === 'p2p') {
+    // P2P: mostrar el nombre del otro usuario
+    return uid === chat.buyerId ? (chat.sellerName || 'Usuario') : (chat.buyerName || 'Usuario');
+  }
   if (uid === chat.buyerId) {
     return chat.type === 'seller' ? chat.sellerName || 'Tienda' : chat.courierName || 'Domiciliario';
   }
@@ -12,7 +17,7 @@ function otherPartyLabel(chat: ChatDoc, uid: string): string {
 }
 
 function ChatIcon({ type }: { type: ChatDoc['type'] }) {
-  const Icon = type === 'seller' ? Store : Bike;
+  const Icon = type === 'seller' ? Store : type === 'p2p' ? MessageCircle : Bike;
   return <Icon size={18} />;
 }
 
@@ -20,6 +25,7 @@ export const ChatHub: React.FC = () => {
   const { user } = useAuth();
   const { chats, unreadChatIds, openChat } = useChatUI();
   const [openingAI, setOpeningAI] = useState(false);
+  const [showNewChat, setShowNewChat] = useState(false);
 
   if (!user) return null;
 
@@ -43,8 +49,19 @@ export const ChatHub: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <div className="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shrink-0">
-        <h3 className="font-extrabold text-sm leading-none">Tus conversaciones</h3>
-        <span className="text-[10px] text-purple-200 font-medium">Asistente, negocios y domiciliarios</span>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-extrabold text-sm leading-none">Tus conversaciones</h3>
+            <span className="text-[10px] text-purple-200 font-medium">Asistente, usuarios y negocios</span>
+          </div>
+          <button
+            onClick={() => setShowNewChat(true)}
+            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all active:scale-90"
+            title="Nueva conversación"
+          >
+            <Edit size={14} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-slate-200/70 dark:divide-slate-700/70">
@@ -92,6 +109,8 @@ export const ChatHub: React.FC = () => {
           </div>
         )}
       </div>
+
+      <NewChatModal isOpen={showNewChat} onClose={() => setShowNewChat(false)} />
     </div>
   );
 };
