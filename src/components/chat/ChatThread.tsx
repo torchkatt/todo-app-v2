@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { ArrowLeft, Send, Loader2, X, Sparkles, Store, Bike, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, X, Sparkles, Store, Bike, MessageCircle, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useChatUI } from '../../context/ChatUIContext';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
 import { setNavigateHook } from '../../services/aiChatTools';
 import { sendMessage, sendAIMessage, type ChatDoc, type ChatMessageDoc, type ChatType } from '../../services/chatService';
 import { AI_PROMPT_CHIPS } from '../../config/constants';
+
+const VOICE_MODE_KEY = 'todo_ai_voice_mode';
 
 const AI_WELCOME = `¡Hola! Soy el asistente de **Todo**. Puedo ayudarte a:
 
@@ -48,6 +52,55 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
   const isAI = type === 'ai';
   const chat = chats.find((c) => c.id === chatId);
 
+  const { isSupported: micSupported, isListening, transcript, start: startListening, stop: stopListening } = useSpeechRecognition();
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopSpeaking } = useSpeechSynthesis();
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [voiceModeOn, setVoiceModeOn] = useState(() => localStorage.getItem(VOICE_MODE_KEY) === '1');
+  const lastSpokenIdRef = useRef<string | null>(null);
+
+  useEffect(() => { if (transcript) setInput(transcript); }, [transcript]);
+  useEffect(() => { if (!isSpeaking) setSpeakingMessageId(null); }, [isSpeaking]);
+
+  // No leer en voz alta el historial ya existente al abrir el hilo — solo
+  // los mensajes nuevos que lleguen mientras el modo voz está activo.
+  useEffect(() => { lastSpokenIdRef.current = null; }, [chatId]);
+  useEffect(() => {
+    if (!isAI) return;
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg || lastMsg.senderId !== 'ai') return;
+    if (lastSpokenIdRef.current === lastMsg.id) return;
+    const isFirstLoad = lastSpokenIdRef.current === null;
+    lastSpokenIdRef.current = lastMsg.id;
+    if (!isFirstLoad && voiceModeOn) {
+      setSpeakingMessageId(lastMsg.id);
+      speak(lastMsg.text);
+    }
+  }, [messages, isAI, voiceModeOn, speak]);
+
+  const toggleVoiceMode = () => {
+    setVoiceModeOn((prev) => {
+      const next = !prev;
+      localStorage.setItem(VOICE_MODE_KEY, next ? '1' : '0');
+      if (!next) stopSpeaking();
+      return next;
+    });
+  };
+
+  const handleToggleMic = () => {
+    if (isListening) stopListening();
+    else startListening();
+  };
+
+  const handlePlayMessage = (m: ChatMessageDoc) => {
+    if (speakingMessageId === m.id) {
+      stopSpeaking();
+      setSpeakingMessageId(null);
+      return;
+    }
+    setSpeakingMessageId(m.id);
+    speak(m.text);
+  };
+
   useEffect(() => {
     const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('createdAt', 'asc'));
     const unsub = onSnapshot(q, (snap) => {
@@ -76,7 +129,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
     try {
       if (isAI) {
         const history = messages.map((m) => ({ role: m.senderId === 'ai' ? 'assistant' : 'user', content: m.text }));
-        await sendAIMessage(chatId, user.id, history, text);
+        await sendAIMessage(chatId, user.id, user.role, history, text);
       } else {
         await sendMessage(chatId, user.id, text);
       }
@@ -104,9 +157,21 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
             <span className="text-[10px] text-purple-200 font-medium">{subtitle}</span>
           </div>
         </div>
-        <button onClick={onClose} aria-label="Cerrar chat" className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white shrink-0">
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          {isAI && ttsSupported && (
+            <button
+              onClick={toggleVoiceMode}
+              aria-label={voiceModeOn ? 'Desactivar lectura automática' : 'Activar lectura automática'}
+              title={voiceModeOn ? 'Modo voz activado' : 'Modo voz desactivado'}
+              className={`p-1.5 rounded-lg transition-colors ${voiceModeOn ? 'bg-white/25 text-white' : 'hover:bg-white/20 text-white/70'}`}
+            >
+              {voiceModeOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+          )}
+          <button onClick={onClose} aria-label="Cerrar chat" className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
@@ -122,6 +187,15 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
                 }`}
               >
                 <div className="whitespace-pre-wrap">{m.text}</div>
+                {isAI && !isMine && ttsSupported && (
+                  <button
+                    onClick={() => handlePlayMessage(m)}
+                    aria-label={speakingMessageId === m.id ? 'Detener lectura' : 'Escuchar respuesta'}
+                    className="mt-1.5 -ml-1 p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors rounded-lg"
+                  >
+                    {speakingMessageId === m.id ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -157,10 +231,25 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={isAI ? 'Ej: busca macbook...' : 'Escribe un mensaje...'}
+            placeholder={isListening ? 'Escuchando...' : isAI ? 'Ej: busca macbook...' : 'Escribe un mensaje...'}
             disabled={sending}
             className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-purple-500 transition-all"
           />
+          {micSupported && (
+            <button
+              type="button"
+              onClick={handleToggleMic}
+              disabled={sending}
+              aria-label={isListening ? 'Detener grabación' : 'Hablar en vez de escribir'}
+              className={`p-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 ${
+                isListening
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                  : 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-purple-600 hover:border-purple-300'
+              }`}
+            >
+              {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+            </button>
+          )}
           <button
             type="submit"
             disabled={!input.trim() || sending}
