@@ -6,6 +6,7 @@ export { createTransaction } from './payments/createTransaction';
 export { wompiWebhook } from './payments/wompiWebhook';
 export { verifyTransaction } from './payments/verifyTransaction';
 export { onTransactionCreate } from './notifications/onTransactionCreate';
+export { onListingCreate } from './notifications/onListingCreate';
 export { aiChat } from './ai/aiProxy';
 export { getOrCreateChat } from './chat/getOrCreateChat';
 export { onChatMessageCreate } from './chat/onChatMessageCreate';
