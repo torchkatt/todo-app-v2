@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, orderBy, limit, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { ArrowLeft, Store, Package, Star, Loader2, DollarSign } from 'lucide-react';
+import { ArrowLeft, Store, Package, Star, Loader2, DollarSign, BarChart3, FileText, Sparkles } from 'lucide-react';
 import type { Seller, Listing } from '../types';
 import { UserRole } from '../types';
 
@@ -121,6 +121,22 @@ const SellerDashboard: React.FC = () => {
               <div className="bg-white rounded-xl border border-border p-4 text-center"><DollarSign size={20} className="mx-auto mb-1 text-emerald-500" /><div className="text-lg font-extrabold">${seller.stats.totalRevenue.toLocaleString('es-CO')}</div><div className="text-[10px] text-text-muted font-semibold">Ingresos</div></div>
               <div className="bg-white rounded-xl border border-border p-4 text-center"><Package size={20} className="mx-auto mb-1 text-purple-500" /><div className="text-lg font-extrabold">{seller.stats.totalTransactions}</div><div className="text-[10px] text-text-muted font-semibold">Ventas</div></div>
               <div className="bg-white rounded-xl border border-border p-4 text-center"><Star size={20} className="mx-auto mb-1 text-amber-400" /><div className="text-lg font-extrabold">{seller.rating || 'Nuevo'}</div><div className="text-[10px] text-text-muted font-semibold">Rating</div></div>
+            </div>
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              <button onClick={() => navigate('/seller/analytics')} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
+                <BarChart3 size={18} className="text-purple-600" />
+                <span className="text-[10px] font-bold text-text-secondary">Analíticas</span>
+              </button>
+              <button onClick={() => navigate(`/seller/${seller.id}/store`)} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
+                <Store size={18} className="text-emerald-600" />
+                <span className="text-[10px] font-bold text-text-secondary">Mi tienda</span>
+              </button>
+              <button onClick={() => navigate('/pricing')} className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-border hover:border-purple-200 hover:shadow-sm transition-all">
+                <Sparkles size={18} className="text-amber-500" />
+                <span className="text-[10px] font-bold text-text-secondary">Plan</span>
+              </button>
             </div>
 
             {/* Listings */}

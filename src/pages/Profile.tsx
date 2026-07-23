@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, Settings, CircleHelp, LogOut, Sparkles, Heart, Package, MapPin, Phone, Mail, Shield, BadgeCheck, Loader2, TrendingUp, Flame, Award, Wallet } from 'lucide-react';
 import GuestConversion from '../components/auth/GuestConversion';
 import CashbackBadge from '../components/wallet/CashbackBadge';
+import CashbackList from '../components/wallet/CashbackList';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const Profile: React.FC = () => {
 
         {/* Cashback Badge */}
         <CashbackBadge />
+        <CashbackList />
 
         {/* Impact / Stats */}
         <div className="bg-white rounded-2xl border border-border p-5">

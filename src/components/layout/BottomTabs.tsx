@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Package, User, MessageCircle } from 'lucide-react';
+import { Home, Search, Package, User, MessageCircle, Rss } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useChatUI } from '../../context/ChatUIContext';
 
@@ -23,6 +23,7 @@ export const BottomTabs: React.FC = () => {
   const tabs = [
     { path: '/app', icon: Home, label: t('nav.home') },
     { path: '/explore', icon: Search, label: t('nav.search') },
+    { path: '/feed', icon: Rss, label: 'Feed' },
     { path: '/orders', icon: Package, label: t('nav.orders') },
     { path: '/profile', icon: User, label: t('nav.profile') },
   ];
