@@ -9,7 +9,7 @@ import {
   query, where, orderBy, limit,
 } from 'firebase/firestore';
 import { WALLET_CONFIG } from '../config/constants';
-import type { Wallet, WalletTransaction } from '../types';
+import type { Wallet, WalletTransaction, AutoReloadConfig } from '../types';
 
 const WALLETS_COLLECTION = 'wallets';
 const TX_COLLECTION = 'wallet_transactions';
@@ -126,5 +126,56 @@ export const walletService = {
   async getBalance(userId: string): Promise<number> {
     const wallet = await this.getWallet(userId);
     return wallet.balance;
+  },
+
+  /**
+   * Obtener configuración de auto-recarga.
+   */
+  async getAutoReloadConfig(userId: string): Promise<AutoReloadConfig | null> {
+    const wallet = await this.getWallet(userId);
+    return wallet.autoReload || null;
+  },
+
+  /**
+   * Guardar/actualizar configuración de auto-recarga.
+   */
+  async setAutoReloadConfig(userId: string, config: Partial<AutoReloadConfig>): Promise<AutoReloadConfig> {
+    const wallet = await this.getWallet(userId);
+    const current = wallet.autoReload || {
+      enabled: false,
+      threshold: 50_000,
+      amount: 100_000,
+      maxMonthly: 5,
+      monthlyCount: 0,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updated: AutoReloadConfig = {
+      ...current,
+      ...config,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, WALLETS_COLLECTION, userId), {
+      ...wallet,
+      autoReload: updated,
+      updatedAt: updated.updatedAt,
+    });
+
+    return updated;
+  },
+
+  /**
+   * Verificar si se debe mostrar prompt de recarga automática.
+   * Retorna null si no aplica, o el monto a recargar si debe hacerlo.
+   */
+  async checkAutoReload(userId: string): Promise<{ shouldReload: boolean; amount: number } | null> {
+    const wallet = await this.getWallet(userId);
+    const config = wallet.autoReload;
+    if (!config?.enabled) return null;
+    if (wallet.balance >= config.threshold) return null;
+    if (config.monthlyCount >= config.maxMonthly) return null;
+
+    return { shouldReload: true, amount: config.amount };
   },
 };

@@ -522,6 +522,7 @@ export interface Wallet {
   pendingCashback: number;   // Cashback no reclamado
   lifetimeCashback: number;  // Cashback total acumulado
   lifetimeSpent: number;     // Gasto total con wallet
+  autoReload?: AutoReloadConfig;
   updatedAt: string;
 }
 
