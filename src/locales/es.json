@@ -266,5 +266,50 @@
   "common.cancel": "Cancelar",
   "common.delete": "Eliminar",
   "common.confirm": "Confirmar",
-  "common.search": "Buscar"
+  "common.search": "Buscar",
+
+  "wallet.title": "Mi Billetera",
+  "wallet.balance": "Saldo disponible",
+  "wallet.topUp": "Recargar",
+  "wallet.history": "Movimientos",
+  "wallet.payWithWallet": "Pagar con mi saldo",
+  "wallet.insufficientBalance": "Saldo insuficiente",
+
+  "cashback.title": "Cashback disponible",
+  "cashback.claim": "Reclamar",
+  "cashback.expiresSoon": "Por vencer",
+
+  "follow.follow": "Seguir",
+  "follow.following": "Siguiendo",
+  "follow.unfollow": "Dejar de seguir",
+  "follow.followers": "{count} seguidores",
+
+  "groupDeal.title": "Compra en Grupo",
+  "groupDeal.share": "Compartir en WhatsApp",
+  "groupDeal.join": "Unirme al grupo",
+  "groupDeal.progress": "{current} de {min} personas",
+  "groupDeal.expiresIn": "Expira en {time}",
+
+  "feed.title": "Feed",
+  "feed.noContent": "Sigue vendedores para ver su contenido aquí",
+
+  "analytics.title": "Analíticas",
+  "analytics.views": "Vistas",
+  "analytics.sales": "Ventas",
+  "analytics.conversion": "Conversión",
+  "analytics.revenue": "Ingresos",
+
+  "gift.send": "Enviar crédito",
+  "gift.receive": "Recibiste un regalo",
+
+  "recharge.title": "Recargas",
+  "recharge.phone": "Celular",
+  "recharge.utilities": "Servicios",
+
+  "featured.sponsored": "Patrocinado",
+  "featured.create": "Crear campaña",
+
+  "tier.free": "Vendedor",
+  "tier.pro": "Pro",
+  "tier.black": "Black"
 }

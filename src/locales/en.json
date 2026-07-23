@@ -266,5 +266,50 @@
   "common.cancel": "Cancel",
   "common.delete": "Delete",
   "common.confirm": "Confirm",
-  "common.search": "Search"
+  "common.search": "Search",
+
+  "wallet.title": "My Wallet",
+  "wallet.balance": "Available balance",
+  "wallet.topUp": "Top up",
+  "wallet.history": "History",
+  "wallet.payWithWallet": "Pay with my balance",
+  "wallet.insufficientBalance": "Insufficient balance",
+
+  "cashback.title": "Available cashback",
+  "cashback.claim": "Claim",
+  "cashback.expiresSoon": "Expiring soon",
+
+  "follow.follow": "Follow",
+  "follow.following": "Following",
+  "follow.unfollow": "Unfollow",
+  "follow.followers": "{count} followers",
+
+  "groupDeal.title": "Group Deal",
+  "groupDeal.share": "Share on WhatsApp",
+  "groupDeal.join": "Join the group",
+  "groupDeal.progress": "{current} of {min} people",
+  "groupDeal.expiresIn": "Expires in {time}",
+
+  "feed.title": "Feed",
+  "feed.noContent": "Follow sellers to see their content here",
+
+  "analytics.title": "Analytics",
+  "analytics.views": "Views",
+  "analytics.sales": "Sales",
+  "analytics.conversion": "Conversion",
+  "analytics.revenue": "Revenue",
+
+  "gift.send": "Send credits",
+  "gift.receive": "You received a gift",
+
+  "recharge.title": "Recharges",
+  "recharge.phone": "Phone",
+  "recharge.utilities": "Utilities",
+
+  "featured.sponsored": "Sponsored",
+  "featured.create": "Create campaign",
+
+  "tier.free": "Seller",
+  "tier.pro": "Pro",
+  "tier.black": "Black"
 }
