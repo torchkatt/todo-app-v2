@@ -1,5 +1,6 @@
-import { db } from './firebase';
+import { db, functions } from './firebase';
 import { collection, query, where, getDocs, getDoc, doc, orderBy, limit, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { logger } from '../utils/logger';
 import { checkToolAction } from './aiChatSecurity';
 import type { Listing, Seller } from '../types';
@@ -62,6 +63,32 @@ export const TODO_TOOLS: ToolDefinition[] = [
       city: { type: 'string', description: 'Ciudad' },
       address: { type: 'string', description: 'Dirección' },
     },
+  }}},
+
+  // ─── Rol (seller / courier) ───
+  { type: 'function', function: { name: 'getSellerOrders', description: 'Ver los pedidos recibidos en la tienda del usuario (solo si tiene una tienda registrada). Filtra por estado.', parameters: {
+    type: 'object', properties: {
+      status: { type: 'string', description: 'Filtrar por estado, ej. PREPARING, READY' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'getCourierDeliveries', description: 'Ver las entregas asignadas al domiciliario. Filtra por estado.', parameters: {
+    type: 'object', properties: {
+      status: { type: 'string', description: 'Filtrar por estado, ej. IN_TRANSIT, DELIVERED' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'getNotifications', description: 'Ver las notificaciones del usuario.', parameters: {
+    type: 'object', properties: {
+      unreadOnly: { type: 'boolean', description: 'Solo no leídas' },
+      limit: { type: 'number', description: 'Cantidad máxima (default 10)' },
+    },
+  }}},
+  { type: 'function', function: { name: 'updateOrderStatus', description: 'Cambiar el estado de un pedido — solo para vendedores (avance de preparación/entrega) o domiciliarios (en camino/entregado). Antes de llamarla, SIEMPRE confirma en un mensaje de texto con el usuario qué pedido y a qué estado va a cambiar, y solo procede tras confirmación explícita. Nunca la uses para cancelar, reembolsar o abrir disputas — eso no está permitido.', parameters: {
+    type: 'object', properties: {
+      transactionId: { type: 'string', description: 'ID del pedido' },
+      status: { type: 'string', enum: ['PREPARING', 'READY', 'IN_TRANSIT', 'DELIVERED'], description: 'Nuevo estado' },
+    }, required: ['transactionId', 'status'],
   }}},
 
   // ─── Favoritos ───
@@ -195,6 +222,52 @@ async function execUpdateProfile(userId: string, args: any) {
   } catch (e) { logger.error('updateProfile error', e); return 'Error al actualizar perfil.'; }
 }
 
+const updateOrderStatusCallable = httpsCallable<{ transactionId: string; status: string }, { ok: boolean; status: string }>(functions, 'updateOrderStatus');
+
+async function execGetSellerOrders(userId: string, args: any) {
+  try {
+    const sq = query(collection(db, 'sellers'), where('ownerId', '==', userId), limit(1));
+    const ss = await getDocs(sq);
+    if (ss.empty) return JSON.stringify({ error: 'No tienes una tienda registrada.' });
+    const sellerId = ss.docs[0].id;
+    let q = query(collection(db, 'transactions'), where('sellerId', '==', sellerId), orderBy('createdAt', 'desc'), limit(args.limit || 10));
+    const snap = await getDocs(q);
+    let txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    if (args.status) txs = txs.filter(t => t.status?.toLowerCase().includes(args.status.toLowerCase()));
+    return JSON.stringify(txs.map(t => ({ id: t.id, status: t.status, total: t.totalAmount, items: t.lineItems?.length || 0, buyerId: t.buyerId, courierId: t.courierId, date: t.createdAt })));
+  } catch (e) { logger.error('getSellerOrders error', e); return '[]'; }
+}
+
+async function execGetCourierDeliveries(userId: string, args: any) {
+  try {
+    let q = query(collection(db, 'transactions'), where('courierId', '==', userId), orderBy('createdAt', 'desc'), limit(args.limit || 10));
+    const snap = await getDocs(q);
+    let txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    if (args.status) txs = txs.filter(t => t.status?.toLowerCase().includes(args.status.toLowerCase()));
+    return JSON.stringify(txs.map(t => ({ id: t.id, status: t.status, total: t.totalAmount, shippingAddress: t.shippingAddress, buyerId: t.buyerId, date: t.createdAt })));
+  } catch (e) { logger.error('getCourierDeliveries error', e); return '[]'; }
+}
+
+async function execGetNotifications(userId: string, args: any) {
+  try {
+    const q = query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(args.limit || 10));
+    const snap = await getDocs(q);
+    let list = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+    if (args.unreadOnly) list = list.filter(n => !n.read);
+    return JSON.stringify(list.map(n => ({ id: n.id, title: n.title, body: n.body, type: n.type, read: n.read, date: n.createdAt })));
+  } catch (e) { logger.error('getNotifications error', e); return '[]'; }
+}
+
+async function execUpdateOrderStatus(args: any) {
+  try {
+    const { data } = await updateOrderStatusCallable({ transactionId: args.transactionId, status: args.status });
+    return `Pedido actualizado a ${data.status}.`;
+  } catch (e: any) {
+    logger.error('updateOrderStatus error', e);
+    return JSON.stringify({ error: e?.message || 'No se pudo actualizar el pedido.' });
+  }
+}
+
 async function execGetFavorites(userId: string) {
   try {
     const snap = await getDoc(doc(db, 'users', userId));
@@ -281,11 +354,11 @@ function execGetTodoInfo(args: any) {
 
 // ─── Main Dispatcher ───
 
-export async function executeToolCall(name: string, args: any, userId?: string): Promise<string> {
+export async function executeToolCall(name: string, args: any, userId?: string, userRole?: string): Promise<string> {
   if (!userId) return JSON.stringify({ error: 'Inicia sesión para usar el asistente.' });
 
   // Security check for the tool action
-  const secCheck = await checkToolAction(userId, name, args);
+  const secCheck = await checkToolAction(userId, name, args, userRole);
   if (!secCheck.allowed && secCheck.error) {
     return JSON.stringify({ error: secCheck.error });
   }
@@ -301,6 +374,10 @@ export async function executeToolCall(name: string, args: any, userId?: string):
       case 'getUserStats': return execGetUserStats(userId);
       case 'getUserProfile': return execGetUserProfile(userId);
       case 'updateProfile': return execUpdateProfile(userId, args);
+      case 'getSellerOrders': return execGetSellerOrders(userId, args);
+      case 'getCourierDeliveries': return execGetCourierDeliveries(userId, args);
+      case 'getNotifications': return execGetNotifications(userId, args);
+      case 'updateOrderStatus': return execUpdateOrderStatus(args);
       case 'getFavorites': return execGetFavorites(userId);
       case 'toggleFavorite': return execToggleFavorite(userId, args);
       case 'getCart': return execGetCart(userId);

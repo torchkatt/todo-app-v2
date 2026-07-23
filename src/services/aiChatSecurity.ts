@@ -44,16 +44,12 @@ const DESTRUCTIVE_TOOLS = new Set([
 ]);
 
 export function canExecuteTool(toolName: string, userRole?: string): boolean {
-  // Authenticated users can use most tools
-  if (!userRole) return false;
-
   // SUPER_ADMIN can do everything
   if (userRole === UserRole.SUPER_ADMIN) return true;
 
-  // Destructive tools require SUPER_ADMIN
-  if (DESTRUCTIVE_TOOLS.has(toolName) && userRole !== UserRole.SUPER_ADMIN) {
-    return false;
-  }
+  // Destructive tools require SUPER_ADMIN — todo lo demás está disponible
+  // para cualquier usuario autenticado (executeToolCall ya exige userId).
+  if (DESTRUCTIVE_TOOLS.has(toolName)) return false;
 
   return true;
 }

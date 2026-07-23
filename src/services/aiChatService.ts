@@ -23,25 +23,33 @@ interface AiChatResponse {
 
 const aiChatCallable = httpsCallable<{ messages: Message[]; continuation?: boolean }, AiChatResponse>(functions, 'aiChat');
 
-export async function chatWithAI(messages: Message[], userId?: string): Promise<string> {
+// Tope de rondas de tool-calls encadenadas (ej. "¿qué pedidos tengo? → márcalos como listos"),
+// mismo orden de magnitud que MAX_CONCURRENT_TOOLS en aiChatSecurity.ts.
+const MAX_TOOL_ROUNDS = 4;
+
+export async function chatWithAI(messages: Message[], userId?: string, userRole?: string): Promise<string> {
   if (!userId) return 'Inicia sesión para usar el asistente.';
 
   try {
-    const first = await aiChatCallable({ messages });
-    let { content, toolCalls } = first.data;
+    let convo: Message[] = [...messages];
+    let content = '';
+    let continuation = false;
 
-    if (toolCalls?.length) {
-      const withToolCalls: Message[] = [...messages, { role: 'assistant', content: content || '', tool_calls: toolCalls }];
+    for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+      const res = await aiChatCallable({ messages: convo, continuation });
+      content = res.data.content;
+      const toolCalls = res.data.toolCalls;
+      if (!toolCalls?.length || round === MAX_TOOL_ROUNDS) break;
+
+      convo = [...convo, { role: 'assistant', content: content || '', tool_calls: toolCalls }];
       for (const toolCall of toolCalls) {
         const fn = toolCall.function;
         let args: any = {};
         try { args = JSON.parse(fn.arguments); } catch (e) { logger.error('[AI] arg parse error:', e); }
-        const toolResult = await executeToolCall(fn.name, args, userId);
-        withToolCalls.push({ role: 'tool', content: toolResult, tool_call_id: toolCall.id });
+        const toolResult = await executeToolCall(fn.name, args, userId, userRole);
+        convo.push({ role: 'tool', content: toolResult, tool_call_id: toolCall.id });
       }
-
-      const second = await aiChatCallable({ messages: withToolCalls, continuation: true });
-      content = second.data.content || content;
+      continuation = true;
     }
 
     return content || '👍 Listo. ¿Necesitas algo más?';

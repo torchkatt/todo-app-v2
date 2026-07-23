@@ -84,9 +84,13 @@ describe('AI Chat — L2: Role Enforcement', () => {
     expect(canExecuteTool('getCart', 'CUSTOMER')).toBe(true);
   });
 
-  it('returns false for null/undefined role', () => {
-    expect(canExecuteTool('searchListings', undefined)).toBe(false);
-    expect(canExecuteTool('getCart', undefined as any)).toBe(false);
+  it('non-destructive tools work without rol (el gate real es executeToolCall exigiendo userId)', () => {
+    expect(canExecuteTool('searchListings', undefined)).toBe(true);
+    expect(canExecuteTool('getCart', undefined as any)).toBe(true);
+  });
+
+  it('destructive tools still require SUPER_ADMIN even with rol ausente', () => {
+    expect(canExecuteTool('cancelOrder', undefined)).toBe(false);
   });
 
   it('undefined tool name returns true for non-destructive (but false for destructive)', () => {

@@ -73,12 +73,13 @@ export async function sendMessage(chatId: string, senderId: string, text: string
 export async function sendAIMessage(
   chatId: string,
   userId: string,
+  userRole: string | undefined,
   history: { role: string; content: string }[],
   text: string
 ): Promise<string> {
   await sendMessage(chatId, userId, text);
   try {
-    const reply = await chatWithAI([...history, { role: 'user', content: text }] as any, userId);
+    const reply = await chatWithAI([...history, { role: 'user', content: text }] as any, userId, userRole);
     await addDoc(collection(db, 'chats', chatId, 'messages'), {
       senderId: 'ai',
       text: reply,
