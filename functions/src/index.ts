@@ -13,3 +13,4 @@ export { updateOrderStatus } from './chat/updateOrderStatus';
 export { handleUpgrade } from './subscriptions/handleUpgrade';
 export { onTransactionComplete } from './cashback/onTransactionComplete';
 export { createWompiTopUp } from './wallet/createWompiTopUp';
+export { aggregateSellerStats } from './analytics/aggregateSellerStats';
