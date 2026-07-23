@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useSubscriptionPlans } from '../context/SubscriptionPlanContext';
+import { ArrowLeft, ShoppingBag, CreditCard, Truck, MapPin, CheckCircle, AlertTriangle, Crown } from 'lucide-react';
 import { functions } from '../services/firebase';
 import { openWompiCheckout } from '../services/paymentService';
 import { DeliveryMethod } from '../types';
@@ -30,6 +31,7 @@ const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { items, totalPrice, clearCart } = useCart();
+  const { currentTier, currentPlan } = useSubscriptionPlans();
   const [address, setAddress] = React.useState('');
   const [name, setName] = React.useState(user?.fullName || '');
   const [phone, setPhone] = React.useState(user?.phone || '');
@@ -166,6 +168,20 @@ const CheckoutPage: React.FC = () => {
             ))}
           </div>
           <div className="border-t border-border pt-3 space-y-1.5">
+            {/* TodoPass free shipping badge */}
+            {(currentTier === 'pro' || currentTier === 'black') && address.trim() && (
+              <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg mb-2">
+                <Crown size={14} className="text-purple-600 shrink-0" />
+                <span className="text-[11px] font-bold text-purple-700">Envío gratis incluido en tu TodoPass 🏆</span>
+              </div>
+            )}
+            {/* Upsell for free users */}
+            {currentTier === 'free' && address.trim() && totalPrice >= 150000 && (
+              <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg mb-2">
+                <Crown size={14} className="text-amber-600 shrink-0" />
+                <span className="text-[11px] font-bold text-amber-700">💎 Ahorra en envíos — TodoPass desde $49.900/mes</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm"><span className="text-text-secondary">Subtotal</span><span className="font-bold">{formatCOP(totalPrice)}</span></div>
             <div className="flex justify-between text-sm"><span className="text-text-secondary">Envío, comisión e impuestos</span><span className="font-bold text-text-muted">Se calculan al confirmar</span></div>
           </div>
