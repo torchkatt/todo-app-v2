@@ -43,13 +43,27 @@ const DESTRUCTIVE_TOOLS = new Set([
   'updateListing', 'deactivateListing', 'manageCart',
 ]);
 
+/** Tools que requieren un rol específico */
+const ROLE_GATED_TOOLS: Record<string, string[]> = {
+  'SELLER': ['getSellerOrders', 'updateOrderStatus'],
+  'COURIER': ['getCourierDeliveries', 'updateOrderStatus'],
+  'ADMIN': ['cancelOrder', 'deleteListing', 'blockUser', 'refundTransaction'],
+};
+
 export function canExecuteTool(toolName: string, userRole?: string): boolean {
   // SUPER_ADMIN can do everything
   if (userRole === UserRole.SUPER_ADMIN) return true;
 
-  // Destructive tools require SUPER_ADMIN — todo lo demás está disponible
-  // para cualquier usuario autenticado (executeToolCall ya exige userId).
+  // Destructive tools require SUPER_ADMIN
   if (DESTRUCTIVE_TOOLS.has(toolName)) return false;
+
+  // Role-gated tools: verify user has the required role
+  for (const [requiredRole, tools] of Object.entries(ROLE_GATED_TOOLS)) {
+    if (tools.includes(toolName)) {
+      const allowed = userRole === requiredRole || userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+      if (!allowed) return false;
+    }
+  }
 
   return true;
 }
