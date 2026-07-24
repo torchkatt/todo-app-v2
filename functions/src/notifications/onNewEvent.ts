@@ -34,6 +34,7 @@ export const onOrderCreated = onDocumentCreated(
     const buyerBody = `Tu pedido #${txId.slice(-8)} está pendiente de pago`;
     await db.collection('notifications').add({
       userId: data.buyerId,
+      targetRole: 'CUSTOMER',
       title: buyerTitle,
       body: buyerBody,
       type: 'order_update',
@@ -55,6 +56,7 @@ export const onOrderCreated = onDocumentCreated(
         const sellerBody = `Has recibido un pedido de ${buyer?.fullName || 'un cliente'} por $${((data.totalAmount || 0) / 100).toLocaleString('es-CO')}`;
         await db.collection('notifications').add({
           userId: sellerOwnerId,
+          targetRole: 'SELLER',
           title: sellerTitle,
           body: sellerBody,
           type: 'order_update',
@@ -104,6 +106,7 @@ export const onNewFollower = onDocumentCreated(
 
       await db.collection('notifications').add({
         userId: sellerOwnerId,
+        targetRole: 'SELLER',
         title,
         body,
         type: 'system',
@@ -149,6 +152,7 @@ export const onNewMessage = onDocumentCreated(
         try {
           await db.collection('notifications').add({
             userId: uid,
+            targetRole: chat.sellerId ? 'SELLER' : 'CUSTOMER',
             title,
             body,
             type: 'chat_message',

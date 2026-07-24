@@ -118,6 +118,27 @@ const SellerDashboard: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* 🎉 Post-onboarding banner */}
+            {new URLSearchParams(window.location.search).get('first') === 'true' && (
+              <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <Sparkles size={24} className="text-amber-200" />
+                  <h2 className="text-lg font-black">🎉 ¡Tu tienda {seller.name} está publicada!</h2>
+                </div>
+                <p className="text-sm text-white/80 mb-4">Ahora publica tu primer listado para que los compradores te encuentren.</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowForm(true)}
+                    className="px-5 py-2.5 bg-white text-emerald-700 rounded-xl text-xs font-extrabold hover:bg-emerald-50 transition-all active:scale-95 shadow-md">
+                    ➕ Publicar primer producto
+                  </button>
+                  <button onClick={() => window.history.replaceState({}, '', '/seller')}
+                    className="px-5 py-2.5 bg-white/20 backdrop-blur-sm text-white border border-white/20 rounded-xl text-xs font-extrabold hover:bg-white/30 transition-all">
+                    ⏳ Más tarde
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               <div className="bg-white rounded-xl border border-border p-4 text-center"><DollarSign size={20} className="mx-auto mb-1 text-emerald-500" /><div className="text-lg font-extrabold">${seller.stats.totalRevenue.toLocaleString('es-CO')}</div><div className="text-[10px] text-text-muted font-semibold">{t('seller.revenue')}</div></div>

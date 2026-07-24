@@ -191,21 +191,17 @@ describe('Seller — Slug generation', () => {
 describe('Seller — Service structure', () => {
   it('sellerService exports all expected functions', async () => {
     const mod = await import('../services/sellerService');
-    expect(typeof mod.createSeller).toBe('function');
-    expect(typeof mod.getSeller).toBe('function');
-    expect(typeof mod.getSellerByOwner).toBe('function');
-    expect(typeof mod.updateSeller).toBe('function');
-    expect(typeof mod.searchSellers).toBe('function');
-    expect(typeof mod.getSellersByCategory).toBe('function');
-    expect(typeof mod.disableSeller).toBe('function');
+    expect(typeof mod.getOrCreateOnboarding).toBe('function');
+    expect(typeof mod.saveStep).toBe('function');
+    expect(typeof mod.completeOnboarding).toBe('function');
+    expect(typeof mod.hasSellerProfile).toBe('function');
   });
 
-  it('sellerService has 7 exported functions', () => {
+  it('sellerService has 4 exported functions', () => {
     const funcNames = [
-      'createSeller', 'getSeller', 'getSellerByOwner', 'updateSeller',
-      'searchSellers', 'getSellersByCategory', 'disableSeller',
+      'getOrCreateOnboarding', 'saveStep', 'completeOnboarding', 'hasSellerProfile',
     ];
-    expect(funcNames).toHaveLength(7);
+    expect(funcNames).toHaveLength(4);
   });
 });
 

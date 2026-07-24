@@ -15,6 +15,7 @@ import { OfflineBanner } from './components/ui/OfflineBanner';
 import { ReloadPrompt } from './components/ui/ReloadPrompt';
 import Onboarding from './components/onboarding/Onboarding';
 import RoleSwitcher from './components/ui/RoleSwitcher';
+import CrossRoleBanner from './components/ui/CrossRoleBanner';
 
 const Landing = lazy(() => import('./pages/Landing'));
 const AppHome = lazy(() => import('./pages/AppHome'));
@@ -45,6 +46,7 @@ const GroupDealPage = lazy(() => import('./pages/GroupDealPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const SellerAnalyticsPage = lazy(() => import('./pages/SellerAnalyticsPage'));
 const SellerFeedPage = lazy(() => import('./pages/SellerFeedPage'));
+const SellerOnboarding = lazy(() => import('./pages/SellerOnboarding'));
 const RechargePage = lazy(() => import('./pages/RechargePage'));
 const GiftCardsPage = lazy(() => import('./pages/GiftCardsPage'));
 const GiftCardDetailPage = lazy(() => import('./pages/GiftCardDetailPage'));
@@ -65,6 +67,7 @@ const App: React.FC = () => (
             <ChatUIProvider>
             <SEO />
             <OfflineBanner />
+            <CrossRoleBanner />
             <Suspense fallback={<Loading />}>
               <ErrorBoundary>
               <div className="pb-20">
@@ -99,6 +102,7 @@ const App: React.FC = () => (
                   <Route path="/group-deal/:id" element={<GroupDealPage />} />
                   <Route path="/seller/analytics" element={<SellerAnalyticsPage />} />
                   <Route path="/recharge" element={<RechargePage />} />
+                  <Route path="/seller/onboarding" element={<SellerOnboarding />} />
                   <Route path="/feed" element={<SellerFeedPage />} />
                   <Route path="/gift-cards" element={<GiftCardsPage />} />
                   <Route path="/gift-cards/:id" element={<GiftCardDetailPage />} />

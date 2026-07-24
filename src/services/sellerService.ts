@@ -1,114 +1,158 @@
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit } from 'firebase/firestore';
+/**
+ * @file sellerService.ts
+ * @description Servicio para gestión de vendedores y onboarding progresivo.
+ */
 import { db } from './firebase';
-import type { Seller, SellerType } from '../types';
+import {
+  doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, serverTimestamp,
+} from 'firebase/firestore';
+import { SellerType, UserRole } from '../types';
+import type { Seller, User } from '../types';
 
-const COLLECTION = 'sellers';
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-/**
- * Create a new seller.
- */
-export async function createSeller(data: Omit<Seller, 'id' | 'slug' | 'stats' | 'createdAt' | 'updatedAt' | 'rating' | 'ratingCount'>): Promise<Seller> {
-  const ref = doc(collection(db, COLLECTION));
-  const now = new Date().toISOString();
-  const seller: Seller = {
-    ...data,
-    id: ref.id,
-    slug: `${slugify(data.name)}-${ref.id.slice(-6)}`,
-    rating: 0,
-    ratingCount: 0,
-    stats: { totalTransactions: 0, totalRevenue: 0, totalListings: 0, activeListings: 0, completionRate: 1, avgRating: 0, responseTimeHours: 0 },
-    createdAt: now,
-    updatedAt: now,
-  };
-  await setDoc(ref, seller);
-  return seller;
-}
-
-/**
- * Get seller by ID.
- */
-export async function getSeller(id: string): Promise<Seller | null> {
-  const snap = await getDoc(doc(db, COLLECTION, id));
-  return snap.exists() ? (snap.data() as Seller) : null;
-}
-
-/**
- * Get seller by owner (userId).
- */
-export async function getSellerByOwner(ownerId: string): Promise<Seller | null> {
-  const q = query(collection(db, COLLECTION), where('ownerId', '==', ownerId), where('isActive', '==', true), limit(1));
-  const snap = await getDocs(q);
-  return snap.empty ? null : snap.docs[0].data() as Seller;
-}
-
-/**
- * Update seller.
- */
-export async function updateSeller(id: string, data: Partial<Omit<Seller, 'id' | 'stats' | 'createdAt'>>): Promise<void> {
-  const ref = doc(db, COLLECTION, id);
-  await updateDoc(ref, { ...data, updatedAt: new Date().toISOString() });
-}
-
-/**
- * Search sellers by name, type, category, or city.
- */
-export async function searchSellers(params: {
-  query?: string;
+export interface OnboardingData {
   type?: SellerType;
-  categoryId?: string;
+  categoryIds?: string[];
+  name?: string;
+  description?: string;
+  logo?: string;
   city?: string;
-  maxResults?: number;
-  lastDoc?: any;
-}): Promise<{ sellers: Seller[]; lastDoc: any }> {
-  const { query: searchTerm, type, city, maxResults = 20 } = params;
-
-  let q = query(collection(db, COLLECTION), where('isActive', '==', true), orderBy('rating', 'desc'), limit(maxResults));
-
-  if (city) {
-    q = query(q, where('location.city', '==', city));
-  }
-  if (type) {
-    q = query(q, where('type', '==', type));
-  }
-
-  const snap = await getDocs(q);
-  let sellers = snap.docs.map(d => d.data() as Seller);
-
-  // Client-side filtering for text search and category
-  if (searchTerm) {
-    const term = searchTerm.toLowerCase();
-    sellers = sellers.filter(s =>
-      s.name.toLowerCase().includes(term) ||
-      s.description?.toLowerCase().includes(term) ||
-      s.location.address.toLowerCase().includes(term)
-    );
-  }
-
-  return { sellers, lastDoc: snap.docs[snap.docs.length - 1] || null };
+  address?: string;
+  neighborhood?: string;
+  phone?: string;
+  whatsapp?: string;
+  website?: string;
+  deliveryEnabled?: boolean;
+  baseFee?: number;
+  pricePerKm?: number;
+  maxDistanceKm?: number;
+  freeThreshold?: number;
+  estimatedTime?: string;
+  pickupEnabled?: boolean;
+  tosAccepted?: boolean;
+  onboardingStatus?: 'not_started' | 'in_progress' | 'completed';
+  onboardingStep?: number;
+  completedSteps?: number[];
 }
 
-/**
- * Get sellers by category.
- */
-export async function getSellersByCategory(categoryId: string, maxResults = 50): Promise<Seller[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where('categoryIds', 'array-contains', categoryId),
-    where('isActive', '==', true),
-    orderBy('stats.totalTransactions', 'desc'),
-    limit(maxResults),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Seller);
-}
+// ─── Service ─────────────────────────────────────────────────────────────────
 
-/**
- * Disable a seller.
- */
-export async function disableSeller(id: string): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), { isActive: false, updatedAt: new Date().toISOString() });
-}
+const ONBOARDING_COL = 'seller_onboarding';
+
+export const sellerService = {
+
+  /** Obtener o crear sesión de onboarding */
+  async getOrCreateOnboarding(userId: string): Promise<OnboardingData> {
+    const ref = doc(db, ONBOARDING_COL, userId);
+    const snap = await getDoc(ref);
+    if (snap.exists()) return snap.data() as OnboardingData;
+    const initial: OnboardingData = {
+      onboardingStatus: 'not_started',
+      onboardingStep: 1,
+      completedSteps: [],
+    };
+    await setDoc(ref, initial);
+    return initial;
+  },
+
+  /** Guardar progreso de un paso */
+  async saveStep(userId: string, step: number, data: Partial<OnboardingData>): Promise<void> {
+    const ref = doc(db, ONBOARDING_COL, userId);
+    const completedSteps: number[] = [];
+    const existing = await getDoc(ref);
+    if (existing.exists()) {
+      completedSteps.push(...(existing.data().completedSteps || []));
+    }
+    if (!completedSteps.includes(step)) completedSteps.push(step);
+    await setDoc(ref, {
+      ...data,
+      onboardingStatus: 'in_progress',
+      onboardingStep: step + 1,
+      completedSteps,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  },
+
+  /** Finalizar onboarding → crear seller + actualizar user */
+  async completeOnboarding(userId: string, user: User, data: OnboardingData): Promise<Seller> {
+    const slug = `tienda-${userId.slice(-6)}`;
+    const sellerRef = await addDoc(collection(db, 'sellers'), {
+      ownerId: userId,
+      name: data.name || `${user.fullName || 'Tienda'} de ${user.fullName || 'Todo'}`,
+      slug,
+      type: data.type || SellerType.INDIVIDUAL,
+      categoryIds: data.categoryIds || [],
+      description: data.description || '',
+      logo: data.logo || '🏪',
+      location: {
+        address: data.address || '',
+        city: data.city || '',
+        neighborhood: data.neighborhood || '',
+      },
+      contact: {
+        phone: data.phone || user.phone || '',
+        email: user.email || '',
+        whatsapp: data.whatsapp || '',
+        website: data.website || '',
+      },
+      deliveryConfig: {
+        isEnabled: data.deliveryEnabled || false,
+        baseFee: data.baseFee || 0,
+        pricePerKm: data.pricePerKm || 0,
+        maxDistanceKm: data.maxDistanceKm || 0,
+        freeThreshold: data.freeThreshold || 0,
+        estimatedTime: data.estimatedTime || '',
+      },
+      rating: 0,
+      ratingCount: 0,
+      subscription: 'free',
+      isActive: true,
+      isVerified: false,
+      stats: {
+        totalTransactions: 0, totalRevenue: 0, totalListings: 0, activeListings: 0,
+        completionRate: 0, avgRating: 0, responseTimeHours: 0,
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Actualizar usuario con multi-rol
+    await updateDoc(doc(db, 'users', userId), {
+      roles: [UserRole.CUSTOMER, UserRole.SELLER],
+      primaryRole: UserRole.SELLER,
+      sellerId: sellerRef.id,
+      onboardingDone: true,
+    });
+
+    // Limpiar onboarding temporal
+    await deleteDoc(doc(db, ONBOARDING_COL, userId));
+
+    return { id: sellerRef.id, ownerId: userId, name: data.name || '', slug, type: data.type } as Seller;
+  },
+
+  /** Verificar si el usuario ya tiene sellerId en Firestore (para redirect) */
+  async hasSellerProfile(userId: string): Promise<boolean> {
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    if (!userSnap.exists()) return false;
+    const u = userSnap.data() as User;
+    if (u.sellerId) return true;
+    // Fallback: buscar en colección sellers
+    const { getDocs, query, where, limit } = await import('firebase/firestore');
+    const q = query(collection(db, 'sellers'), where('ownerId', '==', userId), limit(1));
+    const snap = await getDocs(q);
+    return !snap.empty;
+  },
+};
+
+// Direct exports for backward compat with tests
+export const getOrCreateOnboarding = sellerService.getOrCreateOnboarding.bind(sellerService);
+export const saveStep = sellerService.saveStep.bind(sellerService);
+export const completeOnboarding = sellerService.completeOnboarding.bind(sellerService);
+export const hasSellerProfile = sellerService.hasSellerProfile.bind(sellerService);
+
+// Legacy: getSeller — used by SellerStorefront
+export const getSeller = async (id: string) => {
+  const snap = await getDoc(doc(db, 'sellers', id));
+  return snap.exists() ? ({ ...snap.data(), id: snap.id } as Seller) : null;
+};

@@ -18,6 +18,7 @@ export const onTransactionCreate = onDocumentCreated('transactions/{txId}', asyn
   const buyerBody = `Tu pedido #${txId.slice(-8)} está pendiente de pago`;
   await db.collection('notifications').add({
     userId: data.buyerId,
+    targetRole: 'CUSTOMER',
     title: buyerTitle,
     body: buyerBody,
     type: 'order_update',
@@ -43,6 +44,7 @@ export const onTransactionCreate = onDocumentCreated('transactions/{txId}', asyn
       const sellerBody = `Has recibido un pedido de ${buyer?.fullName || 'un cliente'} por $${((data.totalAmount || 0) / 100).toLocaleString('es-CO')}`;
       await db.collection('notifications').add({
         userId: sellerOwnerId,
+        targetRole: 'SELLER',
         title: sellerTitle,
         body: sellerBody,
         type: 'order_update',
