@@ -3,7 +3,6 @@
  * @description Tests for walletService
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { WALLET_CONFIG } from '../config/constants';
 
 vi.mock('../services/firebase', () => ({ db: {} }));
 
