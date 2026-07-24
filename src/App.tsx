@@ -14,6 +14,7 @@ import { PWAInstallPrompt } from './components/ui/PWAInstallPrompt';
 import { OfflineBanner } from './components/ui/OfflineBanner';
 import { ReloadPrompt } from './components/ui/ReloadPrompt';
 import Onboarding from './components/onboarding/Onboarding';
+import RoleSwitcher from './components/ui/RoleSwitcher';
 
 const Landing = lazy(() => import('./pages/Landing'));
 const AppHome = lazy(() => import('./pages/AppHome'));
@@ -113,6 +114,7 @@ const App: React.FC = () => (
             <ReloadPrompt />
             <Onboarding />
             <AIChatButton />
+            <RoleSwitcher />
             </ChatUIProvider>
             </SubscriptionPlanProvider>
           </ThemeProvider>

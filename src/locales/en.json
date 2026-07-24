@@ -292,6 +292,13 @@
   "landing.aiChat.loginCta": "Sign in",
   "landing.aiChat.registerCta": "Create free account",
 
+  "role.customer": "Customer",
+  "role.seller": "Seller",
+  "role.courier": "Courier",
+  "role.switchTo": "View as {role}",
+  "role.current": "{role} mode",
+  "role.switchNow": "Switch to {role}",
+
   "reviews.title": "Reviews",
   "reviews.cta": "How would you rate your experience?",
   "reviews.submit": "Submit review",

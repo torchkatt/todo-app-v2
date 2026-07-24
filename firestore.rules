@@ -41,7 +41,12 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if (isOwner(userId) && canCreateUser()) || (isAdmin() && isValidUserData());
       allow update: if (isAdmin() && isValidUserData()) || (isOwner(userId) &&
-        request.resource.data.role == resource.data.role);
+        // No permitir auto-asignarse ADMIN o SUPER_ADMIN
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['roles'])
+          || request.resource.data.roles.hasOnly(['CUSTOMER', 'SELLER', 'COURIER']))
+        // primaryRole debe estar en roles
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['primaryRole'])
+          || request.resource.data.primaryRole in request.resource.data.roles));
       allow delete: if isAdmin();
     }
 

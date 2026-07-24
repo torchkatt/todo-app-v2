@@ -4,20 +4,13 @@ import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/f
 import { db } from '../services/firebase';
 import { requestPermission, onMessageListener } from '../services/firebase';
 import { X, Package, Star, AlertCircle, MessageCircle } from 'lucide-react';
-
-interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  type: 'order_update' | 'review' | 'promo' | 'system' | 'chat_message';
-  read: boolean;
-  link?: string;
-  createdAt: any;
-}
+import type { AppNotification, AppNotificationType } from '../types';
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
+  crossRoleNotifications: AppNotification[];
+  crossRoleCount: number;
   showBanner: boolean;
   dismissBanner: () => void;
   requestPushPermission: () => Promise<void>;
@@ -27,29 +20,54 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [crossRoleNotifications, setCrossRoleNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showBanner, setShowBanner] = useState(false);
-  const [currentBanner, setCurrentBanner] = useState<Notification | null>(null);
+  const [currentBanner, setCurrentBanner] = useState<AppNotification | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
     const q = query(collection(db, 'notifications'), where('userId', '==', user.id), orderBy('createdAt', 'desc'), limit(20));
     const unsub = onSnapshot(q, snap => {
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Notification));
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as AppNotification));
       setNotifications(list);
       setUnreadCount(list.filter(n => !n.read).length);
     });
     return unsub;
   }, [user?.id]);
 
+  // Cross-role notifications: actividad del otro rol mientras el usuario está en este
+  useEffect(() => {
+    if (!user?.id || !user.roles || user.roles.length < 2) {
+      setCrossRoleNotifications([]);
+      return;
+    }
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', user.id),
+      where('targetRole', '!=', user.primaryRole),
+      where('read', '==', false),
+      orderBy('targetRole', 'asc' as const),
+      orderBy('read', 'asc' as const),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
+    let cancelled = false;
+    const unsub = onSnapshot(q, snap => {
+      if (!cancelled) setCrossRoleNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as AppNotification)));
+    });
+    return () => { cancelled = true; unsub(); };
+  }, [user?.id, user?.primaryRole, user?.roles?.length]);
+
   // Listen for FCM foreground messages
   useEffect(() => {
     let cancelled = false;
     onMessageListener().then((payload: any) => {
       if (cancelled) return;
-      const n: Notification = {
+      const n: AppNotification = {
         id: Date.now().toString(),
+        userId: user?.id || '',
         title: payload.notification?.title || 'Todo',
         body: payload.notification?.body || '',
         type: 'system',
@@ -77,7 +95,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [user?.id]);
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, showBanner, dismissBanner, requestPushPermission }}>
+    <NotificationContext.Provider value={{
+      notifications,
+      unreadCount,
+      crossRoleNotifications,
+      crossRoleCount: crossRoleNotifications.length,
+      showBanner,
+      dismissBanner,
+      requestPushPermission,
+    }}>
       {children}
 
       {/* In-app banner */}
