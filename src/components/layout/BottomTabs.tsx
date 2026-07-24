@@ -1,27 +1,32 @@
 /**
  * @file components/layout/BottomTabs.tsx
  * @description Bottom navigation bar — acceso rápido a las secciones principales.
- * El chat IA tiene su propio FAB flotante (AIChatButton), no necesita botón aquí.
+ * El chat IA tiene su propio FAB flotante (AIChatButton). El rol activo se muestra
+ * como indicador sutil junto al perfil; el switcher completo está en RoleSwitcher.
  */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Package, User, Rss } from 'lucide-react';
+import { Home, Search, Package, User, Rss, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '../../types';
 
 export const BottomTabs: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   // No mostrar en páginas de autenticación ni en la landing de marketing
   if (['/login', '/register', '/landing'].some(p => location.pathname === p)) return null;
 
+  const isSeller = user?.primaryRole === UserRole.SELLER;
   const tabs = [
     { path: '/app', icon: Home, label: t('nav.home') },
     { path: '/explore', icon: Search, label: t('nav.search') },
     { path: '/feed', icon: Rss, label: 'Feed' },
     { path: '/orders', icon: Package, label: t('nav.orders') },
-    { path: '/profile', icon: User, label: t('nav.profile') },
+    { path: isSeller ? '/seller' : '/profile', icon: isSeller ? Store : User, label: isSeller ? t('seller.dashboard') : t('nav.profile') },
   ];
 
   return (
@@ -51,6 +56,15 @@ export const BottomTabs: React.FC = () => {
             </button>
           );
         })}
+        {/* Role indicator sutil */}
+        {user?.roles && user.roles.length > 1 && (
+          <div className="absolute -top-1.5 right-0 flex items-center gap-0.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${isSeller ? 'bg-emerald-400' : 'bg-blue-400'}`} />
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">
+              {isSeller ? 'V' : 'C'}
+            </span>
+          </div>
+        )}
       </div>
     </nav>
   );
