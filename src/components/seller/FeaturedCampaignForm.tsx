@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Star, Loader2, Calendar, DollarSign, Check, X, AlertCircle } from 'lucide-react';
+import {  Loader2, Calendar, DollarSign, Check, X, AlertCircle, Star } from 'lucide-react';
 import { featuredService } from '../../services/featuredService';
 import { getListingsBySeller } from '../../services/listingService';
 import { FEATURED_CONFIG } from '../../config/constants';

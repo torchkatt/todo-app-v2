@@ -7,7 +7,7 @@ import { db } from './firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
   query, where, orderBy, limit,
-  Timestamp, serverTimestamp,
+  Timestamp, 
 } from 'firebase/firestore';
 import { GROUP_DEAL_CONFIG } from '../config/constants';
 import type { GroupDeal, GroupDealParticipant } from '../types';

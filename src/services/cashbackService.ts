@@ -6,8 +6,8 @@
 import { db } from './firebase';
 import {
   collection, doc, getDoc, getDocs, setDoc,
-  query, where, orderBy, limit,
-  Timestamp,
+  query, where, orderBy, 
+  
 } from 'firebase/firestore';
 import { CASHBACK_CONFIG } from '../config/constants';
 import type { CashbackRecord, CashbackRule } from '../types';

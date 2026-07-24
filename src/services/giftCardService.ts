@@ -6,9 +6,9 @@
 import { db } from './firebase';
 import {
   collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
-  query, where, orderBy, limit, serverTimestamp,
+  query, where, orderBy, limit, 
 } from 'firebase/firestore';
-import { GIFT_CARD_CONFIG, AUTO_RELOAD_CONFIG } from '../config/constants';
+import { GIFT_CARD_CONFIG } from '../config/constants';
 import { walletService } from './walletService';
 import type { GiftCard, GiftCardTransaction, AutoReloadConfig } from '../types';
 

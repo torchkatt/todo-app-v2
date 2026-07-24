@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import {
   Sparkles, ShoppingBag, Store, MapPin, Truck, Check, ArrowLeft,
-  ArrowRight, Loader2, X, Package, Wrench, FileImage, Globe,
+  ArrowRight, Loader2, X, Package,   
 } from 'lucide-react';
 import { sellerService, type OnboardingData } from '../services/sellerService';
 import { getRootCategories, getSubcategories } from '../services/categoryService';

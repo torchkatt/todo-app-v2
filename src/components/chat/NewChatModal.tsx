@@ -4,7 +4,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Loader2, MessageCircle, User } from 'lucide-react';
+import { Search, X,  MessageCircle, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useChatUI } from '../../context/ChatUIContext';
 import { userSearchService } from '../../services/userSearchService';

@@ -4,7 +4,7 @@
  */
 import { db } from './firebase';
 import {
-  collection, doc, getDoc, getDocs, addDoc, updateDoc,
+  collection, doc,  getDocs, addDoc, updateDoc,
   query, where, orderBy, limit,
 } from 'firebase/firestore';
 import { FEATURED_CONFIG } from '../config/constants';

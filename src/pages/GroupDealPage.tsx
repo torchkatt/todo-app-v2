@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft, Heart, Gift, Clock, Users, Share2, Loader2, Zap,
+  ArrowLeft, Heart, Gift, Clock, Users,  Loader2, Zap,
   BadgeCheck, AlertCircle,
 } from 'lucide-react';
 import { groupDealService } from '../services/groupDealService';

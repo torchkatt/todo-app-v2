@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Heart, Clock, Image, MessageCircle, Store } from 'lucide-react';
+import {  Clock, Image,  Store } from 'lucide-react';
 import type { SellerPost, Seller } from '../../types';
 import { getSeller } from '../../services/sellerService';
 

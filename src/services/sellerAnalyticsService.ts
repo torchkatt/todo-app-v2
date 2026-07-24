@@ -6,7 +6,7 @@ import { db } from './firebase';
 import {
   collection, getDocs, addDoc,
   query, where, orderBy, limit,
-  Timestamp,
+  
 } from 'firebase/firestore';
 import type { SellerAnalytics } from '../types';
 import { ANALYTICS_CONFIG } from '../config/constants';
