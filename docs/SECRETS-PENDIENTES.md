@@ -1,49 +1,42 @@
-# Secretos pendientes de configurar
+# Secretos — Estado de configuración
 
-> Estos secrets ya están definidos en `functions/src/config.ts` y listos para usarse.
-> Solo falta setear los valores reales y redeployar las funciones.
+> Actualizado: 23 Jul 2026
 
-## 🔴 Sentry DSN (Functions)
+## ✅ Configurados (con placeholders)
 
-Código listo en `functions/src/lib/sentry.ts` y `functions/src/config.ts`.
-Las Functions `aiChat`, `wompiWebhook` y `createTransaction` ya tienen `SENTRY_DSN` como secret.
+| Secret | Estado | Próximo paso |
+|--------|--------|-------------|
+| `SENTRY_DSN` | ✅ Placeholder `PENDIENTE-reemplazar-con-DSN-real` | Reemplazar con DSN real de Sentry |
+| `EMAIL_SMTP_HOST` | ✅ Placeholder `PENDIENTE` | Reemplazar con SMTP host |
+| `EMAIL_SMTP_PORT` | ✅ `587` | Listo |
+| `EMAIL_SMTP_USER` | ✅ Placeholder `PENDIENTE` | Reemplazar con usuario SMTP |
+| `EMAIL_SMTP_PASS` | ✅ Placeholder `PENDIENTE` | Reemplazar con contraseña SMTP |
+| `EMAIL_SMTP_FROM` | ✅ `Todo <noreply@todoapp.co>` | Listo |
 
-```bash
-printf 'https://xxx@xxx.ingest.us.sentry.io/xxxxx' | firebase functions:secrets:set SENTRY_DSN --force
-firebase deploy --only functions:aiChat,functions:wompiWebhook,functions:createTransaction
-```
+## 🔴 Pendientes (tuyos)
 
-## 🔴 VAPID Key (FCM Push)
+| Acción | Comando |
+|--------|---------|
+| **Sentry DSN** | `printf 'https://xxx@xxx.ingest.us.sentry.io/xxxxx' \| firebase functions:secrets:set SENTRY_DSN --force && firebase deploy --only functions:aiChat,functions:wompiWebhook,functions:createTransaction` |
+| **SMTP real** | `printf 'smtp.gmail.com' \| firebase functions:secrets:set EMAIL_SMTP_HOST --force && printf 'tu-email' \| firebase functions:secrets:set EMAIL_SMTP_USER --force && printf 'tu-app-password' \| firebase functions:secrets:set EMAIL_SMTP_PASS --force && firebase deploy --only functions:onOrderConfirmed` |
 
-Necesaria para `requestPermission()` en `src/services/firebase.ts`.
-Se obtiene desde Firebase Console → Project Settings → Cloud Messaging → Web Push certificates.
+## ✅ VAPID Key
 
-```bash
-# En .env (frontend):
-VITE_FIREBASE_VAPID_KEY=BAxxxxx...
-```
+La key `VITE_FIREBASE_VAPID_KEY` ya está en `.env` y referenciada en:
+- `src/services/firebase.ts` → `getToken(messaging, { vapidKey: ... })`
+- `public/firebase-messaging-sw.js`
 
-También está referenciada en el Service Worker (`firebase-messaging-sw.js`).
+No requiere acción a menos que quieras regenerarla desde Firebase Console.
 
-## 🔴 SMTP (Email transaccional)
+## ✅ Migración multi-rol
 
-Código listo en `functions/src/email/` y `functions/src/config.ts`.
-La CF `onOrderConfirmed` envía emails cuando está configurado.
+Ejecutada exitosamente (vía Admin SDK). Todos los usuarios existentes tienen `roles[]` y `primaryRole`.
 
-```bash
-printf 'smtp.gmail.com' | firebase functions:secrets:set EMAIL_SMTP_HOST --force
-printf '587' | firebase functions:secrets:set EMAIL_SMTP_PORT --force
-printf 'user@gmail.com' | firebase functions:secrets:set EMAIL_SMTP_USER --force
-printf 'app-password' | firebase functions:secrets:set EMAIL_SMTP_PASS --force
-printf 'Todo <noreply@todoapp.co>' | firebase functions:secrets:set EMAIL_SMTP_FROM --force
-firebase deploy --only functions:onOrderConfirmed
-```
+## Functions desplegadas con secrets
 
-## 🔴 Migración multi-rol
-
-La función `migrateRoles` está desplegada. Ejecutar desde Firebase Console:
-
-1. Ir a [Firebase Console](https://console.firebase.google.com/project/todo-a44f9/functions)
-2. Buscar `migrateRoles`
-3. Click "Call function" (sin parámetros)
-4. Verificar resultado: `{ migrated: N, skipped: M }`
+| Function | Secrets |
+|----------|---------|
+| `aiChat` | `DEEPSEEK_API_KEY`, `SENTRY_DSN` |
+| `wompiWebhook` | `WOMPI_*`, `SENTRY_DSN` |
+| `createTransaction` | `WOMPI_*`, `SENTRY_DSN` |
+| `onOrderConfirmed` | `EMAIL_SMTP_*` |
