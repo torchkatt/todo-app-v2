@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from './AuthContext';
@@ -34,12 +35,22 @@ export const useChatUI = () => {
 
 export const ChatUIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const location = useLocation();
   const [chats, setChats] = useState<ChatDoc[]>([]);
   const [unreadChatIds, setUnreadChatIds] = useState<Set<string>>(new Set());
   const [isOpen, setIsOpen] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [activeChatType, setActiveChatType] = useState<ChatType | null>(null);
   const readCache = useRef<Map<string, Timestamp | null>>(new Map());
+
+  // Cerrar el chat al navegar a otra pantalla
+  const prevPath = useRef(location.pathname);
+  useEffect(() => {
+    if (prevPath.current !== location.pathname && isOpen) {
+      closeChat();
+    }
+    prevPath.current = location.pathname;
+  }, [location.pathname, isOpen, closeChat]);
 
   useEffect(() => {
     if (!user?.id) {
