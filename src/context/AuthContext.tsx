@@ -16,6 +16,7 @@ interface AuthContextType {
   loginAnonymously: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  switchRole: (newRole: UserRole) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -44,7 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             uid: fbUser.uid,
             email: fbUser.email || '',
             fullName: fbUser.displayName || 'Usuario',
-            role: UserRole.CUSTOMER,
+            roles: [UserRole.CUSTOMER],
+            primaryRole: UserRole.CUSTOMER,
             isGuest: fbUser.isAnonymous || false,
             isActive: true,
             isVerified: fbUser.emailVerified || false,
@@ -90,6 +92,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.updateProfile(user.id, data);
       setUser(prev => prev ? { ...prev, ...data } : null);
     }, [user?.id]),
+    switchRole: useCallback(async (newRole: UserRole) => {
+      if (!user?.id || !user.roles.includes(newRole)) return;
+      await authService.updateProfile(user.id, { primaryRole: newRole } as any);
+      setUser(prev => prev ? { ...prev, primaryRole: newRole } : null);
+    }, [user?.id, user?.roles]),
   };
 
   return (

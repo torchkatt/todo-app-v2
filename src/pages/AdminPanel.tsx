@@ -101,7 +101,7 @@ const AdminPanel: React.FC = () => {
 
   // ── redirect non-admin ───────────────────────────────────────────────
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== UserRole.SUPER_ADMIN)) {
+    if (!authLoading && (!user || !user.roles.includes(UserRole.SUPER_ADMIN))) {
       navigate('/');
     }
   }, [user, authLoading, navigate]);
@@ -185,7 +185,7 @@ const AdminPanel: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user && user.role === UserRole.SUPER_ADMIN) {
+    if (user && user.roles.includes(UserRole.SUPER_ADMIN)) {
       loadData();
     }
   }, [user]);
@@ -238,7 +238,7 @@ const AdminPanel: React.FC = () => {
     );
   }
 
-  if (!user || user.role !== UserRole.SUPER_ADMIN) {
+  if (!user || !user.roles.includes(UserRole.SUPER_ADMIN)) {
     return null; // will redirect via useEffect
   }
 

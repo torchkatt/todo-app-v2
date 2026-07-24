@@ -44,7 +44,8 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
-  role: UserRole;
+  roles: UserRole[];          // ['CUSTOMER'] por defecto, ['CUSTOMER', 'SELLER'] si también vende
+  primaryRole: UserRole;      // 'CUSTOMER' — el rol activo actualmente
   avatarUrl?: string;
   phone?: string;
   city?: string;
@@ -52,7 +53,7 @@ export interface User {
   isActive: boolean;
   isGuest: boolean;
   isVerified: boolean;
-  sellerId?: string; // if role=SELLER, link to their seller profile
+  sellerId?: string; // if roles includes SELLER, link to their seller profile
   favoriteSellerIds?: string[];
   impact: UserImpact;
   referralCode?: string;
@@ -461,6 +462,26 @@ export interface AIMemory {
   createdAt: any;
   lastAccessed: any;
   ttlDays: number;
+}
+
+// ═══════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════
+
+export type AppNotificationType =
+  | 'order_update' | 'review' | 'promo' | 'system' | 'chat_message'
+  | 'seller_order' | 'seller_follower' | 'seller_message';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  targetRole?: UserRole;    // 'SELLER' | 'CUSTOMER' | 'COURIER'
+  title: string;
+  body: string;
+  type: AppNotificationType;
+  read: boolean;
+  link?: string;
+  createdAt: any;
 }
 
 // ═══════════════════════════════════════════

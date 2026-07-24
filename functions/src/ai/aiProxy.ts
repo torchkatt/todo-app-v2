@@ -88,7 +88,7 @@ export const aiChat = onCall({ cors: true, secrets: [DEEPSEEK_API_KEY, SENTRY_DS
       lastUserMsg.content = secCheck.sanitizedInput;
     }
 
-    const tier = resolveTier({ role: user.role, isGuest: !!user.isGuest });
+    const tier = resolveTier({ role: user.primaryRole || (Array.isArray(user.roles) ? user.roles[0] : user.role), isGuest: !!user.isGuest });
     const usage = await checkAndIncrementUsage(auth.uid, tier);
     if (!usage.allowed) {
       return {
@@ -99,7 +99,7 @@ export const aiChat = onCall({ cors: true, secrets: [DEEPSEEK_API_KEY, SENTRY_DS
     }
   }
 
-  const fullMessages: ProxyMessage[] = [{ role: 'system', content: buildSystemPrompt(user.role) }, ...messages];
+  const fullMessages: ProxyMessage[] = [{ role: 'system', content: buildSystemPrompt(user.primaryRole || (Array.isArray(user.roles) ? user.roles[0] : user.role)) }, ...messages];
 
   try {
     const response = await axios.post(

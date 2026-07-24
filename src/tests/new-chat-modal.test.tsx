@@ -38,6 +38,7 @@ vi.mock('../context/ChatUIContext', () => ({
 vi.mock('../services/firebase', () => ({ db: {}, auth: {}, storage: {}, functions: {} }));
 
 import NewChatModal from '../components/chat/NewChatModal';
+import { UserRole } from '../types';
 import type { User } from '../types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -46,7 +47,7 @@ const mockUser: User = {
   id: 'user-me',
   email: 'me@example.com',
   fullName: 'Current User',
-  role: 'CUSTOMER' as any,
+  roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER,
   isActive: true,
   isGuest: false,
   isVerified: true,
@@ -59,7 +60,7 @@ const searchResults: User[] = [
     id: 'user-1',
     email: 'alice@example.com',
     fullName: 'Alice Smith',
-    role: 'CUSTOMER' as any,
+    roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER,
     isActive: true,
     isGuest: false,
     isVerified: true,
@@ -70,7 +71,7 @@ const searchResults: User[] = [
     id: 'user-2',
     email: 'bob@example.com',
     fullName: 'Bob Jones',
-    role: 'CUSTOMER' as any,
+    roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER,
     isActive: true,
     isGuest: false,
     isVerified: true,

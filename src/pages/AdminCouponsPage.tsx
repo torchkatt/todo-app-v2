@@ -30,7 +30,7 @@ const AdminCouponsPage: React.FC = () => {
   const [expiresAt, setExpiresAt] = useState('');
 
   useEffect(() => {
-    if (!user || user.role !== UserRole.SUPER_ADMIN) {
+    if (!user || !user.roles.includes(UserRole.SUPER_ADMIN)) {
       navigate('/');
       return;
     }
@@ -109,7 +109,7 @@ const AdminCouponsPage: React.FC = () => {
     return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  if (!user || user.role !== UserRole.SUPER_ADMIN) return null;
+  if (!user || !user.roles.includes(UserRole.SUPER_ADMIN)) return null;
 
   return (
     <div className="pb-24 bg-brand-bg min-h-screen">

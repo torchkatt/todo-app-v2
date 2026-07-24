@@ -129,7 +129,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ chatId, type, onClose, o
     try {
       if (isAI) {
         const history = messages.map((m) => ({ role: m.senderId === 'ai' ? 'assistant' : 'user', content: m.text }));
-        await sendAIMessage(chatId, user.id, user.role, history, text);
+        await sendAIMessage(chatId, user.id, user.primaryRole, history, text);
       } else {
         await sendMessage(chatId, user.id, text);
       }

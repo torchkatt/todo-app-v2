@@ -25,7 +25,7 @@ function getTodayString(): string {
  */
 export function getUserTier(user: User): AIChatPlanTier {
   // Admin roles get unlimited
-  if ([UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(user.role)) {
+  if ([UserRole.SUPER_ADMIN, UserRole.ADMIN].some(r => user.roles?.includes(r))) {
     return 'admin';
   }
 

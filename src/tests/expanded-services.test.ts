@@ -127,11 +127,11 @@ describe('ratingService — Extended', () => {
 describe('aiChatUsageService — Extended', () => {
   it('getUserTier returns correct tiers', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    expect(getUserTier({ isGuest: true, role: 'CUSTOMER' } as any)).toBe('guest');
-    expect(getUserTier({ isGuest: false, role: 'CUSTOMER' } as any)).toBe('free');
-    expect(getUserTier({ isGuest: false, role: 'SUPER_ADMIN' } as any)).toBe('admin');
-    expect(getUserTier({ isGuest: false, role: 'ADMIN' } as any)).toBe('admin');
-    expect(getUserTier({ isGuest: false, role: 'SELLER' } as any)).toBe('free');
+    expect(getUserTier({ isGuest: true, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any)).toBe('guest');
+    expect(getUserTier({ isGuest: false, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any)).toBe('free');
+    expect(getUserTier({ isGuest: false, roles: ['SUPER_ADMIN'], primaryRole: 'SUPER_ADMIN' } as any)).toBe('admin');
+    expect(getUserTier({ isGuest: false, roles: ['ADMIN'], primaryRole: 'ADMIN' } as any)).toBe('admin');
+    expect(getUserTier({ isGuest: false, roles: ['SELLER'], primaryRole: 'SELLER' } as any)).toBe('free');
   });
 
   it('guest tier is lowest', () => {

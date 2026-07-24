@@ -40,7 +40,7 @@ const Profile: React.FC = () => {
           <h2 className="text-xl font-extrabold text-text-primary">{user?.fullName || 'Usuario'}</h2>
           <div className="flex items-center justify-center gap-1.5 mt-1">
             <Shield size={12} className="text-emerald-500" />
-            <span className="text-xs text-text-secondary">{user?.isGuest ? 'Invitado' : user?.role?.replace(/_/g, ' ').toLowerCase() || 'Miembro'}</span>
+            <span className="text-xs text-text-secondary">{user?.isGuest ? 'Invitado' : user?.primaryRole?.replace(/_/g, ' ').toLowerCase() || 'Miembro'}</span>
             {user?.isVerified && <BadgeCheck size={14} className="text-blue-500" />}
           </div>
           <div className="flex items-center justify-center gap-1 mt-1.5 text-xs text-text-muted">

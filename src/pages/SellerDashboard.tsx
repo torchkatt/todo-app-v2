@@ -52,7 +52,7 @@ const SellerDashboard: React.FC = () => {
       stats: { totalTransactions: 0, totalRevenue: 0, totalListings: 0, activeListings: 0, completionRate: 0, avgRating: 0, responseTimeHours: 0 },
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     });
-    await updateDoc(doc(db, 'users', user.id), { role: UserRole.SELLER, sellerId: ref.id });
+    await updateDoc(doc(db, 'users', user.id), { roles: [UserRole.CUSTOMER, UserRole.SELLER], primaryRole: UserRole.SELLER, sellerId: ref.id });
     setSeller({ id: ref.id, ownerId: user.id, name: user.fullName || 'Mi Tienda', slug: `tienda-${user.id?.slice(-6)}`, type: 'individual', categoryIds: [], description: 'Vendedor en Todo', logo: '🏪', location: { address: '', city: 'Bucaramanga', neighborhood: '' }, contact: { email: user.email, phone: '' }, rating: 0, ratingCount: 0, deliveryConfig: { isEnabled: false, baseFee: 0, pricePerKm: 0, maxDistanceKm: 0 }, subscription: 'free', isActive: true, isVerified: false, stats: { totalTransactions: 0, totalRevenue: 0, totalListings: 0, activeListings: 0, completionRate: 0, avgRating: 0, responseTimeHours: 0 }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Seller);
   };
 

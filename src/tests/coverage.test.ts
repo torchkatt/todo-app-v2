@@ -30,19 +30,19 @@ describe('analyticsService', () => {
 describe('aiChatUsageService', () => {
   it('getUserTier returns correct tier for guests', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    const guest = { isGuest: true, role: 'CUSTOMER' } as any;
+    const guest = { isGuest: true, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any;
     expect(getUserTier(guest)).toBe('guest');
   });
 
   it('getUserTier returns free for authenticated', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    const user = { isGuest: false, role: 'CUSTOMER' } as any;
+    const user = { isGuest: false, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any;
     expect(getUserTier(user)).toBe('free');
   });
 
   it('getUserTier returns admin for SUPER_ADMIN', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    const admin = { isGuest: false, role: 'SUPER_ADMIN' } as any;
+    const admin = { isGuest: false, roles: ['SUPER_ADMIN'], primaryRole: 'SUPER_ADMIN' } as any;
     expect(getUserTier(admin)).toBe('admin');
   });
 });

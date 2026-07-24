@@ -355,22 +355,22 @@ describe('AI Chat — Tool definitions', () => {
 describe('AI Chat — Usage tiers', () => {
   it('getUserTier returns guest for guests', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    expect(getUserTier({ isGuest: true, role: 'CUSTOMER' } as any)).toBe('guest');
+    expect(getUserTier({ isGuest: true, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any)).toBe('guest');
   });
 
   it('getUserTier returns free for authenticated', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    expect(getUserTier({ isGuest: false, role: 'CUSTOMER' } as any)).toBe('free');
+    expect(getUserTier({ isGuest: false, roles: ['CUSTOMER'], primaryRole: 'CUSTOMER' } as any)).toBe('free');
   });
 
   it('getUserTier returns admin for SUPER_ADMIN', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    expect(getUserTier({ isGuest: false, role: UserRole.SUPER_ADMIN } as any)).toBe('admin');
+    expect(getUserTier({ isGuest: false, roles: [UserRole.SUPER_ADMIN], primaryRole: UserRole.SUPER_ADMIN } as any)).toBe('admin');
   });
 
   it('getUserTier returns admin for ADMIN role', async () => {
     const { getUserTier } = await import('../services/aiChatUsageService');
-    expect(getUserTier({ isGuest: false, role: UserRole.ADMIN } as any)).toBe('admin');
+    expect(getUserTier({ isGuest: false, roles: [UserRole.ADMIN], primaryRole: UserRole.ADMIN } as any)).toBe('admin');
   });
 });
 

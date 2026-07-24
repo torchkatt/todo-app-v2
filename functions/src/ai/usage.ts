@@ -19,8 +19,9 @@ function todayString(): string {
 // campo en User que los active (solo Seller.subscription, que es otro concepto: el
 // plan del vendedor, no del comprador en el chat). Se resuelven aquí como 'free' hasta
 // que exista una entitlement real de usuario para el chat IA.
-export function resolveTier(user: { role: UserRole; isGuest: boolean }): AIChatPlanTier {
-  if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN) return 'admin';
+export function resolveTier(user: { role?: UserRole; isGuest: boolean; roles?: UserRole[]; primaryRole?: UserRole }): AIChatPlanTier {
+  const activeRole = user.primaryRole || (Array.isArray(user.roles) ? user.roles[0] : user.role);
+  if (activeRole === UserRole.SUPER_ADMIN || activeRole === UserRole.ADMIN) return 'admin';
   if (user.isGuest) return 'guest';
   return 'free';
 }

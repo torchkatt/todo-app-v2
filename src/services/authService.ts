@@ -46,7 +46,8 @@ async function ensureUserDoc(fbUser: FirebaseUser, extra?: Partial<User>): Promi
     uid: userId,
     email: fbUser.email || extra?.email || '',
     fullName: fbUser.displayName || extra?.fullName || 'Usuario',
-    role: extra?.role || UserRole.CUSTOMER,
+    roles: extra?.roles || [UserRole.CUSTOMER],
+    primaryRole: extra?.primaryRole || UserRole.CUSTOMER,
     isGuest: fbUser.isAnonymous || false,
     isActive: true,
     isVerified: fbUser.emailVerified || false,
@@ -76,7 +77,7 @@ export const authService = {
 
   async register(email: string, password: string, fullName: string, phone?: string): Promise<User> {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    return ensureUserDoc(cred.user, { fullName, phone, role: UserRole.CUSTOMER });
+    return ensureUserDoc(cred.user, { fullName, phone, roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER });
   },
 
   /**
@@ -128,7 +129,7 @@ export const authService = {
 
   async loginAnonymously(): Promise<User> {
     const cred = await signInAnonymously(auth);
-    return ensureUserDoc(cred.user, { fullName: 'Invitado', isGuest: true, role: UserRole.CUSTOMER });
+    return ensureUserDoc(cred.user, { fullName: 'Invitado', isGuest: true, roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER });
   },
 
   async resetPassword(email: string): Promise<void> {
@@ -157,7 +158,7 @@ export const authService = {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const guest = await getDoc(doc(db, 'users', userId));
     if (guest.exists()) {
-      await setDoc(doc(db, 'users', cred.user.uid), { ...guest.data(), id: cred.user.uid, uid: cred.user.uid, email, fullName, isGuest: false, updatedAt: new Date().toISOString() });
+      await setDoc(doc(db, 'users', cred.user.uid), { ...guest.data(), id: cred.user.uid, uid: cred.user.uid, email, fullName, isGuest: false, roles: [UserRole.CUSTOMER], primaryRole: UserRole.CUSTOMER, updatedAt: new Date().toISOString() });
     }
     await updateDoc(doc(db, 'users', userId), { mergedInto: cred.user.uid });
     return ensureUserDoc(cred.user, { fullName, email });

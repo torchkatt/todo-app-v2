@@ -206,7 +206,7 @@ async function execGetUserProfile(userId: string) {
     const snap = await getDoc(doc(db, 'users', userId));
     if (!snap.exists()) return JSON.stringify({ error: 'No encontrado' });
     const u = snap.data();
-    return JSON.stringify({ fullName: u.fullName, email: u.email, role: u.role, phone: u.phone, city: u.city, address: u.address, isVerified: u.isVerified, isGuest: u.isGuest, createdAt: u.createdAt });
+    return JSON.stringify({ fullName: u.fullName, email: u.email, role: u.primaryRole || (Array.isArray(u.roles) ? u.roles[0] : u.role), phone: u.phone, city: u.city, address: u.address, isVerified: u.isVerified, isGuest: u.isGuest, createdAt: u.createdAt });
   } catch (e) { logger.error('getUserProfile error', e); return JSON.stringify({}); }
 }
 
