@@ -1,17 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Sparkles, ShoppingBag, Bot, CreditCard, Zap,
   BarChart3, Truck, Store, ArrowRight, Check,
   Star, ChevronDown, ChevronUp, Globe, Search, UserPlus,
+  MessageSquare, Gift, BookOpen,
+  Send, Play,
 } from 'lucide-react';
 import SEO from '../components/seo/SEO';
 import { useSubscriptionPlans } from '../context/SubscriptionPlanContext';
 import { analytics } from '../services/analyticsService';
 
+// ─── Util ────────────────────────────────────────────────────────────────────
 const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
+
+// ─── Scroll Reveal Hook ──────────────────────────────────────────────────────
+const useScrollReveal = (threshold = 0.12) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, isVisible };
+};
+
+// ─── Animated Counter ────────────────────────────────────────────────────────
+const AnimatedCounter: React.FC<{ end: number; suffix?: string; duration?: number }> = ({ end, suffix = '', duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const { ref, isVisible } = useScrollReveal(0.5);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    let startTime: number | null = null;
+    const step = (ts: number) => {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / duration, 1);
+      setCount(Math.floor(progress * end));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [isVisible, end, duration]);
+
+  return (
+    <span ref={ref} className="text-4xl md:text-5xl font-black text-white">
+      {count}{suffix}
+    </span>
+  );
+};
+
+// ─── Social Link ─────────────────────────────────────────────────────────────
+const SOCIAL_LINKS = [
+  { icon: <Globe size={20} />, href: 'https://instagram.com/todoappco', label: 'Instagram' },
+  { icon: <MessageSquare size={20} />, href: 'https://x.com/todoappco', label: 'X / Twitter' },
+  { icon: <Play size={20} />, href: 'https://youtube.com/@todoappco', label: 'YouTube' },
+];
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +77,34 @@ const Landing: React.FC = () => {
     const plan = plans.find(p => p.id === planId);
     return plan ? fmtCOP(plan.price) : fallback;
   };
-  const [faqOpen, setFaqOpen] = React.useState<number | null>(null);
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [aiInput, setAiInput] = useState('');
+  const [aiMessages, setAiMessages] = useState<{ role: 'bot' | 'user'; text: string }[]>([
+    { role: 'bot', text: t('ai.welcome') },
+  ]);
+
+  // Scroll reveal refs
+  const featuresReveal = useScrollReveal();
+  const howReveal = useScrollReveal();
+  const pricingReveal = useScrollReveal();
+  const testimonialsReveal = useScrollReveal();
+  const screenshotsReveal = useScrollReveal();
+
+  const handleAiExample = (question: string) => {
+    setAiMessages(prev => [...prev, { role: 'user', text: question }]);
+    setTimeout(() => {
+      setAiMessages(prev => [...prev, {
+        role: 'bot',
+        text: t('landing.aiChat.guestWarning'),
+      }]);
+    }, 600);
+  };
+
+  const handleAiSend = () => {
+    if (!aiInput.trim()) return;
+    handleAiExample(aiInput);
+    setAiInput('');
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -112,10 +192,40 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* ─────────────────── SOCIAL PROOF ─────────────────── */}
+      <section className="py-16 bg-gradient-to-r from-purple-700 to-indigo-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-bold text-purple-200 border border-white/10 mb-4">
+              {t('landing.stats.badge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-2">
+              {t('landing.stats.title')}
+            </h2>
+            <p className="text-purple-200 max-w-2xl mx-auto">
+              {t('landing.stats.subtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { end: 1200, suffix: '+', key: t('landing.stats.sellers').replace('{count}', '') },
+              { end: 8500, suffix: '+', key: t('landing.stats.products').replace('{count}', '') },
+              { end: 32, suffix: '', key: t('landing.stats.cities').replace('{count}', '') },
+              { end: 25, suffix: 'k+', key: t('landing.stats.transactions').replace('{count}', '') },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <AnimatedCounter end={stat.end} suffix={stat.suffix} />
+                <p className="text-sm text-purple-200 font-semibold mt-2">{stat.key.trim()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─────────────────── FEATURES ─────────────────── */}
       <section id="features" className="py-20 md:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={featuresReveal.ref}>
+          <div className={`text-center mb-16 transition-all duration-700 ${featuresReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-bold mb-4">
               {t('landing.features.badge')}
             </span>
@@ -177,10 +287,98 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* ─────────────────── SCREENSHOTS ─────────────────── */}
+      <section className="py-20 md:py-28 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={screenshotsReveal.ref}>
+          <div className={`text-center mb-16 transition-all duration-700 ${screenshotsReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <span className="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-4">
+              {t('landing.screenshots.badge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+              {t('landing.screenshots.title')}
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              {t('landing.screenshots.subtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Screenshot card 1 — Marketplace */}
+            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all bg-white">
+              <div className="aspect-[4/3] bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
+                <div className="w-48 h-64 bg-white rounded-2xl shadow-2xl p-4 flex flex-col gap-2 transform group-hover:scale-105 transition-transform duration-500">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <Sparkles size={14} className="text-purple-600" />
+                    <span className="text-xs font-black text-gray-800">Todo</span>
+                  </div>
+                  <div className="h-3 w-full bg-purple-100 rounded-full" />
+                  <div className="h-3 w-3/4 bg-gray-100 rounded-full" />
+                  <div className="flex-1 grid grid-cols-2 gap-2 mt-2">
+                    <div className="rounded-lg bg-purple-50 flex items-center justify-center text-purple-300 text-xs font-bold">🛍️</div>
+                    <div className="rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-300 text-xs font-bold">📱</div>
+                    <div className="rounded-lg bg-amber-50 flex items-center justify-center text-amber-300 text-xs font-bold">🎧</div>
+                    <div className="rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-300 text-xs font-bold">📦</div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm font-extrabold text-gray-900">{t('landing.screenshots.caption1')}</p>
+              </div>
+            </div>
+
+            {/* Screenshot card 2 — Payments */}
+            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all bg-white">
+              <div className="aspect-[4/3] bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+                <div className="w-48 h-64 bg-white rounded-2xl shadow-2xl p-4 flex flex-col gap-2 transform group-hover:scale-105 transition-transform duration-500">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <CreditCard size={14} className="text-emerald-600" />
+                    <span className="text-xs font-black text-gray-800">Checkout</span>
+                  </div>
+                  <div className="h-8 w-full bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500 text-xs font-bold">💰</div>
+                  <div className="h-5 w-full bg-gray-50 rounded" />
+                  <div className="h-5 w-full bg-gray-50 rounded" />
+                  <div className="mt-auto h-10 w-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-white text-xs font-extrabold">
+                    PAGAR
+                  </div>
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm font-extrabold text-gray-900">{t('landing.screenshots.caption2')}</p>
+              </div>
+            </div>
+
+            {/* Screenshot card 3 — Dashboard */}
+            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all bg-white">
+              <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                <div className="w-48 h-64 bg-white rounded-2xl shadow-2xl p-4 flex flex-col gap-2 transform group-hover:scale-105 transition-transform duration-500">
+                  <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <BarChart3 size={14} className="text-amber-600" />
+                    <span className="text-xs font-black text-gray-800">Dashboard</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-12 bg-amber-50 rounded-lg flex flex-col items-center justify-center">
+                      <span className="text-amber-500 text-xs font-black">$</span>
+                      <span className="text-[8px] text-gray-500">Ventas</span>
+                    </div>
+                    <div className="flex-1 h-12 bg-purple-50 rounded-lg flex flex-col items-center justify-center">
+                      <span className="text-purple-500 text-xs font-black">👁️</span>
+                      <span className="text-[8px] text-gray-500">Visitas</span>
+                    </div>
+                  </div>
+                  <div className="h-16 w-full bg-gradient-to-t from-amber-100/50 rounded-lg" />
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm font-extrabold text-gray-900">{t('landing.screenshots.caption3')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─────────────────── HOW IT WORKS ─────────────────── */}
-      <section id="how" className="py-20 md:py-28 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+      <section id="how" className="py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={howReveal.ref}>
+          <div className={`text-center mb-16 transition-all duration-700 ${howReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-4">
               {t('landing.how.badge')}
             </span>
@@ -235,9 +433,9 @@ const Landing: React.FC = () => {
       </section>
 
       {/* ─────────────────── PRICING ─────────────────── */}
-      <section id="pricing" className="py-20 md:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+      <section id="pricing" className="py-20 md:py-28 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={pricingReveal.ref}>
+          <div className={`text-center mb-16 transition-all duration-700 ${pricingReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold mb-4">
               {t('landing.pricing.badge')}
             </span>
@@ -342,8 +540,8 @@ const Landing: React.FC = () => {
 
       {/* ─────────────────── TESTIMONIALS ─────────────────── */}
       <section className="py-20 md:py-28 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={testimonialsReveal.ref}>
+          <div className={`text-center mb-16 transition-all duration-700 ${testimonialsReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
               {t('landing.testimonials.title')}
             </h2>
@@ -377,8 +575,105 @@ const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* ─────────────────── AI CHAT PREVIEW ─────────────────── */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left — Copy */}
+            <div>
+              <span className="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold mb-4">
+                <Bot size={14} className="inline mr-1 -mt-0.5" />
+                {t('landing.aiChat.title')}
+              </span>
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+                {t('landing.aiChat.subtitle')}
+              </h2>
+              <p className="text-lg text-gray-500 mb-8 leading-relaxed">
+                {t('landing.aiChat.desc')}
+              </p>
+              <div className="space-y-3 mb-8">
+                {[t('landing.aiChat.example1'), t('landing.aiChat.example2'), t('landing.aiChat.example3')].map((ex, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleAiExample(ex)}
+                    className="block w-full text-left px-5 py-3.5 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all group"
+                  >
+                    <span className="text-sm font-semibold text-gray-600 group-hover:text-purple-700">
+                      <MessageSquare size={14} className="inline mr-2 -mt-0.5 text-purple-400" />
+                      {ex}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-gray-400 mb-4">{t('landing.aiChat.guestWarning')}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'ai_chat_login' } }); navigate('/login'); }}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all"
+                >
+                  {t('landing.aiChat.loginCta')}
+                </button>
+                <button
+                  onClick={() => { analytics.track({ name: 'click_cta', properties: { cta: 'ai_chat_register' } }); navigate('/register'); }}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-xl text-sm font-extrabold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
+                >
+                  {t('landing.aiChat.registerCta')}
+                </button>
+              </div>
+            </div>
+
+            {/* Right — Chat mockup */}
+            <div className="bg-gray-50 rounded-3xl p-4 shadow-xl border border-gray-100">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Chat header */}
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-600 to-indigo-600">
+                  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                    <Bot size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-white">Todo AI</div>
+                    <div className="text-xs text-purple-200">En línea</div>
+                  </div>
+                </div>
+                {/* Messages */}
+                <div className="p-4 space-y-3 max-h-[280px] overflow-y-auto">
+                  {aiMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${
+                        msg.role === 'user'
+                          ? 'bg-purple-600 text-white rounded-br-md'
+                          : 'bg-gray-100 text-gray-700 rounded-bl-md'
+                      }`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Input */}
+                <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100">
+                  <input
+                    type="text"
+                    value={aiInput}
+                    onChange={e => setAiInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAiSend()}
+                    placeholder={t('landing.aiChat.placeholder')}
+                    className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-300 border border-gray-200"
+                  />
+                  <button
+                    onClick={handleAiSend}
+                    className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all shrink-0"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─────────────────── FAQ ─────────────────── */}
-      <section id="faq" className="py-20 md:py-28 bg-white">
+      <section id="faq" className="py-20 md:py-28 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-bold mb-4">
@@ -390,7 +685,7 @@ const Landing: React.FC = () => {
           </div>
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((n) => (
-              <div key={n} className="border border-gray-200 rounded-xl overflow-hidden">
+              <div key={n} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
                 <button
                   onClick={() => setFaqOpen(faqOpen === n ? null : n)}
                   className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
@@ -413,6 +708,72 @@ const Landing: React.FC = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────── RESOURCES ─────────────────── */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-1.5 bg-cyan-100 text-cyan-700 rounded-full text-sm font-bold mb-4">
+              <BookOpen size={14} className="inline mr-1 -mt-0.5" />
+              {t('landing.resources.badge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+              {t('landing.resources.title')}
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              {t('landing.resources.subtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              {
+                icon: <MessageSquare size={24} className="text-purple-600" />,
+                title: t('landing.resources.helpCenter'),
+                desc: t('landing.resources.helpCenterDesc'),
+                onClick: () => navigate('/help'),
+                color: 'bg-purple-50',
+                hoverColor: 'hover:border-purple-300',
+              },
+              {
+                icon: <Gift size={24} className="text-emerald-600" />,
+                title: t('landing.resources.sellerGuides'),
+                desc: t('landing.resources.sellerGuidesDesc'),
+                onClick: () => navigate('/help'),
+                color: 'bg-emerald-50',
+                hoverColor: 'hover:border-emerald-300',
+              },
+              {
+                icon: <BookOpen size={24} className="text-amber-600" />,
+                title: t('landing.resources.blog'),
+                desc: t('landing.resources.blogDesc'),
+                onClick: () => navigate('/help'),
+                color: 'bg-amber-50',
+                hoverColor: 'hover:border-amber-300',
+              },
+            ].map((r, i) => (
+              <button
+                key={i}
+                onClick={r.onClick}
+                className={`group text-left p-6 rounded-2xl border border-gray-200 ${r.hoverColor} hover:shadow-lg transition-all`}
+              >
+                <div className={`w-12 h-12 rounded-xl ${r.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  {r.icon}
+                </div>
+                <h3 className="text-base font-extrabold text-gray-900 mb-1">{r.title}</h3>
+                <p className="text-sm text-gray-500">{r.desc}</p>
+              </button>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <button
+              onClick={() => navigate('/help')}
+              className="px-8 py-3.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all"
+            >
+              {t('landing.resources.cta')}
+            </button>
           </div>
         </div>
       </section>
@@ -451,6 +812,21 @@ const Landing: React.FC = () => {
               <p className="text-sm text-gray-400 leading-relaxed mb-4">
                 {t('landing.footer.tagline')}
               </p>
+              {/* Social media — redes sociales */}
+              <div className="flex items-center gap-3">
+                {SOCIAL_LINKS.map((s, i) => (
+                  <a
+                    key={i}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-purple-600 hover:text-white transition-all"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
             </div>
             <div>
               <h4 className="text-sm font-extrabold text-white mb-4">{t('landing.footer.product')}</h4>

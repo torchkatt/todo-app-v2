@@ -10,6 +10,13 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }),
 }));
 
+// IntersectionObserver mock para scroll-reveal hook
+vi.stubGlobal('IntersectionObserver', class {
+  observe() { /* noop */ }
+  unobserve() { /* noop */ }
+  disconnect() { /* noop */ }
+});
+
 import Landing from '../pages/Landing';
 
 describe('Landing — Component rendering', () => {
