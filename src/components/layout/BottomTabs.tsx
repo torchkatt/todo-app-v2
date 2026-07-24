@@ -1,18 +1,17 @@
 /**
  * @file components/layout/BottomTabs.tsx
- * @description Bottom navigation bar con pestañas y badge de mensajes no leídos.
+ * @description Bottom navigation bar — acceso rápido a las secciones principales.
+ * El chat IA tiene su propio FAB flotante (AIChatButton), no necesita botón aquí.
  */
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Package, User, MessageCircle, Rss } from 'lucide-react';
+import { Home, Search, Package, User, Rss } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useChatUI } from '../../context/ChatUIContext';
 
 export const BottomTabs: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { hasUnread, openHub } = useChatUI();
 
   // No mostrar en páginas de autenticación ni en la landing de marketing
   if (['/login', '/register', '/landing'].some(p => location.pathname === p)) return null;
@@ -52,20 +51,6 @@ export const BottomTabs: React.FC = () => {
             </button>
           );
         })}
-
-        {/* Mensajes button */}
-        <button
-          onClick={() => openHub()}
-          aria-label="Mensajes"
-          className="relative flex items-center justify-center px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-full transition-all"
-        >
-          <MessageCircle size={19} className="stroke-[1.8]" />
-          {hasUnread && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-purple-600 border-2 border-slate-950 rounded-full flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-white rounded-full" />
-            </span>
-          )}
-        </button>
       </div>
     </nav>
   );
