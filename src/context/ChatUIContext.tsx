@@ -47,10 +47,12 @@ export const ChatUIProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const prevPath = useRef(location.pathname);
   useEffect(() => {
     if (prevPath.current !== location.pathname && isOpen) {
-      closeChat();
+      setIsOpen(false);
+      setActiveChatId(null);
+      setActiveChatType(null);
     }
     prevPath.current = location.pathname;
-  }, [location.pathname, isOpen, closeChat]);
+  }, [location.pathname, isOpen]);
 
   useEffect(() => {
     if (!user?.id) {
