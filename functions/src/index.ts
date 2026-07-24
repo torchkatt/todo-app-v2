@@ -20,3 +20,4 @@ export { processAutoReload } from './giftCards/processAutoReload';
 export { sendPush } from './notifications/sendPush';
 export { onOrderCreated, onNewFollower, onNewMessage } from './notifications/onNewEvent';
 export { onOrderConfirmed } from './email/onOrderConfirmed';
+export { migrateRoles } from './migrations/addRolesField';

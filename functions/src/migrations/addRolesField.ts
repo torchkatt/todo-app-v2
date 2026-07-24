@@ -1,19 +1,13 @@
-/**
- * @file migrations/addRolesField.ts
- * @description One-time migration: add `roles` array and `primaryRole` to existing
- * user documents that still have the old `role` field.
- *
- * Run: `npx ts-node --esm functions/src/migrations/addRolesField.ts`
- * Or deploy as a callable function and invoke once.
- */
 import * as admin from 'firebase-admin';
+import { onCall } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v2';
 
-admin.initializeApp();
-
-const db = admin.firestore();
-
-async function migrate() {
-  console.log('🔍 Scanning users collection for documents without roles...');
+/**
+ * One-time migration: add `roles` and `primaryRole` to existing user docs.
+ * Invoke once: `firebase functions:call migrateRoles`
+ */
+export const migrateRoles = onCall(async () => {
+  const db = admin.firestore();
   const snap = await db.collection('users').get();
   let migrated = 0;
   let skipped = 0;
@@ -36,25 +30,13 @@ async function migrate() {
     ops++;
     migrated++;
 
-    // Firestore batches max 500 operations
     if (ops >= 400) {
       await batch.commit();
-      console.log(`  → Committed batch (${migrated} migrated so far)`);
       ops = 0;
     }
   }
+  if (ops > 0) await batch.commit();
 
-  if (ops > 0) {
-    await batch.commit();
-  }
-
-  console.log(`\n✅ Migration complete`);
-  console.log(`   Migrated: ${migrated}`);
-  console.log(`   Skipped (already has roles): ${skipped}`);
-  process.exit(0);
-}
-
-migrate().catch((e) => {
-  console.error('Migration failed:', e);
-  process.exit(1);
+  logger.info(`Migration complete: ${migrated} migrated, ${skipped} skipped`);
+  return { migrated, skipped };
 });

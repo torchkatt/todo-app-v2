@@ -299,6 +299,10 @@
   "role.current": "Modo {role}",
   "role.switchNow": "Cambiar a {role}",
 
+  "notFound.title": "Esta página no existe",
+  "notFound.description": "La página que buscas fue movida, eliminada o nunca existió. Revisa la URL o vuelve al inicio.",
+  "notFound.goHome": "Ir al inicio",
+
   "sellerOnboarding.title": "Configurar mi tienda",
   "sellerOnboarding.next": "Siguiente",
   "sellerOnboarding.publish": "Publicar mi tienda",

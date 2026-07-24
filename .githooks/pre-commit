@@ -1,0 +1,20 @@
+#!/bin/sh
+# Pre-commit hook: oxlint + secret scan
+# Install: git config core.hooksPath .githooks
+
+echo "🔍 Running oxlint..."
+npx oxlint --quiet 2>&1
+if [ $? -ne 0 ]; then
+  echo "❌ Oxlint encontró errores. Corrige antes de commitear."
+  exit 1
+fi
+
+echo "🔍 Scanning for secrets..."
+git diff --cached --name-only | grep -v "^.githooks/" | xargs grep -lE '(sk-|AIzaSy|ghp_|-----BEGIN (RSA|EC|OPENSSH) PRIVATE KEY-----)' 2>/dev/null
+if [ $? -eq 0 ]; then
+  echo "❌ Se detectaron posibles secretos. Revisa los archivos listados."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed."
+exit 0
